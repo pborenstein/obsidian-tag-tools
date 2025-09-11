@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 class TagOperationEngine(ABC):
     """Base class for all tag operations with backup, logging, and reversibility."""
     
-    def __init__(self, vault_path: str, dry_run: bool = True):
+    def __init__(self, vault_path: str, dry_run: bool = False):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
         self.backup_dir = self.vault_path / "tagex_backups"
@@ -272,7 +272,7 @@ class TagOperationEngine(ABC):
 class RenameOperation(TagOperationEngine):
     """Operation to rename a single tag across all files."""
     
-    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = True):
+    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = False):
         super().__init__(vault_path, dry_run)
         self.old_tag = old_tag.lower().strip()
         self.new_tag = new_tag.strip()
@@ -308,7 +308,7 @@ class RenameOperation(TagOperationEngine):
 class MergeOperation(TagOperationEngine):
     """Operation to merge multiple tags into a single tag."""
     
-    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = True):
+    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = False):
         super().__init__(vault_path, dry_run)
         self.source_tags = [tag.lower().strip() for tag in source_tags]
         self.target_tag = target_tag.strip()
@@ -344,7 +344,7 @@ class MergeOperation(TagOperationEngine):
 class ApplyOperation(TagOperationEngine):
     """Operation to apply migration mappings from JSON file."""
     
-    def __init__(self, vault_path: str, migration_file: str, dry_run: bool = True):
+    def __init__(self, vault_path: str, migration_file: str, dry_run: bool = False):
         super().__init__(vault_path, dry_run)
         self.migration_file = Path(migration_file)
         
