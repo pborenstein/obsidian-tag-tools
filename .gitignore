@@ -205,3 +205,4 @@ temp/
 # Claude Code configuration
 .claude/
 
+tag_migration_log.json

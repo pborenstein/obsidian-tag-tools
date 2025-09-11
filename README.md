@@ -4,7 +4,7 @@ Extract and analyze tags from Obsidian vault markdown files.
 
 ## Usage
 
-After installation:
+After [ installation](#installation ), run the command:
 ```bash
 tagex <vault_path> [options]
 ```
@@ -45,11 +45,16 @@ Extract all raw tags without filtering:
 tagex /path/to/vault --no-filter
 ```
 
+Get a list of tags sorted by frequency:
+```bash
+tagex /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
+```
+
 ## Features
 
 - Extracts tags from frontmatter YAML
 - Extracts inline hashtags from content
-- **Automatic tag validation** - filters out noise (numbers, HTML entities, technical patterns) by default
+- Automatic tag validation - filters out noise (numbers, HTML entities, technical patterns) by default
 - Multiple output formats (JSON, CSV, text)
 - File pattern exclusions
 - Statistics and summaries
@@ -70,19 +75,12 @@ Or install dependencies for development:
 uv sync
 ```
 
+
 ## Documentation
 
-- [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) - System architecture and component design
-- [doc/ANALYTICS.md](doc/ANALYTICS.md) - Tag analysis tools and usage guide
-- [doc/ROADMAP.md](doc/ROADMAP.md) - Planned features and improvements
+| Document | Description |
+| :----------|:-------------|
+| [ARCHITECTURE.md](doc/ARCHITECTURE.md) | System architecture and component design |
+| [ANALYTICS.md](doc/ANALYTICS.md) | Tag analysis tools and usage guide |
+| [ROADMAP.md](doc/ROADMAP.md) | Planned features and improvements |
 
-## Output Formats
-
-### JSON
-Standard format with file paths, tags, and metadata
-
-### CSV 
-Tabular format suitable for spreadsheet analysis
-
-### Text
-Human-readable format for quick review
