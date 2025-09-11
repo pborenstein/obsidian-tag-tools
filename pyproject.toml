@@ -1,0 +1,20 @@
+[project]
+name = "tag-extractor"
+version = "0.1.0"
+description = "Extract tags from Obsidian vault markdown files"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pyyaml>=6.0",
+    "click>=8.0",
+]
+
+[tool.setuptools]
+packages = ["extractor", "parsers", "utils"]
+py-modules = ["main"]
+
+[project.scripts]
+tagex = "main:main"
+
+[tool.uv]
+package = true
