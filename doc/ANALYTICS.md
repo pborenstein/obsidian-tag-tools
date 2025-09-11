@@ -70,6 +70,7 @@ Each analysis tool generates reports showing:
 - Recommendations for tag organization
 
 The analysis helps identify:
+
 - Singleton tags (used only once)
 - Hub tags (appearing in multiple combinations)
 - Related tag clusters
