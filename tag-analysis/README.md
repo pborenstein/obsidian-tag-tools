@@ -14,7 +14,7 @@ This folder contains the results of a tag co-occurrence analysis and migration e
 
 ### Core Analysis Scripts (Updated September 2025)
 - `cooccurrence_analyzer.py` - Main co-occurrence analysis engine (CLI interface)
-- `meaningful_cooccurrence.py` - Filtered analysis excluding technical noise (CLI interface)
+- Analysis tools with integrated filtering options
 - `migration_analysis.py` - Impact analysis of proposed changes (CLI interface)
 - `tag_migration.py` - Migration script with mappings (legacy, unused)
 
@@ -95,7 +95,7 @@ The 1,150 singleton tags exist because they capture **specific, unique concepts*
 ### Performance
 - Analysis processed **2,400 files** in ~1 second
 - Found **450,000 tag pairs** with ≥2 co-occurrences
-- Identified **900 meaningful co-occurrences** after filtering technical noise
+- Identified **900 meaningful co-occurrences** using technical noise filtering
 
 ### Data Quality
 - **0 errors** in file processing
