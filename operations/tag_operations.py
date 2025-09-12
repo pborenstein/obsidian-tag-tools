@@ -99,6 +99,11 @@ class TagOperationEngine(ABC):
         """Get list of specific modifications made to file."""
         pass
     
+    @abstractmethod
+    def get_operation_log_name(self) -> str:
+        """Get standardized operation name for log files."""
+        pass
+    
     def file_contains_tag(self, content: str, target_tag: str) -> bool:
         """Check if file contains the target tag using proven parsers."""
         target_tag_lower = target_tag.lower().strip()
@@ -125,11 +130,12 @@ class TagOperationEngine(ABC):
         frontmatter, remaining_content = extract_frontmatter(content)
         
         # Transform frontmatter tags if present, preserving original YAML structure
-        frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        frontmatter_match = re.match(r'^---\s*\n(.*?)\n---(\s*\n)', content, re.DOTALL)
         if frontmatter and frontmatter_match:
             original_yaml = frontmatter_match.group(1)
+            original_ending = frontmatter_match.group(2)  # Preserve original spacing after ---
             transformed_yaml = self._transform_yaml_text(original_yaml, tag_transform_func)
-            frontmatter_section = f"---\n{transformed_yaml}\n---\n"
+            frontmatter_section = f"---\n{transformed_yaml}\n---{original_ending}"
         elif frontmatter_match:
             # Frontmatter exists but couldn't parse - preserve original
             frontmatter_section = frontmatter_match.group(0)
@@ -156,7 +162,7 @@ class TagOperationEngine(ABC):
                 # Extract the key and value parts
                 if ':' in line:
                     key_part = line.split(':', 1)[0] + ':'
-                    value_part = line.split(':', 1)[1].strip() if ':' in line.split(':', 1)[1] else ''
+                    value_part = line.split(':', 1)[1].strip() if len(line.split(':', 1)) > 1 else ''
                     
                     if value_part:
                         # Single line tag format: "tags: [tag1, tag2]" or "tags: single-tag"
@@ -313,11 +319,16 @@ class TagOperationEngine(ABC):
         
         # Generate report
         self.generate_report()
+        
+        # Return operation results for testing/inspection
+        return self.operation_log
     
     def save_operation_log(self):
         """Save detailed operation log outside vault."""
         log_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_filename = f"{self.operation_log['operation']}_{log_timestamp}.json"
+        # Use standardized operation name format
+        operation_name = self.get_operation_log_name()
+        log_filename = f"{operation_name}_{log_timestamp}.json"
         
         # Save in current working directory, not in vault
         log_path = Path.cwd() / log_filename
@@ -379,6 +390,10 @@ class RenameOperation(TagOperationEngine):
             "from": self.old_tag,
             "to": self.new_tag
         }]
+    
+    def get_operation_log_name(self) -> str:
+        """Get standardized operation name for log files."""
+        return "tag-rename-op"
 
 
 class MergeOperation(TagOperationEngine):
@@ -402,11 +417,8 @@ class MergeOperation(TagOperationEngine):
                 return self.target_tag
             return tag
         
-        # Transform both frontmatter and inline tags
-        content = self.transform_frontmatter_tags(content, tag_transform)
-        content = self.transform_inline_tags(content, tag_transform)
-        
-        return content
+        # Use the proven parser-based transformation
+        return self.transform_file_tags(content, tag_transform)
     
     def get_file_modifications(self, original: str, modified: str) -> List[Dict]:
         """Get specific tag merge modifications."""
@@ -415,6 +427,10 @@ class MergeOperation(TagOperationEngine):
             "sources": self.source_tags,
             "target": self.target_tag
         }]
+    
+    def get_operation_log_name(self) -> str:
+        """Get standardized operation name for log files."""
+        return "tag-merge-op"
 
 
 

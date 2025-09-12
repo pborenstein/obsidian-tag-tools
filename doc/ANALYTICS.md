@@ -5,19 +5,18 @@
     ║                      TAG ANALYTICS ENGINE                     ║
     ║                                                               ║
     ║    Process raw tags through                                   ║
-    ║    co-occurrence analysis, clustering, and migration sim.     ║
+    ║    co-occurrence analysis and clustering detection.           ║
     ╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ## Overview
 
-The `tag-analysis/` directory contains analytical tools that perform co-occurrence analysis, graph-based clustering, and migration impact simulation on tag data extracted from markdown files.
+The `tag-analysis/` directory contains analytical tools that perform co-occurrence analysis and graph-based clustering on tag data extracted from markdown files.
 
 ```
 tag-analysis/
-├── cooccurrence_analyzer.py    ← Core engine: finds tag relationships with filtering (CLI)
-├── migration_analysis.py       ← Impact simulator: what-if scenarios (CLI)
-└── tag_migration.py           ← Migration mappings (legacy)
+├── cooccurrence_analyzer.py    ← Core analysis engine with filtering (CLI)
+└── README.md                   ← Analysis experiment results and findings
 ```
 
 ---
@@ -55,26 +54,21 @@ The analysis scripts expect tag data in JSON format by default.
    uv run tag-analysis/cooccurrence_analyzer.py tags.json --no-filter
    ```
 
-3. **Migration Analysis** - Assess impact of proposed tag changes:
-   ```bash
-   uv run tag-analysis/migration_analysis.py tags.json
-   ```
-
 ### Expected Output
 
-Each analysis tool generates reports showing:
+The analysis tool generates reports showing:
 
 - Tag frequency statistics
 - Tag relationship patterns  
-- Impact assessments for tag changes
-- Recommendations for tag organization
+- Natural clustering information
+- Hub tag identification
 
 The analysis helps identify:
 
 - Singleton tags (used only once)
 - Hub tags (appearing in multiple combinations)
 - Related tag clusters
-- Potential tag consolidation opportunities
+- Natural groupings and relationships
 
 ---
 
@@ -220,118 +214,28 @@ uv run tag-analysis/cooccurrence_analyzer.py tags.json --min-cooccurrence 5
 
 ---
 
-## Migration Analysis (`migration_analysis.py`)
+## Key Insights from Co-occurrence Analysis
 
-**Function:** Calculates statistics for proposed tag consolidation mappings.
+### What the Analysis Reveals:
 
-```
-    BEFORE Migration:              AFTER Migration:
-    ╭─────────────────╮           ╭─────────────────╮
-    │ 4,620 tags      │    ═══►   │ 4,490 tags      │  (-2.8%)
-    │ 11,416 usages   │           │ 11,280 usages   │  (-1.2%)
-    ╰─────────────────╯           ╰─────────────────╯
-           │                             │
-           │                             │
-    ┌─────────────────┐           ┌─────────────────┐
-    │ work            │           │ category/       │
-    │ notes           │    ═══►   │   work          │
-    │ personal-note   │           │   notes         │  
-    │ diary-entry     │           │   writing       │
-    └─────────────────┘           └─────────────────┘
-         Flat Tags                 Hierarchical Tags
-```
+1. **Hub Detection**: Identifies tags that appear frequently with others, indicating organizational centers
+2. **Tag Clustering**: Finds natural groupings using graph traversal algorithms  
+3. **Noise Filtering**: Separates meaningful content tags from technical artifacts
+4. **Relationship Mapping**: Shows which tags co-occur, revealing content connections
 
-### Analysis Pipeline:
+### Typical Statistical Patterns:
 
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ Load Original│───►│Apply Mappings│───►│Calculate     │
-│  Tag Data    │    │& Deletions   │    │ Before/After │
-└──────────────┘    └──────────────┘    └──────────────┘
-                             │                   │
-                             ▼                   ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│Show Hierarchy│◄───│Find Big      │◄───│Identify      │
-│  Structure   │    │Consolidations│    │ Issues       │
-└──────────────┘    └──────────────┘    └──────────────┘
-```
+- **Singleton tags** - Often 30-40% of tags are used only once (indicates rich, specific tagging)
+- **Natural clusters emerge** - Related tags group together without forced hierarchy  
+- **Hub tags provide structure** - A few highly-connected tags organize the system
+- **Long-tail distribution** - Most tags used infrequently (normal in personal systems)
 
-### Risk Assessment Matrix:
+### Practical Applications:
 
-```
-                   RISK LEVEL
-                   ┌────────────────────────────┐
-    High Impact    │     DANGER ZONE            │  
-    (>100 files)   │                            │  
-                   │  1,632 files affected      │  
-                   │  Major disruption risk     │  
-                   ├────────────────────────────┤
-    Medium Impact  │    CAUTION ZONE            │  
-    (10-100 files) │                            │  
-                   │  Moderate risk/reward      │  
-                   ├────────────────────────────┤
-    Low Impact     │      SAFE ZONE             │  
-    (<10 files)    │                            │  
-                   │  Low risk operations       │  
-                   └────────────────────────────┘
-                    Low         High
-                        BENEFIT LEVEL
-```
-
-### Consolidation Analysis:
-
-```
-BIGGEST CONSOLIDATIONS:
-
-category/reference → 450 total usages
-  ← reference (375)
-  ← articles (45) 
-  ← research (30)
-
-category/work → 340 total usages  
-  ← work (150)
-  ← notes (120)
-  ← tasks (70)
-
-tech/development → 280 total usages
-  ← code (120)
-  ← dev (85)
-  ← project (75)
-```
-
----
-
-## Key Insights from Analysis
-
-### Success Stories:
-
-1. **Hub Detection Works**: Correctly identified `work` and `reference` as organizational centers
-2. **Tag Clustering**: Found groupings (personal, reference, tech) using graph traversal algorithms  
-3. **Noise Filtering**: Successfully separated content tags from technical artifacts
-4. **Risk Assessment**: Correctly predicted high-risk/low-benefit ratio for migration
-
-### Why Migration Was Rejected:
-
-```
-╔═════════════════════════════════════════════════════════════╗
-║                     DECISION MATRIX                         ║
-║                                                             ║
-║   Benefit: 2.8% tag reduction (130 tags)        [LOW]       ║
-║   Risk:    1,632 files modified                 [HIGH]      ║  
-║   Effort:  Frontmatter parsing, backup/restore  [HIGH]      ║
-║   Value:   Mostly cosmetic hierarchy changes    [LOW]       ║
-║                                                             ║
-║   CONCLUSION: Risk >> Benefit                               ║
-║   RECOMMENDATION: Preserve existing system                  ║
-╚═════════════════════════════════════════════════════════════╝
-```
-
-### Statistical Findings:
-
-- **36% singleton tags** - indicates rich, specific tagging (good for personal knowledge)
-- **Natural clusters emerge** - system self-organizes without forced hierarchy  
-- **Hub tags provide structure** - centralized organization around `work`, `reference`
-- **Long-tail distribution normal** - 95% of tags used ≤5 times (expected in personal systems)
+- **Content Discovery**: Find related notes through tag relationships  
+- **Tagging Consistency**: Identify similar tags that could be standardized
+- **System Understanding**: Visualize how your knowledge is organized
+- **Quality Assessment**: Spot potential tagging issues or opportunities
 
 ---
 

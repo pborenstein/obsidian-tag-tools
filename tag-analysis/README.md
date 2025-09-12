@@ -15,8 +15,6 @@ This folder contains the results of a tag co-occurrence analysis and migration e
 ### Core Analysis Scripts (Updated September 2025)
 - `cooccurrence_analyzer.py` - Main co-occurrence analysis engine (CLI interface)
 - Analysis tools with integrated filtering options
-- `migration_analysis.py` - Impact analysis of proposed changes (CLI interface)
-- `tag_migration.py` - Migration script with mappings (legacy, unused)
 
 ### Data Files
 - Analysis generates data files showing tag relationships and usage patterns
