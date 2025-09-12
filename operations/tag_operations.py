@@ -24,13 +24,11 @@ class TagOperationEngine(ABC):
     def __init__(self, vault_path: str, dry_run: bool = False):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
-        self.backup_dir = self.vault_path / "tagex_backups"
         self.operation_log = {
             "operation": self.__class__.__name__.lower(),
             "timestamp": datetime.now().isoformat(),
             "vault_path": str(self.vault_path),
             "dry_run": self.dry_run,
-            "backup_path": None,
             "changes": [],
             "stats": {
                 "files_processed": 0,
@@ -40,27 +38,6 @@ class TagOperationEngine(ABC):
             }
         }
     
-    def create_backup(self) -> Optional[Path]:
-        """Create timestamped backup of vault before operation."""
-        if self.dry_run:
-            return None
-            
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = self.backup_dir / f"backup_{timestamp}"
-        
-        if self.backup_dir.exists():
-            # Keep only last 5 backups
-            backups = sorted([d for d in self.backup_dir.iterdir() if d.is_dir()])
-            if len(backups) >= 5:
-                for old_backup in backups[:-4]:
-                    shutil.rmtree(old_backup)
-        
-        print(f"Creating backup at: {backup_path}")
-        shutil.copytree(self.vault_path, backup_path, 
-                       ignore=shutil.ignore_patterns('.git', '__pycache__', '*.pyc', 'tagex_backups'))
-        
-        self.operation_log["backup_path"] = str(backup_path)
-        return backup_path
     
     def calculate_file_hash(self, content: str) -> str:
         """Calculate hash of file content for integrity checking."""
@@ -265,7 +242,7 @@ class TagOperationEngine(ABC):
         """Find all markdown files in vault."""
         markdown_files = []
         for file_path in self.vault_path.rglob("*.md"):
-            if ".obsidian" not in str(file_path) and "tagex_backups" not in str(file_path):
+            if ".obsidian" not in str(file_path):
                 markdown_files.append(file_path)
         return markdown_files
     
@@ -274,9 +251,6 @@ class TagOperationEngine(ABC):
         print(f"Starting {self.operation_log['operation']} operation on vault: {self.vault_path}")
         print(f"Dry run: {self.dry_run}")
         
-        # Create backup if not dry run
-        if not self.dry_run:
-            self.create_backup()
         
         # Find and process files
         markdown_files = self.find_markdown_files()
@@ -456,49 +430,3 @@ class ApplyOperation(TagOperationEngine):
         }]
 
 
-class UndoOperation:
-    """Operation to undo a previous tag operation using its log file."""
-    
-    def __init__(self, vault_path: str, operation_log_file: str):
-        self.vault_path = Path(vault_path)
-        self.log_file = Path(operation_log_file)
-        
-        # Load operation log
-        with open(self.log_file, 'r') as f:
-            self.operation_log = json.load(f)
-    
-    def run_undo(self):
-        """Restore vault from backup specified in operation log."""
-        backup_path = self.operation_log.get("backup_path")
-        
-        if not backup_path:
-            print("No backup path found in operation log - cannot undo")
-            return False
-        
-        backup_path = Path(backup_path)
-        if not backup_path.exists():
-            print(f"Backup not found at: {backup_path}")
-            return False
-        
-        print(f"Restoring vault from backup: {backup_path}")
-        
-        # Remove current vault contents (except backups)
-        for item in self.vault_path.iterdir():
-            if item.name == "tagex_backups":
-                continue
-            if item.is_dir():
-                shutil.rmtree(item)
-            else:
-                item.unlink()
-        
-        # Restore from backup
-        for item in backup_path.iterdir():
-            if item.is_dir():
-                shutil.copytree(item, self.vault_path / item.name)
-            else:
-                shutil.copy2(item, self.vault_path / item.name)
-        
-        print("Vault restored successfully")
-        print(f"Undid operation: {self.operation_log['operation']} from {self.operation_log['timestamp']}")
-        
-        return True

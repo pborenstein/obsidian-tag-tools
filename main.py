@@ -15,7 +15,7 @@ from extractor.output_formatter import (
     save_output,
     print_summary
 )
-from operations.tag_operations import RenameOperation, MergeOperation, ApplyOperation, UndoOperation
+from operations.tag_operations import RenameOperation, MergeOperation, ApplyOperation
 
 
 @click.group()
@@ -143,18 +143,6 @@ def apply(vault_path, migration_file, dry_run):
     operation.run_operation()
 
 
-@cli.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.argument('operation_log', type=click.Path(exists=True))
-def undo(vault_path, operation_log):
-    """
-    Undo a previous tag operation using its log file.
-    
-    VAULT_PATH: Path to the Obsidian vault directory
-    OPERATION_LOG: JSON log file from a previous operation
-    """
-    operation = UndoOperation(vault_path, operation_log)
-    operation.run_undo()
 
 
 if __name__ == "__main__":
