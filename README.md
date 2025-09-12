@@ -142,5 +142,4 @@ uv sync
 | :----------|:-------------|
 | [ARCHITECTURE.md](doc/ARCHITECTURE.md) | System architecture and component design |
 | [ANALYTICS.md](doc/ANALYTICS.md) | Tag analysis tools and usage guide |
-| [ROADMAP.md](doc/ROADMAP.md) | Planned features and improvements |
 

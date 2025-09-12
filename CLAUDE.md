@@ -38,7 +38,6 @@ uv run tag-analysis/migration_analysis.py tags.json
 
 - [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) - System architecture and diagrams
 - [doc/ANALYTICS.md](doc/ANALYTICS.md) - Tag analysis tools documentation
-- [doc/ROADMAP.md](doc/ROADMAP.md) - Updated roadmap with completed tag operations
 
 ## Architecture Notes
 

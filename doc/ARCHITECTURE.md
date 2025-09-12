@@ -5,7 +5,7 @@
     ║                    TAGEX PROCESSING PIPELINE                 ║
     ║                                                              ║
     ║    Markdown Files → Tag Extraction → Analysis → Operations   ║
-    ║                         ↓              ↓            ↓       ║
+    ║                         ↓              ↓            ↓        ║
     ║                    Tag Output    Relationships   Tag Modify  ║
     ╚══════════════════════════════════════════════════════════════╝
 ```
@@ -197,13 +197,13 @@ Commands:
 │ └─ Error handling and statistics            │
 │                                             │
 │ RenameOperation                             │
-│   └─ Rename single tag across vault        │
+│   └─ Rename single tag across vault         │
 │                                             │
 │ MergeOperation                              │
-│   └─ Consolidate multiple tags into one    │
+│   └─ Consolidate multiple tags into one     │
 │                                             │
 │ ApplyOperation                              │
-│   └─ Apply migration mappings from JSON    │
+│   └─ Apply migration mappings from JSON     │
 └─────────────────────────────────────────────┘
 ```
 
@@ -354,7 +354,7 @@ Input: Vault + Operation Parameters
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 2: File Discovery & Filtering                            │
+│  STEP 2: File Discovery & Filtering                             │
 │                                                                 │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
 │  │Find Markdown│───►│Filter by    │───►│Build Target │          │
@@ -364,7 +364,7 @@ Input: Vault + Operation Parameters
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 3: Tag Transformation (Per File)                         │
+│  STEP 3: Tag Transformation (Per File)                          │
 │                                                                 │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
 │  │Read File &  │───►│Transform    │───►│Validate     │          │
