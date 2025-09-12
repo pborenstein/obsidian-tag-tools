@@ -10,11 +10,11 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["extractor", "parsers", "utils"]
+packages = ["extractor", "parsers", "utils", "operations"]
 py-modules = ["main"]
 
 [project.scripts]
-tagex = "main:main"
+tagex = "main:cli"
 
 [tool.uv]
 package = true
