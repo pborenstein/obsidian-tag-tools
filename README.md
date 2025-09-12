@@ -1,10 +1,10 @@
-# TagEx - Obsidian Tag Management Tool
+# Obsidian Tag Management Tool
 
-Extract, analyze, and modify tags in Obsidian vault markdown files.
+Extract, analyze, and modify tags in Obsidian vault markdown files using the `tagex` command-line tool.
 
 ## Commands
 
-TagEx provides comprehensive tag management through multiple commands:
+The tool provides comprehensive tag management through multiple commands:
 
 ```bash
 # Extract tags from vault
@@ -16,8 +16,6 @@ tagex rename /path/to/vault old-tag new-tag [--dry-run]
 # Merge multiple tags into one
 tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
 
-# Apply migration mappings from analysis
-tagex apply /path/to/vault migration.json [--dry-run]
 ```
 
 Or during development:
@@ -28,7 +26,6 @@ uv run main.py extract /path/to/vault [options]
 # Tag operations
 uv run main.py rename /path/to/vault old-tag new-tag
 uv run main.py merge /path/to/vault tag1 tag2 --into new-tag
-uv run main.py apply /path/to/vault migration.json
 ```
 
 ### Extract Command Options
@@ -76,8 +73,6 @@ tagex rename /path/to/vault work project
 # Merge multiple related tags
 tagex merge /path/to/vault personal-note diary-entry journal --into writing
 
-# Apply migration analysis results
-tagex apply /path/to/vault migration_plan.json --dry-run
 ```
 
 **Complete Workflow:**
@@ -109,7 +104,6 @@ tagex extract /vault -o updated_tags.json
 
 - **Rename tags** across entire vault with preview mode
 - **Merge multiple tags** into consolidated tags
-- **Apply migration mappings** from analysis results
 - **Safe by default** - dry-run mode prevents accidental changes
 - **Operation logging** tracks all modifications with integrity checks
 - **Preserves file structure** - no YAML corruption or formatting changes

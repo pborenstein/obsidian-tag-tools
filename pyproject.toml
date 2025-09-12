@@ -1,5 +1,5 @@
 [project]
-name = "tag-extractor"
+name = "obsidian-tag-tools"
 version = "0.1.0"
 description = "Extract tags from Obsidian vault markdown files"
 readme = "README.md"

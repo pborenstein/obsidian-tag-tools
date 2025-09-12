@@ -1,4 +1,4 @@
-# TagEx Architecture
+# Obsidian Tag Management Tool - Architecture
 
 ```
     ╔══════════════════════════════════════════════════════════════╗
@@ -140,7 +140,6 @@ Commands:
 │ tagex extract   → TagExtractor class        │
 │ tagex rename    → RenameOperation class     │
 │ tagex merge     → MergeOperation class      │
-│ tagex apply     → ApplyOperation class      │
 └─────────────────────────────────────────────┘
 ```
 
@@ -201,9 +200,6 @@ Commands:
 │                                             │
 │ MergeOperation                              │
 │   └─ Consolidate multiple tags into one     │
-│                                             │
-│ ApplyOperation                              │
-│   └─ Apply migration mappings from JSON     │
 └─────────────────────────────────────────────┘
 ```
 
@@ -274,7 +270,7 @@ Tag Data
 
 ## Tag Validation System
 
-TagEx includes tag validation to filter out noise and technical artifacts:
+The tool includes tag validation to filter out noise and technical artifacts:
 
 ### Validation Rules (`utils/tag_normalizer.py`)
 
@@ -332,7 +328,6 @@ tagex extract /vault/path --no-filter -o raw_tags.json
 # Tag operations (always with preview first)
 tagex rename /vault old-tag new-tag --dry-run
 tagex merge /vault tag1 tag2 --into combined-tag --dry-run
-tagex apply /vault migration.json --dry-run
 ```
 
 ## Tag Operations Architecture
