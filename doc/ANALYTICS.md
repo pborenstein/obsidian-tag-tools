@@ -86,7 +86,7 @@ The analysis helps identify:
 
 - **Default behavior**: Filters out technical noise using `is_valid_tag()` from `utils/tag_normalizer.py`
 - **--no-filter flag**: Analyzes all tags including technical artifacts
-- **Integrated filtering**: No need for separate meaningful_cooccurrence.py script
+- **Integrated filtering**: Single script handles both filtered and raw analysis
 
 ```
     File 1: [work, notes, ideas]         ┌─────────────────┐
@@ -173,7 +173,7 @@ Most Connected Tags (hub tags):
 
 ## Tag Filtering Integration
 
-The `cooccurrence_analyzer.py` now includes integrated tag filtering, eliminating the need for a separate `meaningful_cooccurrence.py` script.
+The `cooccurrence_analyzer.py` includes integrated tag filtering.
 
 ### Built-in Filtering
 
@@ -222,7 +222,7 @@ uv run tag-analysis/cooccurrence_analyzer.py tags.json --min-cooccurrence 5
 
 ## Migration Analysis (`migration_analysis.py`)
 
-**Function:** Calculates before/after statistics for proposed tag consolidation mappings.
+**Function:** Calculates statistics for proposed tag consolidation mappings.
 
 ```
     BEFORE Migration:              AFTER Migration:
@@ -342,7 +342,7 @@ tech/development → 280 total usages
 - **Consolidated analysis**: Single script handles both filtered and raw analysis
 - **Command-line control**: `--no-filter` flag for complete analysis
 - **Improved accuracy**: Better noise filtering reduces false relationships
-- **Simplified workflow**: No need to run separate filtering scripts
+- **Simplified workflow**: Single script with optional filtering control
 
 ### Enhanced Validation
 
