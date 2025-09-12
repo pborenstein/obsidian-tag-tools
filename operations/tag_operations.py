@@ -124,18 +124,15 @@ class TagOperationEngine(ABC):
         # Parse frontmatter and content
         frontmatter, remaining_content = extract_frontmatter(content)
         
-        # Transform frontmatter tags if present
-        if frontmatter:
-            transformed_frontmatter = self._transform_frontmatter_tags(frontmatter, tag_transform_func)
-            # Only reconstruct if tags actually changed
-            if self._frontmatter_tags_changed(frontmatter, transformed_frontmatter):
-                yaml_content = yaml.dump(transformed_frontmatter, default_flow_style=False, 
-                                       allow_unicode=True, sort_keys=False)
-                frontmatter_section = f"---\n{yaml_content}---\n"
-            else:
-                # No tag changes, preserve original frontmatter exactly
-                frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-                frontmatter_section = frontmatter_match.group(0) if frontmatter_match else ""
+        # Transform frontmatter tags if present, preserving original YAML structure
+        frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        if frontmatter and frontmatter_match:
+            original_yaml = frontmatter_match.group(1)
+            transformed_yaml = self._transform_yaml_text(original_yaml, tag_transform_func)
+            frontmatter_section = f"---\n{transformed_yaml}\n---\n"
+        elif frontmatter_match:
+            # Frontmatter exists but couldn't parse - preserve original
+            frontmatter_section = frontmatter_match.group(0)
         else:
             frontmatter_section = ""
         
@@ -144,57 +141,103 @@ class TagOperationEngine(ABC):
         
         return frontmatter_section + transformed_content
     
-    def _frontmatter_tags_changed(self, original: dict, transformed: dict) -> bool:
-        """Check if only tag fields changed in frontmatter."""
-        for tag_field in ['tags', 'tag']:
-            if original.get(tag_field) != transformed.get(tag_field):
-                return True
-        return False
-    
-    def _transform_frontmatter_tags(self, frontmatter: dict, tag_transform_func) -> dict:
-        """Transform tags in frontmatter dictionary."""
-        transformed_frontmatter = frontmatter.copy()
+    def _transform_yaml_text(self, yaml_text: str, tag_transform_func) -> str:
+        """Transform only tag lines in YAML text, preserving all other formatting."""
+        lines = yaml_text.split('\n')
+        transformed_lines = []
+        i = 0
         
-        for tag_field in ['tags', 'tag']:
-            if tag_field in frontmatter:
-                original_tags = frontmatter[tag_field]
-                transformed_tags = self._transform_tag_field_value(original_tags, tag_transform_func)
-                transformed_frontmatter[tag_field] = transformed_tags
-        
-        return transformed_frontmatter
-    
-    def _transform_tag_field_value(self, tag_value: Any, tag_transform_func) -> Any:
-        """Transform a tag field value (string, list, or other)."""
-        if tag_value is None:
-            return None
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
             
-        if isinstance(tag_value, str):
-            if ',' in tag_value:
-                # Comma-separated string: "tag1, tag2, tag3"
-                tags = [tag.strip() for tag in tag_value.split(',') if tag.strip()]
-                transformed_tags = []
-                for tag in tags:
+            # Check if this is a tag field line
+            if stripped.startswith('tags:') or stripped.startswith('tag:'):
+                # Extract the key and value parts
+                if ':' in line:
+                    key_part = line.split(':', 1)[0] + ':'
+                    value_part = line.split(':', 1)[1].strip() if ':' in line.split(':', 1)[1] else ''
+                    
+                    if value_part:
+                        # Single line tag format: "tags: [tag1, tag2]" or "tags: single-tag"
+                        transformed_value = self._transform_yaml_tag_value(value_part, tag_transform_func)
+                        if transformed_value:
+                            indent = line[:len(line) - len(line.lstrip())]
+                            transformed_lines.append(f"{indent}{key_part} {transformed_value}")
+                        else:
+                            # Skip empty tag field
+                            pass
+                    else:
+                        # Multi-line array format starts here
+                        indent = line[:len(line) - len(line.lstrip())]
+                        transformed_lines.append(line)  # Keep the "tags:" line
+                        
+                        # Process following array items
+                        i += 1
+                        while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
+                            item_line = lines[i]
+                            if item_line.strip().startswith('- '):
+                                tag_value = item_line.strip()[2:].strip()
+                                if tag_value:
+                                    transformed_tag = tag_transform_func(tag_value.strip('"\''))
+                                    if transformed_tag:
+                                        item_indent = item_line[:len(item_line) - len(item_line.lstrip())]
+                                        transformed_lines.append(f"{item_indent}- {transformed_tag}")
+                            else:
+                                # Empty line in array, preserve it
+                                transformed_lines.append(item_line)
+                            i += 1
+                        i -= 1  # Back up one since we'll increment at end of loop
+                else:
+                    # Malformed tag line, preserve as-is
+                    transformed_lines.append(line)
+            else:
+                # Not a tag line, preserve as-is
+                transformed_lines.append(line)
+            
+            i += 1
+        
+        return '\n'.join(transformed_lines)
+    
+    def _transform_yaml_tag_value(self, value: str, tag_transform_func) -> str:
+        """Transform a YAML tag value while preserving format."""
+        value = value.strip()
+        
+        if value.startswith('[') and value.endswith(']'):
+            # Array format: [tag1, tag2, tag3]
+            inner = value[1:-1]
+            if not inner.strip():
+                return None  # Empty array
+            
+            tags = []
+            for tag in inner.split(','):
+                tag = tag.strip().strip('"\'')
+                if tag:
                     transformed = tag_transform_func(tag)
                     if transformed:
-                        transformed_tags.append(transformed)
-                return ', '.join(transformed_tags) if transformed_tags else None
-            else:
-                # Single tag string
-                return tag_transform_func(tag_value.strip())
-                
-        elif isinstance(tag_value, list):
-            # List of tags
-            transformed_list = []
-            for tag in tag_value:
-                if isinstance(tag, str):
-                    transformed = tag_transform_func(tag.strip())
+                        # Preserve original quoting style if possible
+                        if '"' in inner:
+                            tags.append(f'"{transformed}"')
+                        else:
+                            tags.append(transformed)
+            
+            return f"[{', '.join(tags)}]" if tags else None
+            
+        elif ',' in value:
+            # Comma-separated format: tag1, tag2, tag3
+            tags = []
+            for tag in value.split(','):
+                tag = tag.strip().strip('"\'')
+                if tag:
+                    transformed = tag_transform_func(tag)
                     if transformed:
-                        transformed_list.append(transformed)
-            return transformed_list if transformed_list else None
+                        tags.append(transformed)
+            return ', '.join(tags) if tags else None
             
         else:
-            # Unknown format, return unchanged
-            return tag_value
+            # Single tag
+            tag = value.strip().strip('"\'')
+            return tag_transform_func(tag) if tag else None
     
     def _transform_inline_tags(self, content: str, tag_transform_func) -> str:
         """Transform inline tags in content while preserving code blocks."""
