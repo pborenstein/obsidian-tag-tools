@@ -127,16 +127,15 @@ class TagOperationEngine(ABC):
         # Transform frontmatter tags if present
         if frontmatter:
             transformed_frontmatter = self._transform_frontmatter_tags(frontmatter, tag_transform_func)
-            # Reconstruct frontmatter section
-            if transformed_frontmatter != frontmatter:
+            # Only reconstruct if tags actually changed
+            if self._frontmatter_tags_changed(frontmatter, transformed_frontmatter):
                 yaml_content = yaml.dump(transformed_frontmatter, default_flow_style=False, 
                                        allow_unicode=True, sort_keys=False)
                 frontmatter_section = f"---\n{yaml_content}---\n"
             else:
-                # No changes, reconstruct original
-                yaml_content = yaml.dump(frontmatter, default_flow_style=False, 
-                                       allow_unicode=True, sort_keys=False)
-                frontmatter_section = f"---\n{yaml_content}---\n"
+                # No tag changes, preserve original frontmatter exactly
+                frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+                frontmatter_section = frontmatter_match.group(0) if frontmatter_match else ""
         else:
             frontmatter_section = ""
         
@@ -144,6 +143,13 @@ class TagOperationEngine(ABC):
         transformed_content = self._transform_inline_tags(remaining_content, tag_transform_func)
         
         return frontmatter_section + transformed_content
+    
+    def _frontmatter_tags_changed(self, original: dict, transformed: dict) -> bool:
+        """Check if only tag fields changed in frontmatter."""
+        for tag_field in ['tags', 'tag']:
+            if original.get(tag_field) != transformed.get(tag_field):
+                return True
+        return False
     
     def _transform_frontmatter_tags(self, frontmatter: dict, tag_transform_func) -> dict:
         """Transform tags in frontmatter dictionary."""
@@ -266,10 +272,12 @@ class TagOperationEngine(ABC):
         self.generate_report()
     
     def save_operation_log(self):
-        """Save detailed operation log for undo capability."""
+        """Save detailed operation log outside vault."""
         log_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_filename = f"{self.operation_log['operation']}_{log_timestamp}.json"
-        log_path = self.vault_path / log_filename
+        
+        # Save in current working directory, not in vault
+        log_path = Path.cwd() / log_filename
         
         with open(log_path, 'w') as f:
             json.dump(self.operation_log, f, indent=2, ensure_ascii=False)
