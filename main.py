@@ -15,13 +15,13 @@ from extractor.output_formatter import (
     save_output,
     print_summary
 )
-from operations.tag_operations import RenameOperation, MergeOperation, ApplyOperation
+from operations.tag_operations import RenameOperation, MergeOperation
 
 
 @click.group()
 @click.version_option()
 def cli():
-    """TagEx - Extract and modify tags in Obsidian vaults."""
+    """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults."""
     pass
 
 
@@ -126,23 +126,6 @@ def merge(vault_path, source_tags, target_tag, dry_run):
     """
     operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run)
     operation.run_operation()
-
-
-@cli.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.argument('migration_file', type=click.Path(exists=True))
-@click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def apply(vault_path, migration_file, dry_run):
-    """
-    Apply tag migration mappings from a JSON file.
-    
-    VAULT_PATH: Path to the Obsidian vault directory
-    MIGRATION_FILE: JSON file containing tag mappings
-    """
-    operation = ApplyOperation(vault_path, migration_file, dry_run=dry_run)
-    operation.run_operation()
-
-
 
 
 if __name__ == "__main__":

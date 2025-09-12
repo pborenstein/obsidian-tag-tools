@@ -1,4 +1,4 @@
-# TagEx Analytics Modules Documentation
+# Obsidian Tag Management Tool - Analytics Modules Documentation
 
 ```
     ╔═══════════════════════════════════════════════════════════════╗
@@ -30,13 +30,13 @@ Before running tag analysis, extract tags from your vault:
 
 ```bash
 # Extract filtered tags to JSON file (recommended for analysis)
-tagex /path/to/vault -o tags.json
+tagex extract /path/to/vault -o tags.json
 
 # Or extract raw tags if needed for analysis
-tagex /path/to/vault --no-filter -o raw_tags.json
+tagex extract /path/to/vault --no-filter -o raw_tags.json
 
 # Using uv run (alternative)
-uv run main.py /path/to/vault -o tags.json
+uv run main.py extract /path/to/vault -o tags.json
 ```
 
 The analysis scripts expect tag data in JSON format by default.
