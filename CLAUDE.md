@@ -12,7 +12,7 @@ This tool extracts, analyzes, and modifies tags in Obsidian markdown files. It p
 # Install dependencies
 uv sync
 
-# Install as system-wide tool
+# Install as system-wide tool (creates 'tagex' command)
 uv tool install --editable .
 
 # Tag extraction (console script)
@@ -27,15 +27,18 @@ uv run main.py extract /path/to/vault [options]
 uv run main.py rename /path/to/vault old-tag new-tag
 uv run main.py merge /path/to/vault tag1 tag2 --into target-tag
 
-# Run analysis scripts
+# Run analysis scripts  
 uv run tag-analysis/cooccurrence_analyzer.py tags.json [--no-filter]
-uv run tag-analysis/migration_analysis.py tags.json
+
+# Run tests
+pytest tests/
 ```
 
 ## Documentation
 
 - [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) - System architecture and diagrams
 - [doc/ANALYTICS.md](doc/ANALYTICS.md) - Tag analysis tools documentation
+- [tests/README.md](tests/README.md) - Test suite documentation
 
 ## Architecture Notes
 
@@ -46,12 +49,12 @@ The tool includes tag validation that filters out noise by default. The main ext
 - **`extractor/`** - Tag extraction engine with filtering and validation
 - **`parsers/`** - Frontmatter and inline tag parsing (reused by operations)
 - **`operations/`** - Tag modification engine with dry-run and logging
-- **`tag-analysis/`** - Advanced relationship analysis and migration planning
+- **`tag-analysis/`** - Advanced relationship analysis and co-occurrence detection
 - **`utils/`** - File discovery, tag normalization, and validation utilities
 
 ### Key Features
 
-- **Multi-command CLI** - Extract, rename, merge, and apply operations
+- **Multi-command CLI** - Extract, rename, and merge operations
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **No corruption** - Uses proven parsers, preserves file formatting
 - **Smart filtering** - Only processes files containing target tags
@@ -87,6 +90,6 @@ The tool includes tag validation that filters out noise by default. The main ext
 
 **PREVIOUS IMPROVEMENTS:**
 - **Tag validation system**: Filters pure numbers, HTML entities, technical patterns, and malformed tags
-- **Console script**: Install with `uv tool install --editable .` for system-wide `tagex` command
+- **Console script**: Install with `uv tool install --editable .` to get system-wide `tagex` command (defined in pyproject.toml)
 - **Inline parser fix**: Updated regex to prevent URL fragments from being captured as tags
 - **Consolidated analysis**: Removed `meaningful_cooccurrence.py`, functionality merged into `cooccurrence_analyzer.py`
