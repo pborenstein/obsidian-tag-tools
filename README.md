@@ -1,20 +1,37 @@
-# Tag Extractor
+# TagEx - Obsidian Tag Management Tool
 
-Extract and analyze tags from Obsidian vault markdown files.
+Extract, analyze, and modify tags in Obsidian vault markdown files.
 
-## Usage
+## Commands
 
-After [ installation](#installation ), run the command:
+TagEx provides comprehensive tag management through multiple commands:
+
 ```bash
-tagex <vault_path> [options]
+# Extract tags from vault
+tagex extract /path/to/vault [options]
+
+# Rename a tag across all files
+tagex rename /path/to/vault old-tag new-tag [--dry-run]
+
+# Merge multiple tags into one
+tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
+
+# Apply migration mappings from analysis
+tagex apply /path/to/vault migration.json [--dry-run]
 ```
 
 Or during development:
 ```bash
-uv run tagex <vault_path> [options]
+# Extract tags
+uv run main.py extract /path/to/vault [options]
+
+# Tag operations
+uv run main.py rename /path/to/vault old-tag new-tag
+uv run main.py merge /path/to/vault tag1 tag2 --into new-tag
+uv run main.py apply /path/to/vault migration.json
 ```
 
-### Options
+### Extract Command Options
 
 - `--output`, `-o`: Output file path (default: stdout)
 - `--format`, `-f`: Output format (`json`, `csv`, `txt`) (default: json)
@@ -23,34 +40,63 @@ uv run tagex <vault_path> [options]
 - `--quiet`, `-q`: Suppress summary output
 - `--no-filter`: Disable tag filtering (include all raw tags)
 
+### Operation Command Options
+
+- `--dry-run`: Preview changes without modifying files (recommended for testing)
+- All tag operations include logging and can be previewed safely
+
 ### Examples
 
-Extract tags from vault and output as JSON:
+**Tag Extraction:**
 ```bash
-tagex /path/to/vault
+# Extract tags from vault and output as JSON
+tagex extract /path/to/vault
+
+# Save tags to CSV file
+tagex extract /path/to/vault -f csv -o tags.csv
+
+# Extract with exclusions
+tagex extract /path/to/vault --exclude "*.template.md" --exclude "drafts/*"
+
+# Extract all raw tags without filtering
+tagex extract /path/to/vault --no-filter
+
+# Get a list of tags sorted by frequency
+tagex extract /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
 ```
 
-Save tags to CSV file:
+**Tag Operations:**
 ```bash
-tagex /path/to/vault -f csv -o tags.csv
+# Preview tag rename (safe)
+tagex rename /path/to/vault work project --dry-run
+
+# Actually rename tag after reviewing preview
+tagex rename /path/to/vault work project
+
+# Merge multiple related tags
+tagex merge /path/to/vault personal-note diary-entry journal --into writing
+
+# Apply migration analysis results
+tagex apply /path/to/vault migration_plan.json --dry-run
 ```
 
-Extract with exclusions:
+**Complete Workflow:**
 ```bash
-tagex /path/to/vault --exclude "*.template.md" --exclude "drafts/*"
-```
+# 1. Extract and analyze tags
+tagex extract /vault -o tags.json
+uv run tag-analysis/cooccurrence_analyzer.py tags.json
 
-Extract all raw tags without filtering:
-```bash
-tagex /path/to/vault --no-filter
-```
+# 2. Preview and apply changes
+tagex rename /vault old-name new-name --dry-run
+tagex rename /vault old-name new-name
 
-Get a list of tags sorted by frequency:
-```bash
-tagex /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
+# 3. Verify changes
+tagex extract /vault -o updated_tags.json
 ```
 
 ## Features
+
+**Tag Extraction:**
 
 - Extracts tags from frontmatter YAML
 - Extracts inline hashtags from content
@@ -58,8 +104,22 @@ tagex /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
 - Multiple output formats (JSON, CSV, text)
 - File pattern exclusions
 - Statistics and summaries
-- Advanced tag relationship analysis (co-occurrence, clustering)
+
+**Tag Operations:**
+
+- **Rename tags** across entire vault with preview mode
+- **Merge multiple tags** into consolidated tags
+- **Apply migration mappings** from analysis results
+- **Safe by default** - dry-run mode prevents accidental changes
+- **Operation logging** tracks all modifications with integrity checks
+- **Preserves file structure** - no YAML corruption or formatting changes
+
+**Advanced Analysis:**
+
+- Tag relationship analysis (co-occurrence, clustering)
 - Migration impact assessment tools
+- Hub tag identification and cluster detection
+- Comprehensive tag validation and noise filtering
 
 ## Installation
 

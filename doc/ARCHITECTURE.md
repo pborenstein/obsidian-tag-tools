@@ -4,7 +4,9 @@
     ╔══════════════════════════════════════════════════════════════╗
     ║                    TAGEX PROCESSING PIPELINE                 ║
     ║                                                              ║
-    ║    Markdown Files → Tag Extraction → Analysis → Output       ║
+    ║    Markdown Files → Tag Extraction → Analysis → Operations   ║
+    ║                         ↓              ↓            ↓       ║
+    ║                    Tag Output    Relationships   Tag Modify  ║
     ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -16,7 +18,7 @@
 │                 │      │                 │      │                 │
 │ ┌─────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
 │ │ Click CLI   │ │─────►│ │TagExtractor │ │─────►│ │frontmatter  │ │
-│ │ Interface   │ │      │ │   Engine    │ │      │ │   parser    │ │
+│ │ Multi-Cmd   │ │      │ │   Engine    │ │      │ │   parser    │ │
 │ └─────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
 │                 │      │                 │      │                 │
 │ ┌─────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
@@ -27,18 +29,33 @@
         │                       │                       │
         ▼                       ▼                       ▼
 ┌──────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│     utils/       │      │output_formatter │      │ tag-analysis/   │
+│  operations/     │      │output_formatter │      │ tag-analysis/   │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │file_discovery│ │      │ │ JSON Format │ │      │ │co-occurrence│ │
-│ │              │ │      │ │             │ │      │ │  analyzer   │ │
+│ │TagOperation  │ │      │ │ JSON Format │ │      │ │co-occurrence│ │
+│ │   Engine     │ │      │ │             │ │      │ │  analyzer   │ │
 │ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │tag_normalizer│ │      │ │ CSV & Text  │ │      │ │ migration   │ │
-│ │& validation  │ │      │ │  Formats    │ │      │ │  analysis   │ │
+│ │Rename/Merge/ │ │      │ │ CSV & Text  │ │      │ │ migration   │ │
+│ │Apply Ops     │ │      │ │  Formats    │ │      │ │  analysis   │ │
 │ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
 └──────────────────┘      └─────────────────┘      └─────────────────┘
+        │
+        ▼
+┌──────────────────┐
+│     utils/       │
+│                  │
+│ ┌──────────────┐ │
+│ │file_discovery│ │
+│ │              │ │
+│ └──────────────┘ │
+│                  │
+│ ┌──────────────┐ │
+│ │tag_normalizer│ │
+│ │& validation  │ │
+│ └──────────────┘ │
+└──────────────────┘
 ```
 
 ## Data Flow Pipeline
@@ -108,13 +125,22 @@ Input: Obsidian Vault
 ┌─────────────────────────────────────────────┐
 │              MAIN CONTROLLER                │
 ├─────────────────────────────────────────────┤
-│ • CLI interface using Click framework       │
+│ • Multi-command CLI using Click groups      │
 │ • Console script entry point (tagex)        │
 │ • Tag filtering by default (--no-filter)    │
 │ • Orchestrates extraction workflow          │
+│ • Coordinates tag operations                │
 │ • Handles logging configuration             │
 │ • Error reporting and exit codes            │
 │ • Output file management                    │
+└─────────────────────────────────────────────┘
+
+Commands:
+┌─────────────────────────────────────────────┐
+│ tagex extract   → TagExtractor class        │
+│ tagex rename    → RenameOperation class     │
+│ tagex merge     → MergeOperation class      │
+│ tagex apply     → ApplyOperation class      │
 └─────────────────────────────────────────────┘
 ```
 
@@ -157,6 +183,28 @@ Input: Obsidian Vault
 │                     │    │ • Tag validation    │
 │                     │    │ • Noise filtering   │
 └─────────────────────┘    └─────────────────────┘
+```
+
+### Tag Operations Engine (`operations/tag_operations.py`)
+```
+┌─────────────────────────────────────────────┐
+│           TAG OPERATION ENGINE              │
+├─────────────────────────────────────────────┤
+│ TagOperationEngine (Abstract Base Class)    │
+│ ├─ Dry-run capability for safe previews     │
+│ ├─ Operation logging with integrity checks  │
+│ ├─ File modification tracking               │
+│ └─ Error handling and statistics            │
+│                                             │
+│ RenameOperation                             │
+│   └─ Rename single tag across vault        │
+│                                             │
+│ MergeOperation                              │
+│   └─ Consolidate multiple tags into one    │
+│                                             │
+│ ApplyOperation                              │
+│   └─ Apply migration mappings from JSON    │
+└─────────────────────────────────────────────┘
 ```
 
 ### Output Formatter (`extractor/output_formatter.py`)
@@ -272,24 +320,113 @@ TagEx includes comprehensive tag validation to filter out noise and technical ar
 # Install as editable tool
 uv tool install --editable .
 
-# Run with system-wide command
-tagex /path/to/vault
+# Run extraction with system-wide command
+tagex extract /path/to/vault
 
 # Extract with filtering (default)
-tagex /vault/path -o tags.json
+tagex extract /vault/path -o tags.json
 
 # Extract raw tags (no filtering)
-tagex /vault/path --no-filter -o raw_tags.json
+tagex extract /vault/path --no-filter -o raw_tags.json
+
+# Tag operations (always with preview first)
+tagex rename /vault old-tag new-tag --dry-run
+tagex merge /vault tag1 tag2 --into combined-tag --dry-run
+tagex apply /vault migration.json --dry-run
+```
+
+## Tag Operations Architecture
+
+### Operation Flow Pipeline
+
+```
+Input: Vault + Operation Parameters
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 1: Operation Setup                                        │
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │Initialize   │───►│Create       │───►│Setup        │          │
+│  │Operation    │    │Log Structure│    │Dry-run Mode │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 2: File Discovery & Filtering                            │
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │Find Markdown│───►│Filter by    │───►│Build Target │          │
+│  │Files        │    │Tag Presence │    │File List    │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 3: Tag Transformation (Per File)                         │
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │Read File &  │───►│Transform    │───►│Validate     │          │
+│  │Calculate    │    │Tags Using   │    │Changes      │          │
+│  │Hash         │    │Parsers      │    │             │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+│                              │                   │              │
+│                              ▼                   ▼              │
+│                     ┌─────────────────────────────────┐         │
+│                     │ Write Back (if not dry-run)     │         │
+│                     │ • Preserve original formatting  │         │
+│                     │ • Log modifications             │         │
+│                     │ • Update statistics             │         │
+│                     └─────────────────────────────────┘         │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  STEP 4: Operation Logging                                      │
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │Generate     │───►│Save Log to  │───►│Display      │          │
+│  │Operation    │    │Current Dir  │    │Summary      │          │
+│  │Report       │    │(Not Vault)  │    │Statistics   │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Safe Operation Design
+
+```
+┌─────────────┐    Dry-run?   ┌─────────────┐
+│Operation    │─────Yes──────►│Preview Only │
+│Request      │               │Show Changes │
+└─────────────┘               └─────────────┘
+      │                             │
+      │No                           │
+      ▼                             │
+┌─────────────┐                     │
+│Process File │                     │
+│Calculate    │─────────────────────┤
+│Modifications│                     │
+└─────────────┘                     ▼
+      │                       ┌─────────────┐
+      │                       │Display      │
+      ▼                       │Results &    │
+┌─────────────┐               │Statistics   │
+│Write Changes│               └─────────────┘
+│Log Operation│
+└─────────────┘
 ```
 
 ## Extension Points
 
 The architecture supports extension through:
 
-1. **Additional Parsers**: New tag sources can be added by implementing the parser interface
-2. **Output Formats**: New formatters can be added to `output_formatter.py`  
-3. **Analysis Modules**: The `tag-analysis/` directory demonstrates advanced processing
-4. **File Filters**: Pattern-based exclusion system can be extended
-5. **Statistics**: The statistics tracking system can be enhanced for additional metrics
-6. **Tag Validation**: Validation rules can be customized in `utils/tag_normalizer.py`
-7. **Console Integration**: Script entry points defined in `pyproject.toml`
+1. **Additional Operations**: Extend `TagOperationEngine` for new tag operations
+2. **Additional Parsers**: New tag sources can be added by implementing the parser interface
+3. **Output Formats**: New formatters can be added to `output_formatter.py`  
+4. **Analysis Modules**: The `tag-analysis/` directory demonstrates advanced processing
+5. **File Filters**: Pattern-based exclusion system can be extended
+6. **Statistics**: The statistics tracking system can be enhanced for additional metrics
+7. **Tag Validation**: Validation rules can be customized in `utils/tag_normalizer.py`
+8. **Console Integration**: Script entry points defined in `pyproject.toml`
+9. **Operation Logging**: Structured logging system supports custom reporting
