@@ -41,7 +41,7 @@ uv run tag-analysis/migration_analysis.py tags.json
 
 ## Architecture Notes
 
-TagEx features comprehensive tag validation that filters out noise by default. The system now provides both analytical and operational capabilities.
+TagEx includes tag validation that filters out noise by default. The main extractor includes tag filtering using `--no-filter` to get raw output when needed.
 
 ### Core Modules
 

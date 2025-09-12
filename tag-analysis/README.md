@@ -1,6 +1,6 @@
 # Tag Analysis Experiment Results
 
-This folder contains the results of a comprehensive tag co-occurrence analysis and migration experiment conducted on the Obsidian vault.
+This folder contains the results of a tag co-occurrence analysis and migration experiment conducted on the Obsidian vault.
 
 ## Executive Summary
 

@@ -274,7 +274,7 @@ Tag Data
 
 ## Tag Validation System
 
-TagEx includes comprehensive tag validation to filter out noise and technical artifacts:
+TagEx includes tag validation to filter out noise and technical artifacts:
 
 ### Validation Rules (`utils/tag_normalizer.py`)
 
