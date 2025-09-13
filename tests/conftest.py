@@ -258,7 +258,7 @@ def mock_operation_log():
 
 
 @pytest.fixture
-def sample_cooccurrence_data():
+def sample_pair_data():
     """Sample co-occurrence data for analysis testing."""
     return [
         {"tag": "work", "tagCount": 50, "files": ["file1.md", "file2.md", "file3.md"]},

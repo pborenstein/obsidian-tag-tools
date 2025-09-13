@@ -12,15 +12,15 @@ from pathlib import Path
 class TestCooccurrenceAnalyzer:
     """Tests for the co-occurrence analysis tool."""
     
-    def test_cooccurrence_analyzer_exists(self):
+    def test_pair_analyzer_exists(self):
         """Test that co-occurrence analyzer script exists."""
-        analyzer_path = Path("tag-analysis/cooccurrence_analyzer.py")
+        analyzer_path = Path("tag-analysis/pair_analyzer.py")
         # Script should exist in project root
         assert analyzer_path.exists() or (Path.cwd() / analyzer_path).exists()
     
-    def test_cooccurrence_analyzer_cli_help(self):
+    def test_pair_analyzer_cli_help(self):
         """Test co-occurrence analyzer CLI help."""
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             result = subprocess.run([
@@ -30,19 +30,19 @@ class TestCooccurrenceAnalyzer:
             # Should show help without errors
             assert result.returncode == 0 or "usage" in result.stderr.lower()
             help_text = result.stdout + result.stderr
-            assert "cooccurrence" in help_text.lower() or "analysis" in help_text.lower()
+            assert "pair" in help_text.lower() or "analysis" in help_text.lower()
         except (subprocess.TimeoutExpired, FileNotFoundError):
             # If script not found or times out, skip this test
             pytest.skip("Co-occurrence analyzer script not available")
     
-    def test_cooccurrence_analysis_with_sample_data(self, temp_dir, sample_cooccurrence_data):
+    def test_pair_analysis_with_sample_data(self, temp_dir, sample_pair_data):
         """Test co-occurrence analysis with sample data."""
         # Create sample JSON file
         sample_file = temp_dir / "sample_tags.json"
         with open(sample_file, 'w') as f:
-            json.dump(sample_cooccurrence_data, f)
+            json.dump(sample_pair_data, f)
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             result = subprocess.run([
@@ -64,7 +64,7 @@ class TestCooccurrenceAnalyzer:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pytest.skip("Co-occurrence analyzer not available or timeout")
     
-    def test_cooccurrence_analysis_with_filtering(self, temp_dir):
+    def test_pair_analysis_with_filtering(self, temp_dir):
         """Test co-occurrence analysis with and without filtering."""
         # Create test data with both valid and invalid tags
         test_data = [
@@ -79,7 +79,7 @@ class TestCooccurrenceAnalyzer:
         with open(test_file, 'w') as f:
             json.dump(test_data, f)
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             # Run with filtering (default)
@@ -110,7 +110,7 @@ class TestCooccurrenceAnalyzer:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pytest.skip("Co-occurrence analyzer not available")
     
-    def test_cooccurrence_analysis_minimum_threshold(self, temp_dir):
+    def test_pair_analysis_minimum_threshold(self, temp_dir):
         """Test co-occurrence analysis with minimum threshold option."""
         # Create test data with various co-occurrence frequencies
         test_data = [
@@ -124,13 +124,13 @@ class TestCooccurrenceAnalyzer:
         with open(test_file, 'w') as f:
             json.dump(test_data, f)
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             # Run with high minimum threshold
             result = subprocess.run([
                 sys.executable, analyzer_script, str(test_file),
-                "--min-cooccurrence", "5"
+                "--min-pair", "5"
             ], capture_output=True, text=True, timeout=30)
             
             if result.returncode == 0:
@@ -146,7 +146,7 @@ class TestCooccurrenceAnalyzer:
 class TestAnalysisDataProcessing:
     """Tests for analysis data processing functionality."""
     
-    def test_build_file_to_tags_mapping(self, sample_cooccurrence_data):
+    def test_build_file_to_tags_mapping(self, sample_pair_data):
         """Test building file-to-tags mapping from extraction data."""
         # This tests the expected internal functionality
         # Based on documentation, analyzer should build reverse index
@@ -154,7 +154,7 @@ class TestAnalysisDataProcessing:
         # Simulate what the analyzer should do
         file_to_tags = {}
         
-        for tag_entry in sample_cooccurrence_data:
+        for tag_entry in sample_pair_data:
             tag = tag_entry["tag"]
             files = tag_entry["files"]
             
@@ -171,40 +171,40 @@ class TestAnalysisDataProcessing:
             assert len(tags) > 0
             assert isinstance(tags, set)
     
-    def test_cooccurrence_calculation(self, sample_cooccurrence_data):
+    def test_pair_calculation(self, sample_pair_data):
         """Test co-occurrence calculation logic."""
         from itertools import combinations
         
         # Build file-to-tags mapping
         file_to_tags = {}
-        for tag_entry in sample_cooccurrence_data:
+        for tag_entry in sample_pair_data:
             for file_path in tag_entry["files"]:
                 if file_path not in file_to_tags:
                     file_to_tags[file_path] = set()
                 file_to_tags[file_path].add(tag_entry["tag"])
         
         # Calculate co-occurrences
-        cooccurrence_counts = {}
+        pair_counts = {}
         for file_path, tags in file_to_tags.items():
             for tag1, tag2 in combinations(sorted(tags), 2):
                 pair = (tag1, tag2)
-                cooccurrence_counts[pair] = cooccurrence_counts.get(pair, 0) + 1
+                pair_counts[pair] = pair_counts.get(pair, 0) + 1
         
         # Verify co-occurrence structure
-        assert len(cooccurrence_counts) >= 0
+        assert len(pair_counts) >= 0
         
-        for (tag1, tag2), count in cooccurrence_counts.items():
+        for (tag1, tag2), count in pair_counts.items():
             assert isinstance(tag1, str)
             assert isinstance(tag2, str)
             assert tag1 != tag2
             assert count > 0
     
-    def test_hub_tag_identification(self, sample_cooccurrence_data):
+    def test_hub_tag_identification(self, sample_pair_data):
         """Test identification of hub tags (highly connected tags)."""
         # Simulate hub tag identification logic
         tag_connections = {}
         
-        for tag_entry in sample_cooccurrence_data:
+        for tag_entry in sample_pair_data:
             tag = tag_entry["tag"]
             count = tag_entry["tagCount"]
             tag_connections[tag] = count
@@ -219,7 +219,7 @@ class TestAnalysisDataProcessing:
         if len(hub_tags) > 1:
             assert hub_tags[0][1] >= hub_tags[1][1]
     
-    def test_tag_clustering_logic(self, sample_cooccurrence_data):
+    def test_tag_clustering_logic(self, sample_pair_data):
         """Test tag clustering detection logic."""
         # This tests the expected clustering functionality
         # Based on documentation, analyzer should find connected components
@@ -228,21 +228,21 @@ class TestAnalysisDataProcessing:
         from itertools import combinations
         
         file_to_tags = {}
-        for tag_entry in sample_cooccurrence_data:
+        for tag_entry in sample_pair_data:
             for file_path in tag_entry["files"]:
                 if file_path not in file_to_tags:
                     file_to_tags[file_path] = set()
                 file_to_tags[file_path].add(tag_entry["tag"])
         
         # Find tag pairs that co-occur
-        cooccurrence_pairs = set()
+        pair_pairs = set()
         for tags in file_to_tags.values():
             for tag1, tag2 in combinations(tags, 2):
-                cooccurrence_pairs.add((min(tag1, tag2), max(tag1, tag2)))
+                pair_pairs.add((min(tag1, tag2), max(tag1, tag2)))
         
         # Build adjacency list
         adjacency = {}
-        for tag1, tag2 in cooccurrence_pairs:
+        for tag1, tag2 in pair_pairs:
             if tag1 not in adjacency:
                 adjacency[tag1] = set()
             if tag2 not in adjacency:
@@ -357,13 +357,13 @@ class TestAnalysisFiltering:
 class TestAnalysisOutput:
     """Tests for analysis output formats and content."""
     
-    def test_analysis_output_contains_expected_sections(self, temp_dir, sample_cooccurrence_data):
+    def test_analysis_output_contains_expected_sections(self, temp_dir, sample_pair_data):
         """Test that analysis output contains expected sections."""
         sample_file = temp_dir / "output_test.json"
         with open(sample_file, 'w') as f:
-            json.dump(sample_cooccurrence_data, f)
+            json.dump(sample_pair_data, f)
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             result = subprocess.run([
@@ -404,7 +404,7 @@ class TestAnalysisOutput:
         with open(minimal_file, 'w') as f:
             json.dump(minimal_data, f)
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         for test_file in [empty_file, minimal_file]:
             try:
@@ -424,14 +424,14 @@ class TestAnalysisOutput:
                 # Skip if script not available
                 break
     
-    def test_analysis_statistics_accuracy(self, sample_cooccurrence_data):
+    def test_analysis_statistics_accuracy(self, sample_pair_data):
         """Test that analysis statistics are calculated accurately."""
         # Calculate expected statistics
-        total_tags = len(sample_cooccurrence_data)
-        total_usages = sum(entry["tagCount"] for entry in sample_cooccurrence_data)
+        total_tags = len(sample_pair_data)
+        total_usages = sum(entry["tagCount"] for entry in sample_pair_data)
         
         all_files = set()
-        for entry in sample_cooccurrence_data:
+        for entry in sample_pair_data:
             all_files.update(entry["files"])
         total_files = len(all_files)
         
@@ -473,7 +473,7 @@ class TestAnalysisIntegration:
         assert tags_file.exists()
         
         # 2. Run analysis on extracted data
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             analysis_result = subprocess.run([
@@ -546,7 +546,7 @@ class TestAnalysisIntegration:
         assert filtered_result.exit_code == 0
         assert unfiltered_result.exit_code == 0
         
-        analyzer_script = "tag-analysis/cooccurrence_analyzer.py"
+        analyzer_script = "tag-analysis/pair_analyzer.py"
         
         try:
             # Run analysis on both datasets
