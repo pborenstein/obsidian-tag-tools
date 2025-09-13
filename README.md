@@ -79,7 +79,7 @@ tagex merge /path/to/vault personal-note diary-entry journal --into writing
 ```bash
 # 1. Extract and analyze tags
 tagex extract /vault -o tags.json
-uv run tag-analysis/cooccurrence_analyzer.py tags.json
+uv run tag-analysis/pair_analyzer.py tags.json
 
 # 2. Preview and apply changes
 tagex rename /vault old-name new-name --dry-run

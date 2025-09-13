@@ -46,7 +46,7 @@ The test suite includes comprehensive fixtures for testing:
 ### Test Data
 - **`expected_simple_tags`** - Expected extraction results for validation
 - **`test_output_formats`** - Sample data in JSON/CSV/text formats
-- **`sample_cooccurrence_data`** - Mock data for analysis testing
+- **`sample_pair_data`** - Mock data for analysis testing
 - **`valid_tags_list`** / **`invalid_tags_list`** - Tag validation test cases
 
 ### Mock Operations
