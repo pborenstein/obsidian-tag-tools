@@ -729,6 +729,71 @@ Final content.
         assert results["stats"]["files_modified"] == 0
         assert results["stats"]["tags_modified"] == 0
 
+    def test_delete_nonexistent_tag_no_file_modifications(self, temp_dir):
+        """Test that deleting nonexistent tags doesn't modify any files unnecessarily."""
+        from operations.tag_operations import DeleteOperation
+        import hashlib
+
+        test_vault = temp_dir / "nochange_vault"
+        test_vault.mkdir()
+
+        # Create test files with various tag formats
+        files_data = [
+            ("empty_tags.md", """---
+tags: []
+---
+
+Content with no tags."""),
+            ("single_tag.md", """---
+tags: [work]
+---
+
+Content with #work tag."""),
+            ("multi_tags.md", """---
+tags: [work, notes, ideas]
+---
+
+Content with #work and #notes tags."""),
+            ("multiline_tags.md", """---
+tags:
+  - work
+  - notes
+---
+
+Content here."""),
+            ("no_frontmatter.md", """# Just Content
+
+Regular markdown with #work inline tag.""")
+        ]
+
+        # Create files and calculate their original hashes
+        original_hashes = {}
+        for filename, content in files_data:
+            file_path = test_vault / filename
+            file_path.write_text(content)
+            original_hashes[filename] = hashlib.sha256(content.encode('utf-8')).hexdigest()
+
+        # Delete a nonexistent tag
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["nonexistent-tag"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Verify no files were modified
+        assert results["stats"]["files_modified"] == 0
+        assert results["stats"]["tags_modified"] == 0
+
+        # Verify file contents are exactly the same (by hash)
+        for filename, original_content in files_data:
+            file_path = test_vault / filename
+            current_content = file_path.read_text()
+            current_hash = hashlib.sha256(current_content.encode('utf-8')).hexdigest()
+            assert current_hash == original_hashes[filename], f"File {filename} was unexpectedly modified"
+            assert current_content == original_content, f"Content of {filename} changed unexpectedly"
+
     def test_delete_empty_tag_list(self, simple_vault):
         """Test delete operation with empty tag list."""
         from operations.tag_operations import DeleteOperation
