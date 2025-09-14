@@ -19,15 +19,15 @@ uv tool install --editable .
 tagex extract /path/to/vault [options]
 
 # Tag operations (console script)
-tagex rename /path/to/vault old-tag new-tag [--dry-run]
-tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run]
-tagex delete /path/to/vault unwanted-tag another-tag [--dry-run]
+tagex rename /path/to/vault old-tag new-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex delete /path/to/vault unwanted-tag another-tag [--dry-run] [--tag-types both|frontmatter|inline]
 
 # Or using uv run during development
 uv run main.py extract /path/to/vault [options]
-uv run main.py rename /path/to/vault old-tag new-tag
-uv run main.py merge /path/to/vault tag1 tag2 --into target-tag
-uv run main.py delete /path/to/vault unwanted-tag --dry-run
+uv run main.py rename /path/to/vault old-tag new-tag [--tag-types both|frontmatter|inline]
+uv run main.py merge /path/to/vault tag1 tag2 --into target-tag [--tag-types both|frontmatter|inline]
+uv run main.py delete /path/to/vault unwanted-tag --dry-run [--tag-types both|frontmatter|inline]
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
@@ -58,6 +58,7 @@ uv run pytest tests/
 ### Key Features
 
 - **Multi-command CLI** - Extract, rename, merge, delete operations
+- **Tag type filtering** - Selective processing of frontmatter, inline, or both tag types
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **Tag validation** - Filters noise, preserves meaningful tags
 - **Semantic analysis** - TF-IDF embedding-based similarity detection with morphological fallback

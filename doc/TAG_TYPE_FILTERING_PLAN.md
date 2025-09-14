@@ -1,8 +1,15 @@
 # Implementation Plan: Tag Type Filtering Options
 
+## Status: COMPLETED
+
+**Implementation Date:** January 2025
+**Commit:** 0110b97 - feat: Implement tag type filtering across all commands
+
 ## Overview
 
-Add `--frontmatter-only` and `--inline-only` options to all tagex commands to allow users to work exclusively with frontmatter tags or inline hashtags.
+~~Add `--frontmatter-only` and `--inline-only` options to all tagex commands to allow users to work exclusively with frontmatter tags or inline hashtags.~~
+
+**IMPLEMENTED:** Added `--tag-types` option with values `both` (default), `frontmatter`, and `inline` to all tagex commands, enabling selective processing of tag types.
 
 ## Current Architecture Analysis
 
@@ -115,7 +122,7 @@ Add test cases for:
 
 ## Example Usage
 
-```bash
+~~```bash
 # Extract only frontmatter tags
 tagex extract /path/to/vault --frontmatter-only
 
@@ -124,4 +131,37 @@ tagex rename /path/to/vault old-tag new-tag --inline-only
 
 # Merge frontmatter tags only
 tagex merge /path/to/vault tag1 tag2 --into target --frontmatter-only --dry-run
+```~~
+
+**IMPLEMENTED USAGE:**
+
+```bash
+# Extract only frontmatter tags
+tagex extract /path/to/vault --tag-types frontmatter
+
+# Rename only inline hashtags
+tagex rename /path/to/vault old-tag new-tag --tag-types inline
+
+# Merge frontmatter tags only
+tagex merge /path/to/vault tag1 tag2 --into target --tag-types frontmatter --dry-run
+
+# Default behavior (both tag types)
+tagex extract /path/to/vault --tag-types both
 ```
+
+## Implementation Summary
+
+The tag type filtering feature was successfully implemented with:
+
+1. **Core TagExtractor Updates** - Added `tag_types` parameter with filtering logic
+2. **TagOperationEngine Updates** - Updated all operations to respect tag type filtering
+3. **CLI Integration** - Added `--tag-types` option to all commands with validation
+4. **Comprehensive Testing** - Full test coverage for all filtering modes
+5. **Documentation Updates** - Updated all markdown files with examples and usage
+
+**Benefits Achieved:**
+- Selective tag processing (frontmatter, inline, or both)
+- Backward compatibility maintained (default: both)
+- Consistent API across all commands
+- Safe operations with dry-run support
+- Complete test coverage
