@@ -434,7 +434,7 @@ Content""")
     def test_merge_command_single_source_tag(self, simple_vault):
         """Test merge command with only one source tag."""
         from main import cli
-        
+
         runner = CliRunner()
         result = runner.invoke(cli, [
             'merge',
@@ -443,8 +443,231 @@ Content""")
             '--into', 'professional',
             '--dry-run'
         ])
-        
+
         # Should handle single tag merge
+        assert result.exit_code == 0 or len(result.output) > 0
+
+
+class TestDeleteCommand:
+    """Tests for the delete command."""
+
+    def test_delete_command_help(self):
+        """Test delete command help message."""
+        from main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ['delete', '--help'])
+
+        assert result.exit_code == 0
+        assert "delete" in result.output.lower()
+        assert "--dry-run" in result.output
+
+    def test_delete_command_dry_run(self, temp_dir):
+        """Test delete command in dry-run mode."""
+        from main import cli
+
+        # Create test vault with tags to delete
+        test_vault = temp_dir / "delete_test_vault"
+        test_vault.mkdir()
+
+        (test_vault / "file1.md").write_text("""---
+tags: [work, unwanted-tag, notes]
+---
+
+Content with #unwanted-tag inline.
+""")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(test_vault),
+            'unwanted-tag',
+            '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+
+        # Should show preview
+        assert len(result.output) > 0
+
+        # Files should be unchanged
+        file_content = (test_vault / "file1.md").read_text()
+        assert "unwanted-tag" in file_content
+        assert "#unwanted-tag" in file_content
+
+    def test_delete_command_multiple_tags(self, temp_dir):
+        """Test delete command with multiple tags."""
+        from main import cli
+
+        test_vault = temp_dir / "multi_delete_vault"
+        test_vault.mkdir()
+
+        (test_vault / "test.md").write_text("""---
+tags: [work, unwanted1, unwanted2, notes]
+---
+
+Content with #unwanted1 and #unwanted2.
+""")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(test_vault),
+            'unwanted1',
+            'unwanted2',
+            '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+        assert len(result.output) > 0
+
+    def test_delete_command_missing_arguments(self):
+        """Test delete command with missing arguments."""
+        from main import cli
+
+        runner = CliRunner()
+
+        # Missing tag arguments
+        result = runner.invoke(cli, ['delete', '/vault'])
+        assert result.exit_code != 0
+
+        # Missing vault path
+        result = runner.invoke(cli, ['delete'])
+        assert result.exit_code != 0
+
+    def test_delete_command_shows_warnings_for_inline(self, temp_dir, capsys):
+        """Test that delete command shows warnings for inline tag deletion."""
+        from main import cli
+
+        test_vault = temp_dir / "warning_vault"
+        test_vault.mkdir()
+
+        (test_vault / "inline_test.md").write_text("""---
+tags: [work]
+---
+
+This content has #unwanted-inline tag that will trigger warnings.
+""")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(test_vault),
+            'unwanted-inline',
+            '--dry-run'
+        ])
+
+        # Should succeed but show warnings
+        assert result.exit_code == 0
+
+        # Output should contain warning about inline deletion
+        output = result.output
+        assert "WARNING" in output or "warn" in output.lower()
+
+    def test_delete_command_actual_execution(self, temp_dir):
+        """Test delete command actual execution (not dry-run)."""
+        from main import cli
+
+        test_vault = temp_dir / "exec_delete_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "execution_test.md"
+        test_file.write_text("""---
+tags: [work, unwanted-tag, notes]
+---
+
+# Test File
+
+Content with some text.
+""")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(test_vault),
+            'unwanted-tag'
+        ])
+
+        assert result.exit_code == 0
+
+        # File should be modified
+        modified_content = test_file.read_text()
+        assert "unwanted-tag" not in modified_content
+        assert "work" in modified_content  # Other tags preserved
+        assert "notes" in modified_content
+
+    def test_delete_command_nonexistent_tag(self, simple_vault):
+        """Test delete command with nonexistent tag."""
+        from main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(simple_vault),
+            'absolutely-nonexistent-tag',
+            '--dry-run'
+        ])
+
+        # Should handle gracefully
+        assert result.exit_code == 0
+        assert len(result.output) > 0
+
+    def test_delete_command_preserves_structure(self, temp_dir):
+        """Test delete command preserves file structure."""
+        from main import cli
+
+        test_vault = temp_dir / "structure_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "structure_test.md"
+        test_file.write_text("""---
+title: "Important File"
+tags: [work, unwanted-tag, notes]
+author: "Test User"
+---
+
+# Important File
+
+This file has important structure.
+
+## Section 2
+
+Content here.
+""")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(test_vault),
+            'unwanted-tag'
+        ])
+
+        assert result.exit_code == 0
+
+        # Structure should be preserved
+        modified_content = test_file.read_text()
+        assert "title: \"Important File\"" in modified_content
+        assert "author: \"Test User\"" in modified_content
+        assert "# Important File" in modified_content
+        assert "## Section 2" in modified_content
+
+        # Tag should be gone
+        assert "unwanted-tag" not in modified_content
+
+    def test_delete_command_empty_tag_argument(self, simple_vault):
+        """Test delete command with empty tag argument."""
+        from main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            'delete',
+            str(simple_vault),
+            '',
+            '--dry-run'
+        ])
+
+        # Should handle empty tag gracefully or reject it
+        # Either exit code != 0 or should process gracefully
         assert result.exit_code == 0 or len(result.output) > 0
     
     def test_merge_command_actual_execution(self, temp_dir):

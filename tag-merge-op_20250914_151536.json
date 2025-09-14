@@ -1,0 +1,37 @@
+{
+  "operation": "mergeoperation",
+  "timestamp": "2025-09-14T15:15:36.491295",
+  "vault_path": "/var/folders/dk/rl_g11l92c3grrfqf8ff6r0m0000gn/T/tmpf8n5nhlb/merge_exec_vault",
+  "dry_run": false,
+  "changes": [
+    {
+      "file": "merge_test.md",
+      "before_hash": "07e65f339a7a159f",
+      "after_hash": "37c0bec54e41949d",
+      "modifications": [
+        {
+          "type": "tag_merge",
+          "sources": [
+            "ideas",
+            "brainstorming",
+            "thoughts"
+          ],
+          "target": "thinking"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "files_processed": 1,
+    "files_modified": 1,
+    "tags_modified": 3,
+    "errors": 0
+  },
+  "operation_type": "merge",
+  "source_tags": [
+    "ideas",
+    "brainstorming",
+    "thoughts"
+  ],
+  "target_tag": "thinking"
+}

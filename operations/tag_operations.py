@@ -433,4 +433,136 @@ class MergeOperation(TagOperationEngine):
         return "tag-merge-op"
 
 
+class DeleteOperation(TagOperationEngine):
+    """Operation to delete tags entirely from all files."""
+
+    def __init__(self, vault_path: str, tags_to_delete: List[str], dry_run: bool = False):
+        super().__init__(vault_path, dry_run)
+        self.tags_to_delete = [tag.lower().strip() for tag in tags_to_delete]
+        self.inline_deletions = 0
+        self.frontmatter_deletions = 0
+        self.operation_log.update({
+            "operation_type": "delete",
+            "tags_to_delete": self.tags_to_delete,
+            "warnings": []
+        })
+
+    def transform_tags(self, content: str, file_path: str) -> str:
+        """Delete specified tags from content."""
+        # Track what types of tags we're deleting for warnings
+        frontmatter, remaining_content = extract_frontmatter(content)
+        has_frontmatter_tags = False
+        has_inline_tags = False
+
+        # Check if file contains target tags in different locations
+        if frontmatter:
+            frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
+            for tag in frontmatter_tags:
+                if tag.lower().strip() in self.tags_to_delete:
+                    has_frontmatter_tags = True
+                    break
+
+        inline_tags = extract_inline_tags(remaining_content)
+        for tag in inline_tags:
+            if tag.lower().strip() in self.tags_to_delete:
+                has_inline_tags = True
+                break
+
+        # Issue warnings for inline tag deletions
+        if has_inline_tags:
+            self.inline_deletions += 1
+            warning_msg = (
+                f"WARNING: Deleting inline tags from '{file_path}'. "
+                f"This removes tags from content text, which may affect readability."
+            )
+            print(f"WARNING: {warning_msg}")
+            self.operation_log["warnings"].append({
+                "file": file_path,
+                "type": "inline_deletion",
+                "message": warning_msg
+            })
+
+        if has_frontmatter_tags:
+            self.frontmatter_deletions += 1
+
+        # Perform the deletion using tag transform function
+        def tag_transform(tag: str) -> Optional[str]:
+            if tag.lower().strip() in self.tags_to_delete:
+                self.operation_log["stats"]["tags_modified"] += 1
+                return None  # Return None to delete the tag
+            return tag
+
+        # Use the proven parser-based transformation
+        return self.transform_file_tags(content, tag_transform)
+
+    def get_file_modifications(self, original: str, modified: str) -> List[Dict]:
+        """Get specific tag deletion modifications."""
+        return [{
+            "type": "tag_deletion",
+            "deleted_tags": self.tags_to_delete
+        }]
+
+    def get_operation_log_name(self) -> str:
+        """Get standardized operation name for log files."""
+        return "tag-delete-op"
+
+    def generate_report(self):
+        """Generate operation summary report with deletion-specific warnings."""
+        # Call parent report first
+        super().generate_report()
+
+        # Add deletion-specific information
+        print(f"\nDELETION DETAILS:")
+        print(f"Files with frontmatter tag deletions: {self.frontmatter_deletions}")
+        print(f"Files with inline tag deletions: {self.inline_deletions}")
+
+        if self.inline_deletions > 0:
+            print(f"\nWARNING: {self.inline_deletions} files had inline tags deleted.")
+            print("   Inline tag deletion removes tags from content text, which may affect")
+            print("   readability and context. Consider reviewing these files manually.")
+
+        if len(self.operation_log["warnings"]) > 0:
+            print(f"\n{len(self.operation_log['warnings'])} warnings logged. Check operation log for details.")
+
+    def _transform_yaml_tag_value(self, value: str, tag_transform_func) -> Optional[str]:
+        """Transform a YAML tag value, handling None returns for deletion."""
+        value = value.strip()
+
+        if value.startswith('[') and value.endswith(']'):
+            # Array format: [tag1, tag2, tag3]
+            inner = value[1:-1]
+            if not inner.strip():
+                return None  # Empty array
+
+            tags = []
+            for tag in inner.split(','):
+                tag = tag.strip().strip('"\'')
+                if tag:
+                    transformed = tag_transform_func(tag)
+                    if transformed is not None:  # Keep tags that aren't deleted
+                        # Preserve original quoting style if possible
+                        if '"' in inner:
+                            tags.append(f'"{transformed}"')
+                        else:
+                            tags.append(transformed)
+
+            return f"[{', '.join(tags)}]" if tags else None
+
+        elif ',' in value:
+            # Comma-separated format: tag1, tag2, tag3
+            tags = []
+            for tag in value.split(','):
+                tag = tag.strip().strip('"\'')
+                if tag:
+                    transformed = tag_transform_func(tag)
+                    if transformed is not None:  # Keep tags that aren't deleted
+                        tags.append(transformed)
+            return ', '.join(tags) if tags else None
+
+        else:
+            # Single tag
+            tag = value.strip().strip('"\'')
+            return tag_transform_func(tag) if tag else None
+
+
 

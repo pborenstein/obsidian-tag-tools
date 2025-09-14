@@ -450,20 +450,470 @@ Content""")
             pass
 
 
+class TestDeleteOperation:
+    """Tests for tag delete operations."""
+
+    def test_delete_operation_initialization(self):
+        """Test DeleteOperation can be initialized."""
+        from operations.tag_operations import DeleteOperation
+
+        operation = DeleteOperation(
+            vault_path="/test/vault",
+            tags_to_delete=["unwanted-tag", "another-tag"],
+            dry_run=True
+        )
+        assert operation is not None
+        assert operation.tags_to_delete == ["unwanted-tag", "another-tag"]
+
+    def test_delete_single_tag_frontmatter_only(self, temp_dir):
+        """Test deleting a tag that only appears in frontmatter."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "delete_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "frontmatter_only.md"
+        test_file.write_text("""---
+tags: [work, notes, unwanted-tag]
+---
+
+# Test File
+
+Content with no inline tags.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-tag"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Check that tag was removed
+        modified_content = test_file.read_text()
+        assert "unwanted-tag" not in modified_content
+        assert "work" in modified_content  # Other tags preserved
+        assert "notes" in modified_content
+
+        # Should report minimal warnings for frontmatter-only deletion
+        assert operation.inline_deletions == 0
+        assert operation.frontmatter_deletions == 1
+
+    def test_delete_single_tag_inline_only(self, temp_dir):
+        """Test deleting a tag that only appears inline (should warn)."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "inline_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "inline_only.md"
+        test_file.write_text("""---
+tags: [work, notes]
+---
+
+# Test File
+
+Content with #unwanted-tag inline tag.
+More content with #work tag.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-tag"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Check that inline tag was removed
+        modified_content = test_file.read_text()
+        assert "#unwanted-tag" not in modified_content
+        assert "#work" in modified_content  # Other inline tags preserved
+
+        # Should report warnings for inline deletion
+        assert operation.inline_deletions == 1
+        assert operation.frontmatter_deletions == 0
+        assert len(operation.operation_log["warnings"]) > 0
+
+    def test_delete_tag_both_locations_warns_about_inline(self, temp_dir):
+        """Test deleting a tag that appears in both frontmatter and inline."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "both_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "both_locations.md"
+        test_file.write_text("""---
+tags: [work, unwanted-tag, notes]
+---
+
+# Test File
+
+Content with #unwanted-tag inline and #work inline.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-tag"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Check that tag was removed from both locations
+        modified_content = test_file.read_text()
+        assert "unwanted-tag" not in modified_content
+        assert "#unwanted-tag" not in modified_content
+        assert "work" in modified_content
+        assert "#work" in modified_content
+
+        # Should report both types but warn about inline
+        assert operation.inline_deletions == 1
+        assert operation.frontmatter_deletions == 1
+        assert len(operation.operation_log["warnings"]) > 0
+
+    def test_delete_multiple_tags(self, temp_dir):
+        """Test deleting multiple tags at once."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "multi_vault"
+        test_vault.mkdir()
+
+        test_file1 = test_vault / "file1.md"
+        test_file1.write_text("""---
+tags: [work, unwanted1, notes, unwanted2]
+---
+
+Content with #unwanted1 and #work.
+""")
+
+        test_file2 = test_vault / "file2.md"
+        test_file2.write_text("""---
+tags: [unwanted2, reference]
+---
+
+Content with #unwanted2 inline.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted1", "unwanted2"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Check both files
+        file1_content = test_file1.read_text()
+        file2_content = test_file2.read_text()
+
+        # Unwanted tags should be gone
+        assert "unwanted1" not in file1_content
+        assert "unwanted2" not in file1_content
+        assert "unwanted2" not in file2_content
+
+        # Other tags should remain
+        assert "work" in file1_content
+        assert "notes" in file1_content
+        assert "reference" in file2_content
+
+        # Should have processed both files
+        assert results["stats"]["files_modified"] >= 2
+
+    def test_delete_dry_run_mode(self, temp_dir):
+        """Test delete operation in dry-run mode."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "dry_delete_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "dry_test.md"
+        original_content = """---
+tags: [work, unwanted-tag, notes]
+---
+
+Content with #unwanted-tag inline.
+"""
+        test_file.write_text(original_content)
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-tag"],
+            dry_run=True
+        )
+
+        results = operation.run_operation()
+
+        # File should be unchanged
+        current_content = test_file.read_text()
+        assert current_content == original_content
+
+        # Should still report what would be done
+        assert isinstance(results, dict)
+        assert results["dry_run"] == True
+
+    def test_delete_preserves_file_structure(self, temp_dir):
+        """Test that delete preserves original file structure."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "structure_delete_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "complex.md"
+        test_file.write_text("""---
+title: "Complex File"
+tags: [work, unwanted-tag, notes, ideas]
+created: 2024-01-15
+author: "Test User"
+---
+
+# Complex File
+
+This file has complex structure with #unwanted-tag and #work tags.
+
+## Section 2
+
+More content here.
+
+```code
+# This should not be touched
+unwanted-tag = "in code"
+```
+
+Final content.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-tag"],
+            dry_run=False
+        )
+
+        operation.run_operation()
+
+        modified_content = test_file.read_text()
+
+        # Structure should be preserved
+        assert "title: \"Complex File\"" in modified_content
+        assert "created: 2024-01-15" in modified_content
+        assert "author: \"Test User\"" in modified_content
+        assert "# Complex File" in modified_content
+        assert "## Section 2" in modified_content
+
+        # Tag should be removed from frontmatter and inline
+        assert "unwanted-tag" not in modified_content.split("```")[0]  # Before code block
+        assert "#unwanted-tag" not in modified_content.split("```")[0]  # Before code block
+
+        # But should be preserved in code blocks
+        assert 'unwanted-tag = "in code"' in modified_content
+
+        # Other tags preserved
+        assert "work" in modified_content
+        assert "#work" in modified_content
+
+    def test_delete_nonexistent_tag(self, simple_vault):
+        """Test deleting a tag that doesn't exist in any files."""
+        from operations.tag_operations import DeleteOperation
+
+        operation = DeleteOperation(
+            vault_path=str(simple_vault),
+            tags_to_delete=["absolutely-nonexistent-tag"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Should handle gracefully
+        assert isinstance(results, dict)
+        assert results["stats"]["files_modified"] == 0
+        assert results["stats"]["tags_modified"] == 0
+
+    def test_delete_empty_tag_list(self, simple_vault):
+        """Test delete operation with empty tag list."""
+        from operations.tag_operations import DeleteOperation
+
+        operation = DeleteOperation(
+            vault_path=str(simple_vault),
+            tags_to_delete=[],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Should handle gracefully
+        assert isinstance(results, dict)
+        assert results["stats"]["files_modified"] == 0
+        assert results["stats"]["tags_modified"] == 0
+
+    def test_delete_case_insensitive_matching(self, temp_dir):
+        """Test that delete operation matches tags case-insensitively."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "case_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "case_test.md"
+        test_file.write_text("""---
+tags: [Work, NOTES, Ideas]
+---
+
+Content with #Work and #IDEAS tags.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["work", "ideas"],  # lowercase
+            dry_run=False
+        )
+
+        operation.run_operation()
+
+        modified_content = test_file.read_text()
+
+        # Should remove Work and Ideas (case insensitive)
+        assert "Work" not in modified_content or len([x for x in modified_content.split() if "Work" in x]) == 0
+        assert "IDEAS" not in modified_content or len([x for x in modified_content.split() if "IDEAS" in x]) == 0
+
+        # Should preserve NOTES
+        assert "NOTES" in modified_content
+
+    def test_delete_handles_tag_array_formats(self, temp_dir):
+        """Test delete with various YAML tag array formats."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "format_vault"
+        test_vault.mkdir()
+
+        # Single line array
+        (test_vault / "array.md").write_text("""---
+tags: [work, unwanted, notes]
+---
+Content""")
+
+        # Multi-line array
+        (test_vault / "multiline.md").write_text("""---
+tags:
+  - work
+  - unwanted
+  - notes
+---
+Content""")
+
+        # Comma separated
+        (test_vault / "comma.md").write_text("""---
+tags: work, unwanted, notes
+---
+Content""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted"],
+            dry_run=False
+        )
+
+        operation.run_operation()
+
+        # All files should have unwanted tag removed
+        array_content = (test_vault / "array.md").read_text()
+        multiline_content = (test_vault / "multiline.md").read_text()
+        comma_content = (test_vault / "comma.md").read_text()
+
+        assert "unwanted" not in array_content
+        assert "unwanted" not in multiline_content
+        assert "unwanted" not in comma_content
+
+        # Other tags should remain
+        assert "work" in array_content and "notes" in array_content
+        assert "work" in multiline_content and "notes" in multiline_content
+        assert "work" in comma_content and "notes" in comma_content
+
+    def test_delete_creates_operation_log(self, temp_dir):
+        """Test that delete operation creates proper log files."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "log_delete_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "test.md"
+        test_file.write_text("""---
+tags: [work, unwanted]
+---
+
+Content with #unwanted inline.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Should create log file
+        log_files = list(Path.cwd().glob("tag-delete-op_*.json"))
+        if len(log_files) == 0:
+            log_files = list(temp_dir.glob("tag-delete-op_*.json"))
+
+        assert len(log_files) > 0
+
+        # Log should have delete-specific structure
+        assert results["operation_type"] == "delete"
+        assert "tags_to_delete" in results
+        assert "warnings" in results
+        assert results["tags_to_delete"] == ["unwanted"]
+
+    def test_delete_warning_content_and_format(self, temp_dir):
+        """Test that warnings contain proper information."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "warning_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "warning_test.md"
+        test_file.write_text("""---
+tags: [work]
+---
+
+Content with #unwanted-inline tag that will generate warning.
+""")
+
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["unwanted-inline"],
+            dry_run=False
+        )
+
+        results = operation.run_operation()
+
+        # Should have warnings
+        warnings = results["warnings"]
+        assert len(warnings) > 0
+
+        # Warning should contain file path and explanation
+        warning = warnings[0]
+        assert "file" in warning
+        assert "type" in warning
+        assert warning["type"] == "inline_deletion"
+        assert "message" in warning
+        assert "readability" in warning["message"].lower()
+
+
 class TestOperationEdgeCases:
     """Tests for edge cases and error conditions in operations."""
-    
+
     def test_operation_with_nonexistent_vault(self):
         """Test operation with nonexistent vault path."""
         from operations.tag_operations import RenameOperation
-        
+
         operation = RenameOperation(
             vault_path="/nonexistent/vault/path",
             old_tag="work",
-            new_tag="professional", 
+            new_tag="professional",
             dry_run=True
         )
-        
+
         # Should handle gracefully
         try:
             results = operation.run_operation()
