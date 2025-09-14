@@ -173,20 +173,21 @@ def is_valid_tag(tag: str) -> bool:
         r'^(dom|util|fs|stream|event|parameter)-',  # Technical prefixes
         r'^l[0-9]+$',  # Line number patterns like l123
         r'^[0-9]+px$',  # CSS pixel values
-        r'^v[0-9]+\.[0-9]+',  # Version numbers
-        r'^\w{1,2}$',  # Very short 1-2 character tags
+        r'^v[0-9]+\.[0-9]+\.[0-9]+',  # Full semantic versions only (keep shorter versions like v1.2)
+        r'^[a-zA-Z]{1,2}$',  # Very short 1-2 letter-only tags (allows v1, but not tags with digits)
     ]
     
     for pattern in noise_patterns:
         if re.search(pattern, clean_tag, re.IGNORECASE):
             return False
     
-    # Rule 5: Must contain at least one letter
-    if not re.search(r'[a-zA-Z]', clean_tag):
+    # Rule 5: Must contain at least one letter (including international letters)
+    if not re.search(r'[^\d_\-/.]+', clean_tag):
         return False
     
-    # Rule 6: Valid character set (alphanumeric, underscore, dash, slash)
-    if not re.match(r'^[a-zA-Z0-9_\-/]+$', clean_tag):
+    # Rule 6: Valid character set (letters, digits, underscore, dash, slash, dot)
+    # Allow international characters by using \w+ but filtering out purely numeric/symbol tags
+    if not re.match(r'^[\w\-/.]+$', clean_tag):
         return False
     
     # Rule 7: Slash validation for nested tags

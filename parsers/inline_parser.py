@@ -19,9 +19,9 @@ def extract_inline_tags(content: str) -> List[str]:
     content_without_code = _remove_code_blocks(content)
     
     # Regex pattern for inline tags
-    # Matches #tag, #nested/tag, #tag-with-dashes
-    # Pattern: word boundary, # followed by alphanumeric char, then alphanumeric, underscore, dash, or slash
-    tag_pattern = r'(?:^|(?<=\s))#([a-zA-Z0-9][a-zA-Z0-9_\-\/]*)'
+    # Matches #tag, #nested/tag, #tag-with-dashes, including international characters
+    # Pattern: word boundary, # followed by word char, then word chars, underscore, dash, or slash, ending with word char
+    tag_pattern = r'(?:^|(?<=\s))#([\w](?:[\w_\-/]*[\w]|[\w]*))(?=\s|$|[^a-zA-Z0-9_\-/])'
     
     tags = []
     for match in re.finditer(tag_pattern, content_without_code):
