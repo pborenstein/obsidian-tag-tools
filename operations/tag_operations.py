@@ -21,14 +21,16 @@ from parsers.inline_parser import extract_inline_tags
 class TagOperationEngine(ABC):
     """Base class for all tag operations with backup, logging, and reversibility."""
     
-    def __init__(self, vault_path: str, dry_run: bool = False):
+    def __init__(self, vault_path: str, dry_run: bool = False, tag_types: str = 'both'):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
+        self.tag_types = tag_types
         self.operation_log = {
             "operation": self.__class__.__name__.lower(),
             "timestamp": datetime.now().isoformat(),
             "vault_path": str(self.vault_path),
             "dry_run": self.dry_run,
+            "tag_types": self.tag_types,
             "changes": [],
             "stats": {
                 "files_processed": 0,
@@ -105,46 +107,53 @@ class TagOperationEngine(ABC):
         pass
     
     def file_contains_tag(self, content: str, target_tag: str) -> bool:
-        """Check if file contains the target tag using proven parsers."""
+        """Check if file contains the target tag using proven parsers, respecting tag_types filter."""
         target_tag_lower = target_tag.lower().strip()
-        
-        # Use proven frontmatter parser
+
+        # Parse content
         frontmatter, remaining_content = extract_frontmatter(content)
-        if frontmatter:
+
+        # Check frontmatter tags if enabled
+        if self.tag_types in ('both', 'frontmatter') and frontmatter:
             frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
             for tag in frontmatter_tags:
                 if tag.lower().strip() == target_tag_lower:
                     return True
-        
-        # Use proven inline parser
-        inline_tags = extract_inline_tags(remaining_content)
-        for tag in inline_tags:
-            if tag.lower().strip() == target_tag_lower:
-                return True
-        
+
+        # Check inline tags if enabled
+        if self.tag_types in ('both', 'inline'):
+            inline_tags = extract_inline_tags(remaining_content)
+            for tag in inline_tags:
+                if tag.lower().strip() == target_tag_lower:
+                    return True
+
         return False
     
     def transform_file_tags(self, content: str, tag_transform_func) -> str:
-        """Transform tags in file content using proven parsers."""
+        """Transform tags in file content using proven parsers, respecting tag_types filter."""
         # Parse frontmatter and content
         frontmatter, remaining_content = extract_frontmatter(content)
-        
-        # Transform frontmatter tags if present, preserving original YAML structure
+
+        # Handle frontmatter transformation based on tag_types
         frontmatter_match = re.match(r'^---\s*\n(.*?)\n---(\s*\n)', content, re.DOTALL)
-        if frontmatter and frontmatter_match:
+        if frontmatter and frontmatter_match and self.tag_types in ('both', 'frontmatter'):
             original_yaml = frontmatter_match.group(1)
             original_ending = frontmatter_match.group(2)  # Preserve original spacing after ---
             transformed_yaml = self._transform_yaml_text(original_yaml, tag_transform_func)
             frontmatter_section = f"---\n{transformed_yaml}\n---{original_ending}"
         elif frontmatter_match:
-            # Frontmatter exists but couldn't parse - preserve original
+            # Frontmatter exists but either couldn't parse or frontmatter processing disabled - preserve original
             frontmatter_section = frontmatter_match.group(0)
         else:
             frontmatter_section = ""
-        
-        # Transform inline tags in remaining content
-        transformed_content = self._transform_inline_tags(remaining_content, tag_transform_func)
-        
+
+        # Handle inline transformation based on tag_types
+        if self.tag_types in ('both', 'inline'):
+            transformed_content = self._transform_inline_tags(remaining_content, tag_transform_func)
+        else:
+            # Inline processing disabled - preserve original content
+            transformed_content = remaining_content
+
         return frontmatter_section + transformed_content
     
     def _transform_yaml_text(self, yaml_text: str, tag_transform_func) -> str:
@@ -369,8 +378,8 @@ class TagOperationEngine(ABC):
 class RenameOperation(TagOperationEngine):
     """Operation to rename a single tag across all files."""
     
-    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = False):
-        super().__init__(vault_path, dry_run)
+    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = False, tag_types: str = 'both'):
+        super().__init__(vault_path, dry_run, tag_types)
         self.old_tag = old_tag.lower().strip()
         self.new_tag = new_tag.strip()
         self.operation_log.update({
@@ -410,8 +419,8 @@ class RenameOperation(TagOperationEngine):
 class MergeOperation(TagOperationEngine):
     """Operation to merge multiple tags into a single tag."""
     
-    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = False):
-        super().__init__(vault_path, dry_run)
+    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = False, tag_types: str = 'both'):
+        super().__init__(vault_path, dry_run, tag_types)
         self.source_tags = [tag.lower().strip() for tag in source_tags]
         self.target_tag = target_tag.strip()
         self.operation_log.update({
@@ -421,21 +430,21 @@ class MergeOperation(TagOperationEngine):
         })
     
     def transform_tags(self, content: str, file_path: str) -> str:
-        """Merge source tags into target tag."""
-        # Check if file contains any of the source tags
+        """Merge source tags into target tag, respecting tag_types filter."""
+        # Check if file contains any of the source tags in enabled locations
         has_source_tags = False
         frontmatter, remaining_content = extract_frontmatter(content)
 
-        # Check frontmatter tags
-        if frontmatter:
+        # Check frontmatter tags if enabled
+        if self.tag_types in ('both', 'frontmatter') and frontmatter:
             frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
             for tag in frontmatter_tags:
                 if tag.lower().strip() in self.source_tags:
                     has_source_tags = True
                     break
 
-        # Check inline tags
-        if not has_source_tags:
+        # Check inline tags if enabled
+        if not has_source_tags and self.tag_types in ('both', 'inline'):
             inline_tags = extract_inline_tags(remaining_content)
             for tag in inline_tags:
                 if tag.lower().strip() in self.source_tags:
@@ -471,8 +480,8 @@ class MergeOperation(TagOperationEngine):
 class DeleteOperation(TagOperationEngine):
     """Operation to delete tags entirely from all files."""
 
-    def __init__(self, vault_path: str, tags_to_delete: List[str], dry_run: bool = False):
-        super().__init__(vault_path, dry_run)
+    def __init__(self, vault_path: str, tags_to_delete: List[str], dry_run: bool = False, tag_types: str = 'both'):
+        super().__init__(vault_path, dry_run, tag_types)
         self.tags_to_delete = [tag.lower().strip() for tag in tags_to_delete]
         self.inline_deletions = 0
         self.frontmatter_deletions = 0
@@ -483,28 +492,29 @@ class DeleteOperation(TagOperationEngine):
         })
 
     def transform_tags(self, content: str, file_path: str) -> str:
-        """Delete specified tags from content."""
+        """Delete specified tags from content, respecting tag_types filter."""
         # Track what types of tags we're deleting for warnings
         frontmatter, remaining_content = extract_frontmatter(content)
         has_frontmatter_tags = False
         has_inline_tags = False
 
-        # Check if file contains target tags in different locations
-        if frontmatter:
+        # Check if file contains target tags in enabled locations
+        if self.tag_types in ('both', 'frontmatter') and frontmatter:
             frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
             for tag in frontmatter_tags:
                 if tag.lower().strip() in self.tags_to_delete:
                     has_frontmatter_tags = True
                     break
 
-        inline_tags = extract_inline_tags(remaining_content)
-        for tag in inline_tags:
-            if tag.lower().strip() in self.tags_to_delete:
-                has_inline_tags = True
-                break
+        if self.tag_types in ('both', 'inline'):
+            inline_tags = extract_inline_tags(remaining_content)
+            for tag in inline_tags:
+                if tag.lower().strip() in self.tags_to_delete:
+                    has_inline_tags = True
+                    break
 
-        # Issue warnings for inline tag deletions
-        if has_inline_tags:
+        # Issue warnings for inline tag deletions only if inline processing is enabled
+        if has_inline_tags and self.tag_types in ('both', 'inline'):
             self.inline_deletions += 1
             warning_msg = (
                 f"WARNING: Deleting inline tags from '{file_path}'. "

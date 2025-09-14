@@ -1087,3 +1087,191 @@ Content""")
         content = test_file.read_text()
         assert "work" in content
         assert "notes" in content
+
+
+class TestOperationsWithTagTypes:
+    """Test operations with tag_types parameter filtering."""
+
+    def test_rename_with_frontmatter_only(self, temp_dir):
+        """Test rename operation with frontmatter-only tag filtering."""
+        from operations.tag_operations import RenameOperation
+
+        test_vault = temp_dir / "frontmatter_rename_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [old-tag, work]
+---
+# Title
+Content with #old-tag and #work inline tags""")
+
+        operation = RenameOperation(
+            vault_path=str(test_vault),
+            old_tag="old-tag",
+            new_tag="new-tag",
+            dry_run=False,
+            tag_types='frontmatter'
+        )
+
+        results = operation.run_operation()
+
+        # Read modified content
+        content = test_file.read_text()
+
+        # Frontmatter tag should be renamed
+        assert "new-tag" in content
+        # Inline tag should remain unchanged
+        assert "#old-tag" in content  # Inline tag preserved
+        # Frontmatter should not contain old tag
+        assert "tags: [new-tag, work]" in content or "tags: [work, new-tag]" in content
+
+    def test_rename_with_inline_only(self, temp_dir):
+        """Test rename operation with inline-only tag filtering."""
+        from operations.tag_operations import RenameOperation
+
+        test_vault = temp_dir / "inline_rename_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [old-tag, work]
+---
+# Title
+Content with #old-tag and #work inline tags""")
+
+        operation = RenameOperation(
+            vault_path=str(test_vault),
+            old_tag="old-tag",
+            new_tag="new-tag",
+            dry_run=False,
+            tag_types='inline'
+        )
+
+        results = operation.run_operation()
+
+        # Read modified content
+        content = test_file.read_text()
+
+        # Inline tag should be renamed
+        assert "#new-tag" in content
+        # Frontmatter tag should remain unchanged
+        assert "tags: [old-tag, work]" in content
+
+    def test_merge_with_tag_types_filtering(self, temp_dir):
+        """Test merge operation with tag_types filtering."""
+        from operations.tag_operations import MergeOperation
+
+        test_vault = temp_dir / "merge_tag_types_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [source1, work]
+---
+# Title
+Content with #source1 and #source2 inline tags""")
+
+        # Merge only frontmatter tags
+        operation = MergeOperation(
+            vault_path=str(test_vault),
+            source_tags=["source1"],
+            target_tag="merged",
+            dry_run=False,
+            tag_types='frontmatter'
+        )
+
+        results = operation.run_operation()
+        content = test_file.read_text()
+
+        # Frontmatter should have merged tag
+        assert "merged" in content and "tags:" in content
+        # Inline source1 should remain unchanged
+        assert "#source1" in content
+
+    def test_delete_with_tag_types_filtering(self, temp_dir):
+        """Test delete operation with tag_types filtering."""
+        from operations.tag_operations import DeleteOperation
+
+        test_vault = temp_dir / "delete_tag_types_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [to-delete, keep]
+---
+# Title
+Content with #to-delete and #keep inline tags""")
+
+        # Delete only from frontmatter
+        operation = DeleteOperation(
+            vault_path=str(test_vault),
+            tags_to_delete=["to-delete"],
+            dry_run=False,
+            tag_types='frontmatter'
+        )
+
+        results = operation.run_operation()
+        content = test_file.read_text()
+
+        # Frontmatter should not have deleted tag
+        assert "to-delete" not in content.split("---")[1]  # frontmatter section
+        # Inline tag should remain
+        assert "#to-delete" in content
+
+    def test_operation_logs_include_tag_types(self, temp_dir):
+        """Test that operation logs include tag_types setting."""
+        from operations.tag_operations import RenameOperation
+
+        test_vault = temp_dir / "log_tag_types_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "test.md"
+        test_file.write_text("""---
+tags: [test]
+---
+# Test""")
+
+        operation = RenameOperation(
+            vault_path=str(test_vault),
+            old_tag="test",
+            new_tag="renamed",
+            dry_run=True,
+            tag_types='frontmatter'
+        )
+
+        results = operation.run_operation()
+
+        # Check that tag_types is logged
+        assert results["tag_types"] == 'frontmatter'
+
+    def test_no_matching_tag_types_produces_no_changes(self, temp_dir):
+        """Test that operations produce no changes when no matching tag types exist."""
+        from operations.tag_operations import RenameOperation
+
+        test_vault = temp_dir / "no_match_vault"
+        test_vault.mkdir()
+
+        test_file = test_vault / "inline_only.md"
+        test_file.write_text("""# Title
+Content with #inline-only tag""")
+
+        # Try to rename with frontmatter-only filtering
+        operation = RenameOperation(
+            vault_path=str(test_vault),
+            old_tag="inline-only",
+            new_tag="renamed",
+            dry_run=False,
+            tag_types='frontmatter'
+        )
+
+        results = operation.run_operation()
+
+        # Should report no changes
+        assert results["stats"]["files_modified"] == 0
+        assert results["stats"]["tags_modified"] == 0
+
+        # File content should be unchanged
+        content = test_file.read_text()
+        assert "#inline-only" in content
+        assert "renamed" not in content

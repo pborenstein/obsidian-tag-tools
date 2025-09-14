@@ -192,6 +192,98 @@ Content""")
         assert results["unique"]["count"] == 1
         assert len(results["unique"]["files"]) == 1
 
+    def test_extract_with_tag_types_parameter(self, temp_dir):
+        """Test tag extraction with tag_types parameter."""
+        from extractor.core import TagExtractor
+
+        vault_path = temp_dir / "tag_types_vault"
+        vault_path.mkdir()
+
+        # Create file with both frontmatter and inline tags
+        (vault_path / "mixed_tags.md").write_text("""---
+tags: [frontmatter-tag]
+---
+# Title
+Content with #inline-tag here""")
+
+        # Test 'both' (default)
+        extractor_both = TagExtractor(str(vault_path), tag_types='both')
+        results_both = extractor_both.extract_tags()
+        assert "frontmatter-tag" in results_both
+        assert "inline-tag" in results_both
+
+        # Test 'frontmatter' only
+        extractor_frontmatter = TagExtractor(str(vault_path), tag_types='frontmatter')
+        results_frontmatter = extractor_frontmatter.extract_tags()
+        assert "frontmatter-tag" in results_frontmatter
+        assert "inline-tag" not in results_frontmatter
+
+        # Test 'inline' only
+        extractor_inline = TagExtractor(str(vault_path), tag_types='inline')
+        results_inline = extractor_inline.extract_tags()
+        assert "frontmatter-tag" not in results_inline
+        assert "inline-tag" in results_inline
+
+    def test_extract_frontmatter_only_filtering(self, temp_dir):
+        """Test extracting only frontmatter tags."""
+        from extractor.core import TagExtractor
+
+        vault_path = temp_dir / "frontmatter_vault"
+        vault_path.mkdir()
+
+        (vault_path / "file1.md").write_text("""---
+tags: [work, meeting]
+---
+# Meeting Notes
+This has #inline-notes and #work tags""")
+
+        (vault_path / "file2.md").write_text("""---
+tags: project
+---
+Project details with #project-inline tag""")
+
+        extractor = TagExtractor(str(vault_path), tag_types='frontmatter')
+        results = extractor.extract_tags()
+
+        # Should only have frontmatter tags
+        expected_tags = {"work", "meeting", "project"}
+        actual_tags = set(results.keys())
+
+        assert expected_tags.issubset(actual_tags)
+        # Should not have inline tags
+        assert "inline-notes" not in results
+        assert "project-inline" not in results
+
+    def test_extract_inline_only_filtering(self, temp_dir):
+        """Test extracting only inline tags."""
+        from extractor.core import TagExtractor
+
+        vault_path = temp_dir / "inline_vault"
+        vault_path.mkdir()
+
+        (vault_path / "file1.md").write_text("""---
+tags: [frontmatter-work]
+---
+# Title
+Content with #inline-work and #notes""")
+
+        (vault_path / "file2.md").write_text("""---
+tags: [frontmatter-project]
+---
+Content with #project tag""")
+
+        extractor = TagExtractor(str(vault_path), tag_types='inline')
+        results = extractor.extract_tags()
+
+        # Should only have inline tags
+        expected_tags = {"inline-work", "notes", "project"}
+        actual_tags = set(results.keys())
+
+        assert expected_tags.issubset(actual_tags)
+        # Should not have frontmatter tags
+        assert "frontmatter-work" not in results
+        assert "frontmatter-project" not in results
+
 
 class TestOutputFormatter:
     """Tests for output formatting functionality."""
