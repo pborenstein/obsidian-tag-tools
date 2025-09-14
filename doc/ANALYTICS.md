@@ -35,6 +35,10 @@ tagex extract /path/to/vault -o tags.json
 # Or extract raw tags if needed for analysis
 tagex extract /path/to/vault --no-filter -o raw_tags.json
 
+# Extract specific tag types for targeted analysis
+tagex extract /path/to/vault --tag-types frontmatter -o frontmatter_tags.json
+tagex extract /path/to/vault --tag-types inline -o inline_tags.json
+
 # Using uv run (alternative)
 uv run main.py extract /path/to/vault -o tags.json
 ```
@@ -75,7 +79,7 @@ The analysis scripts expect tag data in JSON format by default.
 The analysis tool generates reports showing:
 
 - Tag frequency statistics
-- Tag relationship patterns  
+- Tag relationship patterns
 - Natural clustering information
 - Hub tag identification
 
@@ -85,6 +89,28 @@ The analysis helps identify:
 - Hub tags (appearing in multiple combinations)
 - Related tag clusters
 - Natural groupings and relationships
+
+### Analyzing Different Tag Types
+
+The analytics tools work with any extracted tag data, enabling specialized analysis:
+
+```bash
+# Compare frontmatter vs inline tag patterns
+tagex extract /vault --tag-types frontmatter -o fm_tags.json
+tagex extract /vault --tag-types inline -o inline_tags.json
+
+uv run tag-analysis/pair_analyzer.py fm_tags.json
+uv run tag-analysis/pair_analyzer.py inline_tags.json
+
+# Merge analysis for specific tag types
+uv run tag-analysis/merge_analyzer.py fm_tags.json
+uv run tag-analysis/merge_analyzer.py inline_tags.json
+```
+
+This enables insights into:
+- **Frontmatter patterns**: Formal categorization and metadata
+- **Inline patterns**: Contextual and content-driven tagging
+- **Usage differences**: How different tag types are used organizationally
 
 ---
 

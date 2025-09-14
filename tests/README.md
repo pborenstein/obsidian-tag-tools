@@ -58,7 +58,8 @@ The test suite includes comprehensive fixtures for testing:
 ### 1. Core Extraction Tests (`test_extractor.py`)
 Tests the main TagExtractor engine:
 - Frontmatter YAML tag extraction
-- Inline hashtag extraction  
+- Inline hashtag extraction
+- **Tag type filtering** - selective extraction of frontmatter, inline, or both
 - Tag filtering and validation
 - File processing statistics
 - Error handling for malformed files
@@ -74,12 +75,14 @@ Tests tag modification operations:
 - **Rename operations**: Single tag renaming across vault
 - **Merge operations**: Multi-tag consolidation
 - **Delete operations**: Tag removal from frontmatter and inline content
+- **Tag type filtering**: Selective processing of frontmatter, inline, or both tag types
 - Dry-run functionality and logging
 - File integrity and hash validation
 
 ### 4. CLI Tests (`test_cli.py`)
 Tests command-line interface:
 - Multi-command structure (extract/rename/merge/delete)
+- **Tag types option** - `--tag-types` parameter validation and functionality
 - Argument parsing and validation
 - Output format options
 - Error handling and exit codes

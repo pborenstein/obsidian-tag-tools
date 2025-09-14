@@ -63,10 +63,12 @@ uv run main.py delete /path/to/vault old-tag
 - `--verbose`, `-v`: Enable verbose logging
 - `--quiet`, `-q`: Suppress summary output
 - `--no-filter`: Disable tag filtering (include all raw tags)
+- `--tag-types`: Tag types to extract (`both`, `frontmatter`, `inline`) (default: both)
 
 ### Operation Command Options
 
 - `--dry-run`: Preview changes without modifying files (recommended for testing)
+- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: both)
 - All tag operations include logging and can be previewed safely
 
 ### Examples
@@ -85,6 +87,12 @@ tagex extract /path/to/vault --exclude "*.template.md" --exclude "drafts/*"
 # Extract all raw tags without filtering
 tagex extract /path/to/vault --no-filter
 
+# Extract only frontmatter tags
+tagex extract /path/to/vault --tag-types frontmatter
+
+# Extract only inline hashtags
+tagex extract /path/to/vault --tag-types inline
+
 # Get a list of tags sorted by frequency
 tagex extract /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
 ```
@@ -99,6 +107,12 @@ tagex rename /path/to/vault work project
 
 # Merge multiple related tags
 tagex merge /path/to/vault personal-note diary-entry journal --into writing
+
+# Rename only frontmatter tags (leave inline tags unchanged)
+tagex rename /path/to/vault work project --tag-types frontmatter --dry-run
+
+# Delete only inline tags (preserve frontmatter tags)
+tagex delete /path/to/vault obsolete-tag --tag-types inline --dry-run
 
 # Preview deleting tags (safe)
 tagex delete /path/to/vault obsolete-tag temp-tag --dry-run
@@ -125,6 +139,7 @@ tagex extract /vault -o updated_tags.json
 
 - Extracts tags from frontmatter YAML
 - Extracts inline hashtags from content
+- **Selective tag type filtering** - choose frontmatter, inline, or both
 - Automatic tag validation - filters out noise (numbers, HTML entities, technical patterns) by default
 - Multiple output formats (JSON, CSV, txt)
 - File pattern exclusions
@@ -135,6 +150,7 @@ tagex extract /vault -o updated_tags.json
 - **Rename tags** across entire vault with preview mode
 - **Merge multiple tags** into consolidated tags
 - **Delete tags** from all files, with warnings for inline tag removal
+- **Selective processing** - operate on frontmatter, inline, or both tag types
 - **Safe by default** - dry-run mode prevents accidental changes
 - **Operation logging** tracks all modifications with integrity checks
 - **Preserves file structure** - no YAML corruption or formatting changes

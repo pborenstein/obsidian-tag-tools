@@ -151,6 +151,7 @@ Commands:
 ├─────────────────────────────────────────────┤
 │ • Processes vault files sequentially        │
 │ • Aggregates tag data from all sources      │
+│ • Selective tag type filtering capability   │
 │ • Maintains processing statistics           │
 │ • Coordinates parser modules                │
 │ • Handles file processing errors            │
@@ -192,6 +193,7 @@ Commands:
 ├─────────────────────────────────────────────┤
 │ TagOperationEngine (Abstract Base Class)    │
 │ ├─ Dry-run capability for safe previews     │
+│ ├─ Tag type filtering (frontmatter/inline)  │
 │ ├─ Operation logging with integrity checks  │
 │ ├─ File modification tracking               │
 │ ├─ Parser-based tag transformation          │
@@ -273,6 +275,28 @@ Tag Data
    └─► TEXT ──► stdout/file
 ```
 
+### Tag Type Filtering System
+```
+Input: --tag-types parameter
+   │
+   ├─► 'both' (default) ──► Process frontmatter + inline
+   │
+   ├─► 'frontmatter' ────► Process YAML tags only
+   │
+   └─► 'inline' ─────────► Process hashtags only
+
+Tag Processing Flow:
+┌─────────────────────────────────────────────┐
+│  File Content → Parser Selection            │
+├─────────────────────────────────────────────┤
+│ if tag_types in ('both', 'frontmatter'):    │
+│   ├─► frontmatter_parser.py                 │
+│                                             │
+│ if tag_types in ('both', 'inline'):         │
+│   └─► inline_parser.py                      │
+└─────────────────────────────────────────────┘
+```
+
 ## Tag Validation System
 
 The tool includes tag validation to filter out noise and technical artifacts:
@@ -334,6 +358,11 @@ tagex extract /vault/path --no-filter -o raw_tags.json
 tagex rename /vault old-tag new-tag --dry-run
 tagex merge /vault tag1 tag2 --into combined-tag --dry-run
 tagex delete /vault unwanted-tag another-tag --dry-run
+
+# Tag type filtering examples
+tagex extract /vault --tag-types frontmatter -o frontmatter_only.json
+tagex rename /vault work project --tag-types inline --dry-run
+tagex delete /vault temp-tag --tag-types frontmatter --dry-run
 ```
 
 ## Tag Operations Architecture
