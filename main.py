@@ -15,7 +15,7 @@ from extractor.output_formatter import (
     save_output,
     print_summary
 )
-from operations.tag_operations import RenameOperation, MergeOperation
+from operations.tag_operations import RenameOperation, MergeOperation, DeleteOperation
 
 
 @click.group()
@@ -120,11 +120,29 @@ def rename(vault_path, old_tag, new_tag, dry_run):
 def merge(vault_path, source_tags, target_tag, dry_run):
     """
     Merge multiple tags into a single tag.
-    
+
     VAULT_PATH: Path to the Obsidian vault directory
     SOURCE_TAGS: Tags to merge (space-separated)
     """
     operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run)
+    operation.run_operation()
+
+
+@cli.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('tags_to_delete', nargs=-1, required=True)
+@click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
+def delete(vault_path, tags_to_delete, dry_run):
+    """
+    Delete tags entirely from all files in the vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
+    TAG_TO_DELETE: Tags to delete (space-separated)
+
+    WARNING: This operation removes tags from both frontmatter and inline content.
+    Use --dry-run first to preview changes. Inline tag deletion may affect readability.
+    """
+    operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run)
     operation.run_operation()
 
 
