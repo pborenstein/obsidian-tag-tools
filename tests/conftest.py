@@ -261,12 +261,12 @@ def mock_operation_log():
 def sample_pair_data():
     """Sample co-occurrence data for analysis testing."""
     return [
-        {"tag": "work", "tagCount": 50, "files": ["file1.md", "file2.md", "file3.md"]},
-        {"tag": "notes", "tagCount": 30, "files": ["file1.md", "file2.md"]}, 
-        {"tag": "ideas", "tagCount": 25, "files": ["file1.md", "file3.md"]},
-        {"tag": "reference", "tagCount": 20, "files": ["file2.md", "file4.md"]},
-        {"tag": "articles", "tagCount": 15, "files": ["file2.md", "file4.md"]},
-        {"tag": "singleton", "tagCount": 1, "files": ["file5.md"]}
+        {"tag": "work", "tagCount": 50, "relativePaths": ["file1.md", "file2.md", "file3.md"]},
+        {"tag": "notes", "tagCount": 30, "relativePaths": ["file1.md", "file2.md"]},
+        {"tag": "ideas", "tagCount": 25, "relativePaths": ["file1.md", "file3.md"]},
+        {"tag": "reference", "tagCount": 20, "relativePaths": ["file2.md", "file4.md"]},
+        {"tag": "articles", "tagCount": 15, "relativePaths": ["file2.md", "file4.md"]},
+        {"tag": "singleton", "tagCount": 1, "relativePaths": ["file5.md"]}
     ]
 
 
