@@ -43,8 +43,8 @@ class TestCompleteExtractionWorkflow:
         for tag_entry in data:
             assert "tag" in tag_entry
             assert "tagCount" in tag_entry
-            assert "files" in tag_entry
-            assert isinstance(tag_entry["files"], list)
+            assert "relativePaths" in tag_entry
+            assert isinstance(tag_entry["relativePaths"], list)
             assert tag_entry["tagCount"] > 0
         
         # Verify some expected tags from simple_vault fixture
@@ -132,7 +132,7 @@ class TestCompleteExtractionWorkflow:
         # Check that template-related files are not in the results
         all_files = []
         for entry in excluded_data:
-            all_files.extend(entry["files"])
+            all_files.extend(entry["relativePaths"])
         
         template_files = [f for f in all_files if "template" in f.lower()]
         assert len(template_files) == 0

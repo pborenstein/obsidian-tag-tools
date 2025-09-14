@@ -121,10 +121,14 @@ invalid_yaml: [unclosed
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter_tags
-        
+        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+
         # Should handle gracefully, possibly returning empty list or partial results
-        tags = extract_frontmatter_tags(content)
+        frontmatter, _ = extract_frontmatter(content)
+        if frontmatter:
+            tags = extract_tags_from_frontmatter(frontmatter)
+        else:
+            tags = []
         # The implementation should be robust - exact behavior depends on implementation
         assert isinstance(tags, list)
     
