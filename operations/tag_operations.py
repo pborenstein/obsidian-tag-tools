@@ -167,19 +167,23 @@ class TagOperationEngine(ABC):
                     if value_part:
                         # Single line tag format: "tags: [tag1, tag2]" or "tags: single-tag"
                         transformed_value = self._transform_yaml_tag_value(value_part, tag_transform_func)
+                        indent = line[:len(line) - len(line.lstrip())]
                         if transformed_value:
-                            indent = line[:len(line) - len(line.lstrip())]
                             transformed_lines.append(f"{indent}{key_part} {transformed_value}")
+                        elif transformed_value is None and value_part.strip().startswith('['):
+                            # Preserve empty array format when all tags were deleted from an array
+                            transformed_lines.append(f"{indent}{key_part} []")
                         else:
-                            # Skip empty tag field
+                            # Skip non-array empty tag fields
                             pass
                     else:
                         # Multi-line array format starts here
                         indent = line[:len(line) - len(line.lstrip())]
                         transformed_lines.append(line)  # Keep the "tags:" line
-                        
+
                         # Process following array items
                         i += 1
+                        array_has_items = False
                         while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
                             item_line = lines[i]
                             if item_line.strip().startswith('- '):
@@ -189,10 +193,17 @@ class TagOperationEngine(ABC):
                                     if transformed_tag:
                                         item_indent = item_line[:len(item_line) - len(item_line.lstrip())]
                                         transformed_lines.append(f"{item_indent}- {transformed_tag}")
+                                        array_has_items = True
                             else:
                                 # Empty line in array, preserve it
                                 transformed_lines.append(item_line)
                             i += 1
+
+                        # If array had items but all were deleted, add empty array placeholder
+                        if not array_has_items and i > len([l for l in lines[len(transformed_lines):i] if l.strip().startswith('- ')]):
+                            # There were list items originally but none remain, preserve as empty array
+                            pass  # Keep the "tags:" line without items (YAML empty array)
+
                         i -= 1  # Back up one since we'll increment at end of loop
                 else:
                     # Malformed tag line, preserve as-is
@@ -411,12 +422,36 @@ class MergeOperation(TagOperationEngine):
     
     def transform_tags(self, content: str, file_path: str) -> str:
         """Merge source tags into target tag."""
+        # Check if file contains any of the source tags
+        has_source_tags = False
+        frontmatter, remaining_content = extract_frontmatter(content)
+
+        # Check frontmatter tags
+        if frontmatter:
+            frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
+            for tag in frontmatter_tags:
+                if tag.lower().strip() in self.source_tags:
+                    has_source_tags = True
+                    break
+
+        # Check inline tags
+        if not has_source_tags:
+            inline_tags = extract_inline_tags(remaining_content)
+            for tag in inline_tags:
+                if tag.lower().strip() in self.source_tags:
+                    has_source_tags = True
+                    break
+
+        # Only transform if file contains source tags
+        if not has_source_tags:
+            return content  # No changes needed
+
         def tag_transform(tag: str) -> str:
             if tag.lower().strip() in self.source_tags:
                 self.operation_log["stats"]["tags_modified"] += 1
                 return self.target_tag
             return tag
-        
+
         # Use the proven parser-based transformation
         return self.transform_file_tags(content, tag_transform)
     
@@ -484,6 +519,10 @@ class DeleteOperation(TagOperationEngine):
 
         if has_frontmatter_tags:
             self.frontmatter_deletions += 1
+
+        # Only transform if file actually contains tags to delete
+        if not has_frontmatter_tags and not has_inline_tags:
+            return content  # No changes needed
 
         # Perform the deletion using tag transform function
         def tag_transform(tag: str) -> Optional[str]:
