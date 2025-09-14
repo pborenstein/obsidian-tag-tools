@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-class TestCooccurrenceAnalyzer:
+class TestPairAnalyzer:
     """Tests for the co-occurrence analysis tool."""
     
     def test_pair_analyzer_exists(self):
@@ -224,7 +224,7 @@ class TestAnalysisDataProcessing:
         # This tests the expected clustering functionality
         # Based on documentation, analyzer should find connected components
         
-        # Build adjacency graph from co-occurrence data
+        # Build adjacency graph from pair data
         from itertools import combinations
         
         file_to_tags = {}

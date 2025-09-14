@@ -151,7 +151,7 @@ Created comprehensive mock data:
 
 #### `tests/test_analysis.py` - Analysis Tools Testing
 **17 tests covering:**
-- Co-occurrence analyzer functionality
+- Pair analyzer functionality
 - Filtering integration with analysis
 - Data processing algorithms
 - Output format validation

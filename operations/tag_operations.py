@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Tag operation engine for modifying tags across Obsidian vaults.
-Provides base functionality for rename, merge, apply, and undo operations.
+Provides base functionality for rename, merge, and delete operations.
 """
 import json
 import os
