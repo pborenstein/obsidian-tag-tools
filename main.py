@@ -33,7 +33,8 @@ def cli():
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--quiet', '-q', is_flag=True, help='Suppress summary output')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
-def extract(vault_path, output, format, exclude, verbose, quiet, no_filter):
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to extract (default: both)')
+def extract(vault_path, output, format, exclude, verbose, quiet, no_filter, tag_types):
     """
     Extract tags from an Obsidian vault.
     
@@ -51,7 +52,7 @@ def extract(vault_path, output, format, exclude, verbose, quiet, no_filter):
     
     try:
         # Initialize extractor
-        extractor = TagExtractor(vault_path, exclude_patterns, filter_tags=not no_filter)
+        extractor = TagExtractor(vault_path, exclude_patterns, filter_tags=not no_filter, tag_types=tag_types)
         
         # Extract tags
         tag_data = extractor.extract_tags()
@@ -100,7 +101,8 @@ def extract(vault_path, output, format, exclude, verbose, quiet, no_filter):
 @click.argument('old_tag')
 @click.argument('new_tag')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def rename(vault_path, old_tag, new_tag, dry_run):
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
+def rename(vault_path, old_tag, new_tag, dry_run, tag_types):
     """
     Rename a tag across all files in the vault.
     
@@ -108,7 +110,7 @@ def rename(vault_path, old_tag, new_tag, dry_run):
     OLD_TAG: Tag to rename
     NEW_TAG: New tag name
     """
-    operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=dry_run)
+    operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 
@@ -117,14 +119,15 @@ def rename(vault_path, old_tag, new_tag, dry_run):
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def merge(vault_path, source_tags, target_tag, dry_run):
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
+def merge(vault_path, source_tags, target_tag, dry_run, tag_types):
     """
     Merge multiple tags into a single tag.
 
     VAULT_PATH: Path to the Obsidian vault directory
     SOURCE_TAGS: Tags to merge (space-separated)
     """
-    operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run)
+    operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 
@@ -132,7 +135,8 @@ def merge(vault_path, source_tags, target_tag, dry_run):
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def delete(vault_path, tags_to_delete, dry_run):
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
+def delete(vault_path, tags_to_delete, dry_run, tag_types):
     """
     Delete tags entirely from all files in the vault.
 
@@ -142,7 +146,7 @@ def delete(vault_path, tags_to_delete, dry_run):
     WARNING: This operation removes tags from both frontmatter and inline content.
     Use --dry-run first to preview changes. Inline tag deletion may affect readability.
     """
-    operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run)
+    operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 

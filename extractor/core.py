@@ -18,18 +18,20 @@ logger = logging.getLogger(__name__)
 class TagExtractor:
     """Main tag extraction engine."""
     
-    def __init__(self, vault_path: str, exclude_patterns: Set[str] = None, filter_tags: bool = True):
+    def __init__(self, vault_path: str, exclude_patterns: Set[str] = None, filter_tags: bool = True, tag_types: str = 'both'):
         """
         Initialize the tag extractor.
-        
+
         Args:
             vault_path: Path to the Obsidian vault
             exclude_patterns: Patterns to exclude from scanning
             filter_tags: Whether to filter out invalid tags (default: True)
+            tag_types: Which tag types to extract ('both', 'frontmatter', 'inline')
         """
         self.vault_path = Path(vault_path)
         self.exclude_patterns = exclude_patterns or {'.obsidian', '.git', '.DS_Store', '__pycache__'}
         self.filter_tags = filter_tags
+        self.tag_types = tag_types
         self.file_count = 0
         self.error_count = 0
         
@@ -90,15 +92,17 @@ class TagExtractor:
         
         # Extract frontmatter and remaining content
         frontmatter, markdown_content = extract_frontmatter(content)
-        
-        # Extract tags from frontmatter
-        frontmatter_tags = extract_tags_from_frontmatter(frontmatter) if frontmatter else []
-        
-        # Extract inline tags from markdown content
-        inline_tags = extract_inline_tags(markdown_content)
-        
-        # Combine all tags
-        all_tags = frontmatter_tags + inline_tags
+
+        # Extract tags based on tag_types setting
+        all_tags = []
+
+        if self.tag_types in ('both', 'frontmatter'):
+            frontmatter_tags = extract_tags_from_frontmatter(frontmatter) if frontmatter else []
+            all_tags.extend(frontmatter_tags)
+
+        if self.tag_types in ('both', 'inline'):
+            inline_tags = extract_inline_tags(markdown_content)
+            all_tags.extend(inline_tags)
         
         # Filter valid tags and normalize (if filtering enabled)
         if self.filter_tags:
