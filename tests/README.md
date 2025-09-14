@@ -13,7 +13,7 @@ tests/
 ├── test_parsers.py      ← Frontmatter and inline parser tests
 ├── test_utils.py        ← Utility function tests
 ├── test_workflows.py    ← End-to-end workflow tests
-└── test_analysis.py     ← Tag analysis and co-occurrence tests
+└── test_analysis.py     ← Tag analysis and pair analysis tests
 ```
 
 ## Running Tests
@@ -73,12 +73,13 @@ Tests individual parsing modules:
 Tests tag modification operations:
 - **Rename operations**: Single tag renaming across vault
 - **Merge operations**: Multi-tag consolidation
+- **Delete operations**: Tag removal from frontmatter and inline content
 - Dry-run functionality and logging
 - File integrity and hash validation
 
 ### 4. CLI Tests (`test_cli.py`)
 Tests command-line interface:
-- Multi-command structure (extract/rename/merge)
+- Multi-command structure (extract/rename/merge/delete)
 - Argument parsing and validation
 - Output format options
 - Error handling and exit codes

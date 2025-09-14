@@ -105,7 +105,7 @@ The analysis helps identify:
              │                                     │              
              │  Co-occurrence Matrix:              │              
              │  ┌─────────────────────────────┐    │              
-             └─►│ work + notes:     45        │◄───┘              
+             └─►│ Filtered pair analysis      │◄───┘              
                 │ work + ideas:     25        │                        
                 │ work + tasks:     20        │                        
                 │ notes + ideas:    15        │                        
@@ -122,8 +122,8 @@ The analysis helps identify:
                                                          │
                                                          ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ Find Clusters   │◄───│  Calculate Hub   │◄───│   Count Co-     │
-│  (Graph DFS)    │    │   Centrality     │    │  occurrences    │
+│ Find Clusters   │◄───│  Calculate Hub   │◄───│   Count Pairs   │
+│  (Graph DFS)    │    │   Centrality     │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
@@ -230,7 +230,7 @@ uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 5
 
 ---
 
-## Key Insights from Co-occurrence Analysis
+## Key Insights from Pair Analysis
 
 ### What the Analysis Reveals:
 
@@ -318,7 +318,7 @@ The filtering shows that tag validation supports relationship analysis in person
 - Detects plural/singular, verb forms, and common suffix patterns
 - `--no-sklearn` flag available to test fallback behavior
 
-**3. HIGH FILE OVERLAP** - Co-occurrence analysis
+**3. HIGH FILE OVERLAP** - Pair analysis
 - Finds tags appearing together in 80%+ of files
 - Suggests functional equivalence or subsumption
 - Shows overlap ratios and shared file counts
@@ -442,3 +442,4 @@ def find_semantic_duplicates_pattern(tag_stats):
 - `organize, organization` → stem: `organiz`
 
 This **dynamic approach** works with any English tag vocabulary without requiring vault-specific configuration, ensuring the analyzer remains universally applicable while providing a robust fallback when embedding-based analysis is unavailable.
+ailable.

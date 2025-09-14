@@ -32,13 +32,13 @@
 │  operations/     │      │output_formatter │      │ tag-analysis/   │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │TagOperation  │ │      │ │ JSON Format │ │      │ │co-occurrence│ │
+│ │TagOperation  │ │      │ │ JSON Format │ │      │ │pair analysis│ │
 │ │   Engine     │ │      │ │             │ │      │ │  analyzer   │ │
 │ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │Rename/Merge/ │ │      │ │ CSV & Text  │ │      │ │ migration   │ │
-│ │Apply Ops     │ │      │ │  Formats    │ │      │ │  analysis   │ │
+│ │Rename/Merge/ │ │      │ │ CSV & Text  │ │      │ │ merge       │ │
+│ │Delete Ops    │ │      │ │  Formats    │ │      │ │  analyzer   │ │
 │ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
 └──────────────────┘      └─────────────────┘      └─────────────────┘
         │

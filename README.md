@@ -40,6 +40,8 @@ tagex rename /path/to/vault old-tag new-tag [--dry-run]
 # Merge multiple tags into one
 tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
 
+# Delete tags from all files
+tagex delete /path/to/vault tag-to-remove another-tag --dry-run
 ```
 
 Or during development:
@@ -50,6 +52,7 @@ uv run main.py extract /path/to/vault [options]
 # Tag operations
 uv run main.py rename /path/to/vault old-tag new-tag
 uv run main.py merge /path/to/vault tag1 tag2 --into new-tag
+uv run main.py delete /path/to/vault old-tag
 ```
 
 ### Extract Command Options
@@ -97,12 +100,15 @@ tagex rename /path/to/vault work project
 # Merge multiple related tags
 tagex merge /path/to/vault personal-note diary-entry journal --into writing
 
+# Preview deleting tags (safe)
+tagex delete /path/to/vault obsolete-tag temp-tag --dry-run
 ```
 
 **Complete Workflow:**
 ```bash
 # 1. Extract and analyze tags
 tagex extract /vault -o tags.json
+# By default, analysis scripts filter noise. Use --no-filter to disable.
 uv run tag-analysis/pair_analyzer.py tags.json
 
 # 2. Preview and apply changes
@@ -128,14 +134,14 @@ tagex extract /vault -o updated_tags.json
 
 - **Rename tags** across entire vault with preview mode
 - **Merge multiple tags** into consolidated tags
+- **Delete tags** from all files, with warnings for inline tag removal
 - **Safe by default** - dry-run mode prevents accidental changes
 - **Operation logging** tracks all modifications with integrity checks
 - **Preserves file structure** - no YAML corruption or formatting changes
 
 **Advanced Analysis:**
 
-- Tag relationship analysis (co-occurrence, clustering)
-- Migration impact assessment tools
+- Tag relationship analysis (pair analysis, clustering)
 - Hub tag identification and cluster detection
 - Comprehensive tag validation and noise filtering
 
