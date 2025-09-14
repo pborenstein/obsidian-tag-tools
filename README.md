@@ -2,6 +2,30 @@
 
 Extract, analyze, and modify tags in Obsidian vault markdown files using the `tagex` command-line tool.
 
+
+## Quick start
+
+```bash
+# Install (editably) with uv
+uv tool install --editable .
+
+# Sanity check CLI
+tagex --help
+
+# Extract all tags to JSON from your vault
+tagex extract "$HOME/Obsidian/MyVault" -f json -o tags.json
+
+# Top 20 tags (requires jq)
+jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
+
+# Dry-run a rename, then apply
+tagex rename "$HOME/Obsidian/MyVault" "work" "project" --dry-run
+tagex rename "$HOME/Obsidian/MyVault" "work" "project"
+
+# Explore co-occurrence
+uv run tag-analysis/pair_analyzer.py tags.json
+```
+
 ## Commands
 
 The tool provides comprehensive tag management through multiple commands:
