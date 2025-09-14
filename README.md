@@ -96,7 +96,7 @@ tagex extract /vault -o updated_tags.json
 - Extracts tags from frontmatter YAML
 - Extracts inline hashtags from content
 - Automatic tag validation - filters out noise (numbers, HTML entities, technical patterns) by default
-- Multiple output formats (JSON, CSV, text)
+- Multiple output formats (JSON, CSV, txt)
 - File pattern exclusions
 - Statistics and summaries
 

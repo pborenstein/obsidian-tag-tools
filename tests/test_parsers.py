@@ -330,9 +330,9 @@ tags: [work, notes]
 
 This content has #ideas and #project inline tags.
 """
-        from parsers.frontmatter_parser import extract_frontmatter_tags
+        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         from parsers.inline_parser import extract_inline_tags
-        
+
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
         inline_tags = extract_inline_tags(content)
@@ -352,9 +352,9 @@ tags: [work, notes]
 
 More content with #work and #research tags.
 """
-        from parsers.frontmatter_parser import extract_frontmatter_tags
+        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         from parsers.inline_parser import extract_inline_tags
-        
+
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
         inline_tags = extract_inline_tags(content)
@@ -368,10 +368,10 @@ More content with #work and #research tags.
         """Test parsing files from the complex vault fixture."""
         complex_file = complex_vault / "complex.md"
         content = complex_file.read_text()
-        
-        from parsers.frontmatter_parser import extract_frontmatter_tags
+
+        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         from parsers.inline_parser import extract_inline_tags
-        
+
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
         inline_tags = extract_inline_tags(content)

@@ -17,7 +17,8 @@ def extract_frontmatter(content: str) -> tuple[Optional[dict], str]:
         Tuple of (frontmatter_dict, remaining_content)
     """
     # Match frontmatter pattern: --- at start, content, --- delimiter
-    frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*\n'
+    # Allow optional trailing content after closing ---
+    frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*(?:\n|$)'
     match = re.match(frontmatter_pattern, content, re.DOTALL)
     
     if not match:
