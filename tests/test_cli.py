@@ -150,8 +150,8 @@ class TestExtractCommand:
         runner = CliRunner()
         result = runner.invoke(cli, [
             'extract',
-            str(simple_vault), 
-            '--format', 'text'
+            str(simple_vault),
+            '--format', 'txt'
         ])
         
         assert result.exit_code == 0

@@ -15,7 +15,7 @@ At the start of this exercise, the tagex Obsidian tag management tool was in a m
 - **Tag extraction** from both frontmatter YAML and inline hashtags
 - **Advanced filtering** to remove noise (pure numbers, HTML entities, technical patterns)
 - **Safe operations** with dry-run mode and comprehensive logging
-- **Multiple output formats** (JSON, CSV, text)
+- **Multiple output formats** (JSON, CSV, txt)
 - **Co-occurrence analysis** for relationship discovery
 - **File exclusion patterns** for selective processing
 
@@ -111,7 +111,7 @@ Created comprehensive mock data:
 - File exclusion patterns
 - Statistics collection
 - Error handling and recovery
-- Output formatting (JSON, CSV, text)
+- Output formatting (JSON, CSV, txt)
 - Empty vault and large file handling
 
 #### `tests/test_operations.py` - Tag Operations Testing  
