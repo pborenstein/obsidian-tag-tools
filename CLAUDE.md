@@ -21,24 +21,27 @@ tagex extract /path/to/vault [options]
 # Tag operations (console script)
 tagex rename /path/to/vault old-tag new-tag [--dry-run]
 tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run]
+tagex delete /path/to/vault unwanted-tag another-tag [--dry-run]
 
 # Or using uv run during development
 uv run main.py extract /path/to/vault [options]
 uv run main.py rename /path/to/vault old-tag new-tag
 uv run main.py merge /path/to/vault tag1 tag2 --into target-tag
+uv run main.py delete /path/to/vault unwanted-tag --dry-run
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
 uv run tag-analysis/merge_analyzer.py tags.json [--no-sklearn]
 
 # Run tests
-pytest tests/
+uv run pytest tests/
 ```
 
 ## Documentation
 
 - [doc/ARCHITECTURE.md](doc/ARCHITECTURE.md) - System architecture and diagrams
 - [doc/ANALYTICS.md](doc/ANALYTICS.md) - Tag analysis tools documentation
+- [doc/TESTING_NARRATIVE.md](doc/TESTING_NARRATIVE.md) - Test development narrative
 - [tag-analysis/SEMANTIC_ANALYSIS.md](tag-analysis/SEMANTIC_ANALYSIS.md) - Semantic similarity detection
 - [tests/README.md](tests/README.md) - Test suite documentation
 
@@ -48,13 +51,13 @@ pytest tests/
 
 - **`extractor/`** - Tag extraction with filtering and validation
 - **`parsers/`** - Frontmatter and inline tag parsing
-- **`operations/`** - Tag modification (rename, merge) with dry-run support
+- **`operations/`** - Tag modification (rename, merge, delete) with dry-run support
 - **`tag-analysis/`** - Relationship analysis and semantic similarity detection
 - **`utils/`** - File discovery, tag normalization, and validation
 
 ### Key Features
 
-- **Multi-command CLI** - Extract, rename, merge operations
+- **Multi-command CLI** - Extract, rename, merge, delete operations
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **Tag validation** - Filters noise, preserves meaningful tags
 - **Semantic analysis** - TF-IDF embedding-based similarity detection with morphological fallback

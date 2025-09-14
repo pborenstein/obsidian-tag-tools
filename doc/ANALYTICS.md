@@ -16,8 +16,8 @@ The `tag-analysis/` directory contains analytical tools that perform tag pair an
 ```
 tag-analysis/
 ├── pair_analyzer.py            ← Core analysis engine with filtering (CLI)
-├── merge_analyzer.py           ← Tag merge suggestion engine (CLI)
-└── README.md                   ← Analysis experiment results and findings
+├── merge_analyzer.py           ← Tag merge suggestion engine with embeddings (CLI)
+└── SEMANTIC_ANALYSIS.md        ← Technical documentation on semantic similarity
 ```
 
 ---
@@ -309,12 +309,13 @@ The filtering shows that tag validation supports relationship analysis in person
 - Catches likely typos and minor spelling variations
 - Examples: `writing/writng`, `tech/technology`
 
-**2. SEMANTIC DUPLICATES** - TF-IDF embedding analysis
-- Uses character-level n-gram embeddings (2-4 character patterns)
-- Calculates cosine similarity between tag vectors
-- Identifies conceptually related tags beyond string matching
+**2. SEMANTIC DUPLICATES** - TF-IDF embedding analysis with morphological fallback
+- **Primary method**: Character-level n-gram embeddings (2-4 character patterns)
+- Calculates cosine similarity between tag vectors for conceptual relationships
+- Identifies semantically related tags beyond string matching
 - Examples: `music/audio`, `family/relatives`, `work/employment`
-- Falls back to dynamic morphological patterns if sklearn unavailable
+- **Fallback method**: Dynamic morphological pattern matching for environments without scikit-learn
+- Detects plural/singular, verb forms, and common suffix patterns
 - `--no-sklearn` flag available to test fallback behavior
 
 **3. HIGH FILE OVERLAP** - Co-occurrence analysis
@@ -378,6 +379,9 @@ The embedding method uses character-level n-grams instead of word-level features
 - **Morphological sensitivity**: Captures shared roots and affixes (`neuro-`, `-ing`, `-ed`)
 - **Typo robustness**: Similar character patterns even with spelling variations
 - **Language independence**: Works across different languages and naming conventions
+- **Semantic detection**: Identifies conceptual relationships that morphological patterns cannot capture
+
+See [tag-analysis/SEMANTIC_ANALYSIS.md](../tag-analysis/SEMANTIC_ANALYSIS.md) for detailed technical implementation.
 
 ### Usage Examples
 
@@ -400,7 +404,7 @@ tagex merge /path/to/vault writers writering --into writing --dry-run
 
 ### Dependencies and Fallback Strategy
 
-**Required Dependencies:** The merge analyzer now includes scikit-learn as a dependency for TF-IDF embedding analysis:
+**Required Dependencies:** The merge analyzer includes scikit-learn as a dependency for TF-IDF embedding analysis:
 
 ```bash
 # scikit-learn is included in pyproject.toml dependencies
@@ -437,4 +441,4 @@ def find_semantic_duplicates_pattern(tag_stats):
 - `quick, quickly` → stem: `quick`
 - `organize, organization` → stem: `organiz`
 
-This **dynamic approach** works with any English tag vocabulary without requiring vault-specific configuration, ensuring the analyzer remains universally applicable.
+This **dynamic approach** works with any English tag vocabulary without requiring vault-specific configuration, ensuring the analyzer remains universally applicable while providing a robust fallback when embedding-based analysis is unavailable.

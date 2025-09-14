@@ -140,6 +140,7 @@ Commands:
 │ tagex extract   → TagExtractor class        │
 │ tagex rename    → RenameOperation class     │
 │ tagex merge     → MergeOperation class      │
+│ tagex delete    → DeleteOperation class     │
 └─────────────────────────────────────────────┘
 ```
 
@@ -193,6 +194,7 @@ Commands:
 │ ├─ Dry-run capability for safe previews     │
 │ ├─ Operation logging with integrity checks  │
 │ ├─ File modification tracking               │
+│ ├─ Parser-based tag transformation          │
 │ └─ Error handling and statistics            │
 │                                             │
 │ RenameOperation                             │
@@ -200,6 +202,9 @@ Commands:
 │                                             │
 │ MergeOperation                              │
 │   └─ Consolidate multiple tags into one     │
+│                                             │
+│ DeleteOperation                             │
+│   └─ Remove tags entirely from vault        │
 └─────────────────────────────────────────────┘
 ```
 
@@ -328,6 +333,7 @@ tagex extract /vault/path --no-filter -o raw_tags.json
 # Tag operations (always with preview first)
 tagex rename /vault old-tag new-tag --dry-run
 tagex merge /vault tag1 tag2 --into combined-tag --dry-run
+tagex delete /vault unwanted-tag another-tag --dry-run
 ```
 
 ## Tag Operations Architecture
@@ -418,10 +424,11 @@ The architecture supports extension through:
 
 1. **Additional Operations**: Extend `TagOperationEngine` for new tag operations
 2. **Additional Parsers**: New tag sources can be added by implementing the parser interface
-3. **Output Formats**: New formatters can be added to `output_formatter.py`  
-4. **Analysis Modules**: The `tag-analysis/` directory demonstrates advanced processing
+3. **Output Formats**: New formatters can be added to `output_formatter.py`
+4. **Analysis Modules**: The `tag-analysis/` directory provides semantic similarity detection
 5. **File Filters**: Pattern-based exclusion system can be extended
 6. **Statistics**: The statistics tracking system can be enhanced for additional metrics
 7. **Tag Validation**: Validation rules can be customized in `utils/tag_normalizer.py`
 8. **Console Integration**: Script entry points defined in `pyproject.toml`
 9. **Operation Logging**: Structured logging system supports custom reporting
+10. **Semantic Analysis**: TF-IDF embedding-based tag merge suggestions with morphological fallback
