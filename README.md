@@ -43,10 +43,14 @@ tagex /path/to/vault merge tag1 tag2 tag3 --into target-tag [--dry-run]
 # Delete tags from all files
 tagex /path/to/vault delete tag-to-remove another-tag --dry-run
 
+# Get comprehensive vault statistics
+tagex /path/to/vault stats --top 15
+
 # Global --tag-types option examples
 tagex --tag-types frontmatter /path/to/vault extract
 tagex --tag-types inline /path/to/vault rename old-tag new-tag --dry-run
 tagex --tag-types both /path/to/vault merge tag1 tag2 --into new-tag
+tagex --tag-types frontmatter /path/to/vault stats --format json
 ```
 
 Or during development:
@@ -58,6 +62,7 @@ uv run main.py /path/to/vault extract [options]
 uv run main.py /path/to/vault rename old-tag new-tag
 uv run main.py /path/to/vault merge tag1 tag2 --into new-tag
 uv run main.py /path/to/vault delete old-tag
+uv run main.py /path/to/vault stats --top 20
 ```
 
 ### Global Options
@@ -79,6 +84,12 @@ uv run main.py /path/to/vault delete old-tag
 
 - `--dry-run`: Preview changes without modifying files (recommended for testing)
 - All tag operations include logging and can be previewed safely
+
+### Stats Command Options
+
+- `--top`, `-t`: Number of top tags to display (default: 20)
+- `--format`, `-f`: Output format (`text`, `json`) (default: text)
+- `--no-filter`: Include all raw tags without filtering
 
 ### Examples
 
@@ -125,6 +136,22 @@ tagex --tag-types inline /path/to/vault delete obsolete-tag --dry-run
 
 # Preview deleting tags (safe)
 tagex /path/to/vault delete obsolete-tag temp-tag --dry-run
+```
+
+**Vault Statistics:**
+
+```bash
+# Display comprehensive tag statistics
+tagex /path/to/vault stats
+
+# Show top 10 tags with JSON output
+tagex /path/to/vault stats --top 10 --format json
+
+# Stats for frontmatter tags only
+tagex --tag-types frontmatter /path/to/vault stats
+
+# Include all tags (no filtering)
+tagex /path/to/vault stats --no-filter
 ```
 
 **Complete Workflow:**
