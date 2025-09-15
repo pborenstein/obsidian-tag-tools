@@ -20,16 +20,18 @@ from operations.tag_operations import RenameOperation, MergeOperation, DeleteOpe
 
 @click.group()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
 @click.version_option()
 @click.pass_context
-def cli(ctx, vault_path):
+def cli(ctx, vault_path, tag_types):
     """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults.
 
     VAULT_PATH: Path to the Obsidian vault directory
     """
-    # Store vault_path in context for subcommands
+    # Store vault_path and tag_types in context for subcommands
     ctx.ensure_object(dict)
     ctx.obj['vault_path'] = vault_path
+    ctx.obj['tag_types'] = tag_types
 
 
 @cli.command()
@@ -39,11 +41,11 @@ def cli(ctx, vault_path):
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--quiet', '-q', is_flag=True, help='Suppress summary output')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to extract (default: both)')
 @click.pass_context
-def extract(ctx, output, format, exclude, verbose, quiet, no_filter, tag_types):
+def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
     """Extract tags from the vault."""
     vault_path = ctx.obj['vault_path']
+    tag_types = ctx.obj['tag_types']
     # Set up logging
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
@@ -136,9 +138,8 @@ def merge(ctx, source_tags, target_tag, dry_run, tag_types):
 @cli.command()
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
 @click.pass_context
-def delete(ctx, tags_to_delete, dry_run, tag_types):
+def delete(ctx, tags_to_delete, dry_run):
     """Delete tags entirely from all files in the vault.
 
     TAGS_TO_DELETE: Tags to delete (space-separated)
@@ -147,6 +148,7 @@ def delete(ctx, tags_to_delete, dry_run, tag_types):
     Use --dry-run first to preview changes. Inline tag deletion may affect readability.
     """
     vault_path = ctx.obj['vault_path']
+    tag_types = ctx.obj['tag_types']
     operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
