@@ -13,14 +13,14 @@ uv tool install --editable .
 tagex --help
 
 # Extract all tags to JSON from your vault
-tagex extract "$HOME/Obsidian/MyVault" -f json -o tags.json
+tagex "$HOME/Obsidian/MyVault" extract -f json -o tags.json
 
 # Top 20 tags (requires jq)
 jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 
 # Dry-run a rename, then apply
-tagex rename "$HOME/Obsidian/MyVault" "work" "project" --dry-run
-tagex rename "$HOME/Obsidian/MyVault" "work" "project"
+tagex "$HOME/Obsidian/MyVault" rename "work" "project" --dry-run
+tagex "$HOME/Obsidian/MyVault" rename "work" "project"
 
 # Explore co-occurrence
 uv run tag-analysis/pair_analyzer.py tags.json
@@ -32,27 +32,27 @@ The tool provides comprehensive tag management through multiple commands:
 
 ```bash
 # Extract tags from vault
-tagex extract /path/to/vault [options]
+tagex /path/to/vault extract [options]
 
 # Rename a tag across all files
-tagex rename /path/to/vault old-tag new-tag [--dry-run]
+tagex /path/to/vault rename old-tag new-tag [--dry-run]
 
 # Merge multiple tags into one
-tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
+tagex /path/to/vault merge tag1 tag2 tag3 --into target-tag [--dry-run]
 
 # Delete tags from all files
-tagex delete /path/to/vault tag-to-remove another-tag --dry-run
+tagex /path/to/vault delete tag-to-remove another-tag --dry-run
 ```
 
 Or during development:
 ```bash
 # Extract tags
-uv run main.py extract /path/to/vault [options]
+uv run main.py /path/to/vault extract [options]
 
 # Tag operations
-uv run main.py rename /path/to/vault old-tag new-tag
-uv run main.py merge /path/to/vault tag1 tag2 --into new-tag
-uv run main.py delete /path/to/vault old-tag
+uv run main.py /path/to/vault rename old-tag new-tag
+uv run main.py /path/to/vault merge tag1 tag2 --into new-tag
+uv run main.py /path/to/vault delete old-tag
 ```
 
 ### Extract Command Options
@@ -76,61 +76,61 @@ uv run main.py delete /path/to/vault old-tag
 **Tag Extraction:**
 ```bash
 # Extract tags from vault and output as JSON
-tagex extract /path/to/vault
+tagex /path/to/vault extract
 
 # Save tags to CSV file
-tagex extract /path/to/vault -f csv -o tags.csv
+tagex /path/to/vault extract -f csv -o tags.csv
 
 # Extract with exclusions
-tagex extract /path/to/vault --exclude "*.template.md" --exclude "drafts/*"
+tagex /path/to/vault extract --exclude "*.template.md" --exclude "drafts/*"
 
 # Extract all raw tags without filtering
-tagex extract /path/to/vault --no-filter
+tagex /path/to/vault extract --no-filter
 
 # Extract only frontmatter tags
-tagex extract /path/to/vault --tag-types frontmatter
+tagex /path/to/vault extract --tag-types frontmatter
 
 # Extract only inline hashtags
-tagex extract /path/to/vault --tag-types inline
+tagex /path/to/vault extract --tag-types inline
 
 # Get a list of tags sorted by frequency
-tagex extract /path/to/vault -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
+tagex /path/to/vault extract -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
 ```
 
 **Tag Operations:**
 ```bash
 # Preview tag rename (safe)
-tagex rename /path/to/vault work project --dry-run
+tagex /path/to/vault rename work project --dry-run
 
 # Actually rename tag after reviewing preview
-tagex rename /path/to/vault work project
+tagex /path/to/vault rename work project
 
 # Merge multiple related tags
-tagex merge /path/to/vault personal-note diary-entry journal --into writing
+tagex /path/to/vault merge personal-note diary-entry journal --into writing
 
 # Rename only frontmatter tags (leave inline tags unchanged)
-tagex rename /path/to/vault work project --tag-types frontmatter --dry-run
+tagex /path/to/vault rename work project --tag-types frontmatter --dry-run
 
 # Delete only inline tags (preserve frontmatter tags)
-tagex delete /path/to/vault obsolete-tag --tag-types inline --dry-run
+tagex /path/to/vault delete obsolete-tag --tag-types inline --dry-run
 
 # Preview deleting tags (safe)
-tagex delete /path/to/vault obsolete-tag temp-tag --dry-run
+tagex /path/to/vault delete obsolete-tag temp-tag --dry-run
 ```
 
 **Complete Workflow:**
 ```bash
 # 1. Extract and analyze tags
-tagex extract /vault -o tags.json
+tagex /vault extract -o tags.json
 # By default, analysis scripts filter noise. Use --no-filter to disable.
 uv run tag-analysis/pair_analyzer.py tags.json
 
 # 2. Preview and apply changes
-tagex rename /vault old-name new-name --dry-run
-tagex rename /vault old-name new-name
+tagex /vault rename old-name new-name --dry-run
+tagex /vault rename old-name new-name
 
 # 3. Verify changes
-tagex extract /vault -o updated_tags.json
+tagex /vault extract -o updated_tags.json
 ```
 
 ## Features

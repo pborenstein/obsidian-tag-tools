@@ -15,19 +15,17 @@ uv sync
 # Install as system-wide tool (creates 'tagex' command)
 uv tool install --editable .
 
-# Tag extraction (console script)
-tagex extract /path/to/vault [options]
-
 # Tag operations (console script)
-tagex rename /path/to/vault old-tag new-tag [--dry-run] [--tag-types both|frontmatter|inline]
-tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run] [--tag-types both|frontmatter|inline]
-tagex delete /path/to/vault unwanted-tag another-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex /path/to/vault extract [options]
+tagex /path/to/vault rename old-tag new-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex /path/to/vault delete unwanted-tag another-tag [--dry-run] [--tag-types both|frontmatter|inline]
 
 # Or using uv run during development
-uv run main.py extract /path/to/vault [options]
-uv run main.py rename /path/to/vault old-tag new-tag [--tag-types both|frontmatter|inline]
-uv run main.py merge /path/to/vault tag1 tag2 --into target-tag [--tag-types both|frontmatter|inline]
-uv run main.py delete /path/to/vault unwanted-tag --dry-run [--tag-types both|frontmatter|inline]
+uv run main.py /path/to/vault extract [options]
+uv run main.py /path/to/vault rename old-tag new-tag [--tag-types both|frontmatter|inline]
+uv run main.py /path/to/vault merge tag1 tag2 --into target-tag [--tag-types both|frontmatter|inline]
+uv run main.py /path/to/vault delete unwanted-tag --dry-run [--tag-types both|frontmatter|inline]
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]

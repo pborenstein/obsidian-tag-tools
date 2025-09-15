@@ -137,10 +137,10 @@ Input: Obsidian Vault
 
 Commands:
 ┌─────────────────────────────────────────────┐
-│ tagex extract   → TagExtractor class        │
-│ tagex rename    → RenameOperation class     │
-│ tagex merge     → MergeOperation class      │
-│ tagex delete    → DeleteOperation class     │
+│ tagex /vault extract → TagExtractor class   │
+│ tagex /vault rename  → RenameOperation class│
+│ tagex /vault merge   → MergeOperation class │
+│ tagex /vault delete  → DeleteOperation class│
 └─────────────────────────────────────────────┘
 ```
 
@@ -346,23 +346,23 @@ The tool includes tag validation to filter out noise and technical artifacts:
 uv tool install --editable .
 
 # Run extraction with system-wide command
-tagex extract /path/to/vault
+tagex /path/to/vault extract
 
 # Extract with filtering (default)
-tagex extract /vault/path -o tags.json
+tagex /vault/path extract -o tags.json
 
 # Extract raw tags (no filtering)
-tagex extract /vault/path --no-filter -o raw_tags.json
+tagex /vault/path extract --no-filter -o raw_tags.json
 
 # Tag operations (always with preview first)
-tagex rename /vault old-tag new-tag --dry-run
-tagex merge /vault tag1 tag2 --into combined-tag --dry-run
-tagex delete /vault unwanted-tag another-tag --dry-run
+tagex /vault rename old-tag new-tag --dry-run
+tagex /vault merge tag1 tag2 --into combined-tag --dry-run
+tagex /vault delete unwanted-tag another-tag --dry-run
 
 # Tag type filtering examples
-tagex extract /vault --tag-types frontmatter -o frontmatter_only.json
-tagex rename /vault work project --tag-types inline --dry-run
-tagex delete /vault temp-tag --tag-types frontmatter --dry-run
+tagex /vault extract --tag-types frontmatter -o frontmatter_only.json
+tagex /vault rename work project --tag-types inline --dry-run
+tagex /vault delete temp-tag --tag-types frontmatter --dry-run
 ```
 
 ## Tag Operations Architecture
