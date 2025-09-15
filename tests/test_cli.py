@@ -62,16 +62,16 @@ class TestCLIBasics:
 class TestExtractCommand:
     """Tests for the extract command."""
     
-    def test_extract_command_help(self):
+    def test_extract_command_help(self, simple_vault):
         """Test extract command help message."""
         from main import cli
-        
+
         runner = CliRunner()
-        result = runner.invoke(cli, ['extract', '--help'])
-        
+        result = runner.invoke(cli, [str(simple_vault), 'extract', '--help'])
+
         assert result.exit_code == 0
         assert "extract" in result.output.lower()
-        
+
         # Should show available options
         assert "--output" in result.output or "-o" in result.output
         assert "--format" in result.output or "-f" in result.output
@@ -81,7 +81,7 @@ class TestExtractCommand:
         from main import cli
         
         runner = CliRunner()
-        result = runner.invoke(cli, ['extract', str(simple_vault)])
+        result = runner.invoke(cli, [str(simple_vault), 'extract'])
         
         assert result.exit_code == 0
         
@@ -110,8 +110,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract', 
-            str(simple_vault), 
+            str(simple_vault), 'extract',
             '--output', str(output_file)
         ])
         
@@ -131,8 +130,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--format', 'csv',
             '--output', str(output_file)
         ])
@@ -149,8 +147,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--format', 'txt'
         ])
         
@@ -167,8 +164,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(complex_vault),
+            str(complex_vault), 'extract',
             '--exclude', '*.template.md',
             '--exclude', 'templates/*'
         ])
@@ -184,8 +180,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--verbose'
         ])
         
@@ -200,8 +195,7 @@ class TestExtractCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--quiet'
         ])
         
@@ -217,12 +211,11 @@ class TestExtractCommand:
         runner = CliRunner()
         
         # Extract with filtering (default)
-        result_filtered = runner.invoke(cli, ['extract', str(simple_vault)])
+        result_filtered = runner.invoke(cli, [str(simple_vault), 'extract'])
         
         # Extract without filtering
         result_unfiltered = runner.invoke(cli, [
-            'extract', 
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--no-filter'
         ])
         
@@ -716,8 +709,7 @@ class TestCLIErrorHandling:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--format', 'invalid-format'
         ])
         
@@ -761,7 +753,7 @@ Content""")
             restricted_vault.chmod(stat.S_IWUSR)
             
             runner = CliRunner()
-            result = runner.invoke(cli, ['extract', str(restricted_vault)])
+            result = runner.invoke(cli, [str(restricted_vault), 'extract'])
             
             # Should handle permission errors gracefully
             # Exact behavior depends on implementation
@@ -783,7 +775,7 @@ Content""")
         
         # This is difficult to test directly, but we can at least verify
         # the CLI doesn't crash on normal operations
-        result = runner.invoke(cli, ['extract', str(simple_vault)])
+        result = runner.invoke(cli, [str(simple_vault), 'extract'])
         assert isinstance(result.exit_code, int)
 
 
@@ -807,7 +799,7 @@ Content with #work and #notes tags.""")
         runner = CliRunner()
         
         # 1. Extract tags
-        extract_result = runner.invoke(cli, ['extract', str(test_vault)])
+        extract_result = runner.invoke(cli, [str(test_vault), 'extract'])
         assert extract_result.exit_code == 0
         
         # 2. Rename a tag (dry run first)
@@ -823,7 +815,7 @@ Content with #work and #notes tags.""")
         assert rename_result.exit_code == 0
         
         # 4. Extract again to verify changes
-        final_extract = runner.invoke(cli, ['extract', str(test_vault)])
+        final_extract = runner.invoke(cli, [str(test_vault), 'extract'])
         assert final_extract.exit_code == 0
     
     def test_cli_output_consistency(self, simple_vault, temp_dir):
@@ -835,7 +827,7 @@ Content with #work and #notes tags.""")
         # Run same command multiple times
         results = []
         for _ in range(3):
-            result = runner.invoke(cli, ['extract', str(simple_vault)])
+            result = runner.invoke(cli, [str(simple_vault), 'extract'])
             results.append(result)
         
         # All should succeed
@@ -852,7 +844,7 @@ Content with #work and #notes tags.""")
         runner = CliRunner()
         
         # Extract from complex vault
-        result = runner.invoke(cli, ['extract', str(complex_vault)])
+        result = runner.invoke(cli, [str(complex_vault), 'extract'])
         assert result.exit_code == 0
         
         # Try operations on complex vault
@@ -1001,7 +993,7 @@ Content with #delete-me""")
         runner = CliRunner()
 
         # Default behavior (should be 'both')
-        result_default = runner.invoke(cli, ['extract', str(simple_vault)])
+        result_default = runner.invoke(cli, [str(simple_vault), 'extract'])
 
         # Explicit 'both'
         result_both = runner.invoke(cli, [
@@ -1012,3 +1004,155 @@ Content with #delete-me""")
         assert result_both.exit_code == 0
         # Output should be the same
         assert result_default.output == result_both.output
+
+
+class TestGlobalTagTypesIntegration:
+    """Integration tests for global --tag-types option to ensure it actually works correctly."""
+
+    def test_global_tag_types_frontmatter_only_delete(self, temp_dir):
+        """Test that global --tag-types frontmatter only deletes frontmatter tags, not inline."""
+        from main import cli
+        from click.testing import CliRunner
+
+        # Create test vault with file containing both frontmatter and inline tags
+        vault_path = temp_dir / "global_tag_test"
+        vault_path.mkdir()
+
+        test_file = vault_path / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [test-tag]
+---
+# Content
+
+This has an inline #test-tag in the content.
+""")
+
+        runner = CliRunner()
+
+        # Test with global --tag-types frontmatter
+        result = runner.invoke(cli, [
+            '--tag-types', 'frontmatter', str(vault_path), 'delete', 'test-tag', '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+
+        # Should only process frontmatter tags, not inline
+        assert "Files with frontmatter tag deletions: 1" in result.output
+        assert "Files with inline tag deletions: 0" in result.output
+
+        # Should NOT show warning about inline tag deletion since inline processing is disabled
+        assert "WARNING: Deleting inline tags" not in result.output
+
+    def test_global_tag_types_inline_only_delete(self, temp_dir):
+        """Test that global --tag-types inline only deletes inline tags, not frontmatter."""
+        from main import cli
+        from click.testing import CliRunner
+
+        # Create test vault with file containing both frontmatter and inline tags
+        vault_path = temp_dir / "global_tag_test"
+        vault_path.mkdir()
+
+        test_file = vault_path / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [test-tag]
+---
+# Content
+
+This has an inline #test-tag in the content.
+""")
+
+        runner = CliRunner()
+
+        # Test with global --tag-types inline
+        result = runner.invoke(cli, [
+            '--tag-types', 'inline', str(vault_path), 'delete', 'test-tag', '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+
+        # Should only process inline tags, not frontmatter
+        assert "Files with frontmatter tag deletions: 0" in result.output
+        assert "Files with inline tag deletions: 1" in result.output
+
+        # SHOULD show warning about inline tag deletion since inline processing is enabled
+        assert "WARNING: Deleting inline tags" in result.output
+
+    def test_global_tag_types_both_delete(self, temp_dir):
+        """Test that global --tag-types both deletes both frontmatter and inline tags."""
+        from main import cli
+        from click.testing import CliRunner
+
+        # Create test vault with file containing both frontmatter and inline tags
+        vault_path = temp_dir / "global_tag_test"
+        vault_path.mkdir()
+
+        test_file = vault_path / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [test-tag]
+---
+# Content
+
+This has an inline #test-tag in the content.
+""")
+
+        runner = CliRunner()
+
+        # Test with global --tag-types both
+        result = runner.invoke(cli, [
+            '--tag-types', 'both', str(vault_path), 'delete', 'test-tag', '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+
+        # Should process both frontmatter and inline tags
+        assert "Files with frontmatter tag deletions: 1" in result.output
+        assert "Files with inline tag deletions: 1" in result.output
+        assert "Tags modified: 2" in result.output
+
+        # SHOULD show warning about inline tag deletion since inline processing is enabled
+        assert "WARNING: Deleting inline tags" in result.output
+
+    def test_individual_commands_no_local_tag_types_option(self, simple_vault):
+        """Test that individual commands don't have their own --tag-types options."""
+        from main import cli
+        from click.testing import CliRunner
+
+        runner = CliRunner()
+
+        # Test that delete command doesn't accept local --tag-types
+        result = runner.invoke(cli, [
+            str(simple_vault), 'delete', 'some-tag', '--tag-types', 'frontmatter', '--dry-run'
+        ])
+
+        # Should fail because --tag-types is not a local option for delete command
+        assert result.exit_code != 0
+        assert "No such option" in result.output or "Unrecognized option" in result.output
+
+    def test_global_tag_types_with_rename_operation(self, temp_dir):
+        """Test that global --tag-types works with rename operation."""
+        from main import cli
+        from click.testing import CliRunner
+
+        # Create test vault with file containing both frontmatter and inline tags
+        vault_path = temp_dir / "global_tag_test"
+        vault_path.mkdir()
+
+        test_file = vault_path / "mixed_tags.md"
+        test_file.write_text("""---
+tags: [old-tag]
+---
+# Content
+
+This has an inline #old-tag in the content.
+""")
+
+        runner = CliRunner()
+
+        # Test rename with global --tag-types frontmatter
+        result = runner.invoke(cli, [
+            '--tag-types', 'frontmatter', str(vault_path), 'rename', 'old-tag', 'new-tag', '--dry-run'
+        ])
+
+        assert result.exit_code == 0
+        # Should indicate it would process the file (contains frontmatter tag)
+        assert "Files processed: 1" in result.output
