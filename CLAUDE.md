@@ -20,6 +20,7 @@ tagex /path/to/vault extract [options]
 tagex /path/to/vault rename old-tag new-tag [--dry-run]
 tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run]
 tagex /path/to/vault delete unwanted-tag another-tag [--dry-run]
+tagex /path/to/vault stats [--top N] [--format text|json] [--no-filter]
 
 # Global --tag-types option (applies to all commands)
 tagex --tag-types both|frontmatter|inline /path/to/vault COMMAND [options]
@@ -29,6 +30,7 @@ uv run main.py /path/to/vault extract [options]
 uv run main.py /path/to/vault rename old-tag new-tag
 uv run main.py /path/to/vault merge tag1 tag2 --into target-tag
 uv run main.py /path/to/vault delete unwanted-tag --dry-run
+uv run main.py /path/to/vault stats [--top 10] [--format json]
 
 # Global --tag-types with uv run
 uv run main.py --tag-types frontmatter /path/to/vault extract
@@ -63,7 +65,8 @@ uv run pytest tests/
 
 - **Vault-first CLI structure** - Vault path comes first, then command
 - **Global tag type filtering** - --tag-types option applies to all operations
-- **Multi-command operations** - Extract, rename, merge, delete with consistent interface
+- **Multi-command operations** - Extract, rename, merge, delete, stats with consistent interface
+- **Comprehensive statistics** - Tag distribution, vault health metrics, singleton analysis
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **Tag validation** - Filters noise, preserves meaningful tags
 - **Semantic analysis** - TF-IDF embedding-based similarity detection with morphological fallback
