@@ -22,8 +22,8 @@ jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 tagex "$HOME/Obsidian/MyVault" rename "work" "project" --dry-run
 tagex "$HOME/Obsidian/MyVault" rename "work" "project"
 
-# Explore co-occurrence
-uv run tag-analysis/pair_analyzer.py tags.json
+# View vault statistics and health metrics
+tagex "$HOME/Obsidian/MyVault" stats
 ```
 
 ## Commands
