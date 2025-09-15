@@ -54,13 +54,13 @@ Once installed, the tool can be run directly using the `tagex` command.
 **Extracting Tags:**
 ```bash
 # Extract all tags to stdout as JSON
-tagex extract /path/to/vault
+tagex /path/to/vault extract
 
 # Extract and save to a CSV file
-tagex extract /path/to/vault -f csv -o my_tags.csv
+tagex /path/to/vault extract -f csv -o my_tags.csv
 
 # Extract with verbose logging and no tag filtering
-tagex extract /path/to/vault --verbose --no-filter
+tagex /path/to/vault extract --verbose --no-filter
 ```
 
 **Modifying Tags:**
@@ -68,22 +68,22 @@ All modification commands should be run with `--dry-run` first to preview change
 
 ```bash
 # Preview renaming a tag
-tagex rename /path/to/vault old-tag new-tag --dry-run
+tagex /path/to/vault rename old-tag new-tag --dry-run
 
 # Apply the rename
-tagex rename /path/to/vault old-tag new-tag
+tagex /path/to/vault rename old-tag new-tag
 
 # Preview merging several tags into one
-tagex merge /path/to/vault tag1 tag2 --into consolidated-tag --dry-run
+tagex /path/to/vault merge tag1 tag2 --into consolidated-tag --dry-run
 
 # Preview deleting tags
-tagex delete /path/to/vault obsolete-tag --dry-run
+tagex /path/to/vault delete obsolete-tag --dry-run
 ```
 
 ### Running During Development
 To run the tool without installing it globally, use `uv run`:
 ```bash
-uv run main extract /path/to/vault
+uv run main.py /path/to/vault extract
 ```
 
 ### Running Tests

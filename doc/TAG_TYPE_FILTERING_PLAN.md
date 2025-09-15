@@ -9,7 +9,7 @@
 
 ~~Add `--frontmatter-only` and `--inline-only` options to all tagex commands to allow users to work exclusively with frontmatter tags or inline hashtags.~~
 
-**IMPLEMENTED:** Added `--tag-types` option with values `both` (default), `frontmatter`, and `inline` to all tagex commands, enabling selective processing of tag types.
+**IMPLEMENTED:** Added global `--tag-types` option with values `both` (default), `frontmatter`, and `inline` to the tagex CLI, enabling selective processing of tag types across all commands.
 
 ## Current Architecture Analysis
 
@@ -137,16 +137,18 @@ tagex merge /path/to/vault tag1 tag2 --into target --frontmatter-only --dry-run
 
 ```bash
 # Extract only frontmatter tags
-tagex /path/to/vault extract --tag-types frontmatter
+tagex --tag-types frontmatter /path/to/vault extract
 
 # Rename only inline hashtags
-tagex /path/to/vault rename old-tag new-tag --tag-types inline
+tagex --tag-types inline /path/to/vault rename old-tag new-tag
 
 # Merge frontmatter tags only
-tagex /path/to/vault merge tag1 tag2 --into target --tag-types frontmatter --dry-run
+tagex --tag-types frontmatter /path/to/vault merge tag1 tag2 --into target --dry-run
 
 # Default behavior (both tag types)
-tagex /path/to/vault extract --tag-types both
+tagex --tag-types both /path/to/vault extract
+# Or simply (both is default):
+tagex /path/to/vault extract
 ```
 
 ## Implementation Summary
@@ -155,13 +157,14 @@ The tag type filtering feature was successfully implemented with:
 
 1. **Core TagExtractor Updates** - Added `tag_types` parameter with filtering logic
 2. **TagOperationEngine Updates** - Updated all operations to respect tag type filtering
-3. **CLI Integration** - Added `--tag-types` option to all commands with validation
+3. **CLI Integration** - Added global `--tag-types` option with vault-first CLI structure
 4. **Comprehensive Testing** - Full test coverage for all filtering modes
 5. **Documentation Updates** - Updated all markdown files with examples and usage
 
 **Benefits Achieved:**
 - Selective tag processing (frontmatter, inline, or both)
+- Global option applies to all commands uniformly
+- Vault-first CLI structure for consistency
 - Backward compatibility maintained (default: both)
-- Consistent API across all commands
 - Safe operations with dry-run support
 - Complete test coverage

@@ -125,7 +125,8 @@ Input: Obsidian Vault
 ┌─────────────────────────────────────────────┐
 │              MAIN CONTROLLER                │
 ├─────────────────────────────────────────────┤
-│ • Multi-command CLI using Click groups      │
+│ • Vault-first CLI using Click groups        │
+│ • Global --tag-types option handling        │
 │ • Console script entry point (tagex)        │
 │ • Tag filtering by default (--no-filter)    │
 │ • Orchestrates extraction workflow          │
@@ -141,6 +142,8 @@ Commands:
 │ tagex /vault rename  → RenameOperation class│
 │ tagex /vault merge   → MergeOperation class │
 │ tagex /vault delete  → DeleteOperation class│
+│                                             │
+│ Global --tag-types option affects all      │
 └─────────────────────────────────────────────┘
 ```
 
@@ -277,13 +280,16 @@ Tag Data
 
 ### Tag Type Filtering System
 ```
-Input: --tag-types parameter
+Input: Global --tag-types parameter
    │
    ├─► 'both' (default) ──► Process frontmatter + inline
    │
    ├─► 'frontmatter' ────► Process YAML tags only
    │
    └─► 'inline' ─────────► Process hashtags only
+
+CLI Structure:
+tagex [--tag-types TYPE] VAULT_PATH COMMAND [OPTIONS]
 
 Tag Processing Flow:
 ┌─────────────────────────────────────────────┐
@@ -359,10 +365,10 @@ tagex /vault rename old-tag new-tag --dry-run
 tagex /vault merge tag1 tag2 --into combined-tag --dry-run
 tagex /vault delete unwanted-tag another-tag --dry-run
 
-# Tag type filtering examples
-tagex /vault extract --tag-types frontmatter -o frontmatter_only.json
-tagex /vault rename work project --tag-types inline --dry-run
-tagex /vault delete temp-tag --tag-types frontmatter --dry-run
+# Tag type filtering examples (global --tag-types option)
+tagex --tag-types frontmatter /vault extract -o frontmatter_only.json
+tagex --tag-types inline /vault rename work project --dry-run
+tagex --tag-types frontmatter /vault delete temp-tag --dry-run
 ```
 
 ## Tag Operations Architecture

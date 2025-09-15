@@ -36,8 +36,8 @@ tagex /path/to/vault extract -o tags.json
 tagex /path/to/vault extract --no-filter -o raw_tags.json
 
 # Extract specific tag types for targeted analysis
-tagex /path/to/vault extract --tag-types frontmatter -o frontmatter_tags.json
-tagex /path/to/vault extract --tag-types inline -o inline_tags.json
+tagex --tag-types frontmatter /path/to/vault extract -o frontmatter_tags.json
+tagex --tag-types inline /path/to/vault extract -o inline_tags.json
 
 # Using uv run (alternative)
 uv run main.py /path/to/vault extract -o tags.json
@@ -96,8 +96,8 @@ The analytics tools work with any extracted tag data, enabling specialized analy
 
 ```bash
 # Compare frontmatter vs inline tag patterns
-tagex /vault extract --tag-types frontmatter -o fm_tags.json
-tagex /vault extract --tag-types inline -o inline_tags.json
+tagex --tag-types frontmatter /vault extract -o fm_tags.json
+tagex --tag-types inline /vault extract -o inline_tags.json
 
 uv run tag-analysis/pair_analyzer.py fm_tags.json
 uv run tag-analysis/pair_analyzer.py inline_tags.json

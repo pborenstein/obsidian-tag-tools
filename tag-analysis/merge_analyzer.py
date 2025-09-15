@@ -342,7 +342,7 @@ def print_merge_suggestions(suggestions):
             others = [t for t in tags if t != keep]
             print(f"  Keep: {keep}")
             print(f"  Merge: {', '.join(others)}")
-            print(f"  Command: tagex merge /path/to/vault {' '.join(others)} --into {keep}")
+            print(f"  Command: tagex /path/to/vault merge {' '.join(others)} --into {keep}")
             print(f"  Total usage: {suggestion['total_usage']}")
             print()
     
@@ -356,7 +356,7 @@ def print_merge_suggestions(suggestions):
             if others:  # Only show if there are actually other tags to merge
                 print(f"  Keep: {keep}")
                 print(f"  Merge: {', '.join(others)}")
-                print(f"  Command: tagex merge /path/to/vault {' '.join(others)} --into {keep}")
+                print(f"  Command: tagex /path/to/vault merge {' '.join(others)} --into {keep}")
                 print(f"  Total usage: {suggestion['total_usage']}")
                 if suggestion.get('method') == 'embedding' and 'similarity_scores' in suggestion:
                     scores = [f"{score:.2f}" for score in suggestion['similarity_scores']]
@@ -371,7 +371,7 @@ def print_merge_suggestions(suggestions):
             print(f"  Overlap: {suggestion['overlap_ratio']:.1%} ({suggestion['shared_files']}/{suggestion['total_files']} files)")
             print(f"  Suggest keeping: {suggestion['suggested_keep']}")
             other = suggestion['tag1'] if suggestion['suggested_keep'] == suggestion['tag2'] else suggestion['tag2']
-            print(f"  Command: tagex rename /path/to/vault {other} {suggestion['suggested_keep']}")
+            print(f"  Command: tagex /path/to/vault rename {other} {suggestion['suggested_keep']}")
             print()
 
 
