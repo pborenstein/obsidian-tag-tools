@@ -206,3 +206,4 @@ temp/
 .claude/
 
 tag_migration_log.json
+tag-*.json
