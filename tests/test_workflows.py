@@ -22,8 +22,7 @@ class TestCompleteExtractionWorkflow:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+            str(simple_vault), 'extract',
             '--format', 'json',
             '--output', str(output_file),
             '--verbose'
@@ -61,16 +60,12 @@ class TestCompleteExtractionWorkflow:
         runner = CliRunner()
         
         # Extract with filtering (default)
-        filtered_result = runner.invoke(cli, [
-            'extract',
-            str(complex_vault),
+        filtered_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--output', str(filtered_output)
         ])
         
         # Extract without filtering
-        unfiltered_result = runner.invoke(cli, [
-            'extract', 
-            str(complex_vault),
+        unfiltered_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--no-filter',
             '--output', str(unfiltered_output)
         ])
@@ -106,17 +101,13 @@ class TestCompleteExtractionWorkflow:
         # Extract all files
         all_output = temp_dir / "all_files.json"
         runner = CliRunner()
-        all_result = runner.invoke(cli, [
-            'extract',
-            str(complex_vault),
+        all_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--output', str(all_output)
         ])
         
         # Extract excluding templates
         excluded_output = temp_dir / "excluded_templates.json"
-        excluded_result = runner.invoke(cli, [
-            'extract',
-            str(complex_vault),
+        excluded_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--exclude', '*.template.md',
             '--exclude', 'templates/*',
             '--output', str(excluded_output)
@@ -147,17 +138,13 @@ class TestCompleteExtractionWorkflow:
         runner = CliRunner()
         
         # Generate JSON output
-        json_result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+        json_result = runner.invoke(cli, [str(simple_vault), 'extract',
             '--format', 'json',
             '--output', str(json_output)
         ])
         
         # Generate CSV output
-        csv_result = runner.invoke(cli, [
-            'extract',
-            str(simple_vault),
+        csv_result = runner.invoke(cli, [str(simple_vault), 'extract',
             '--format', 'csv',
             '--output', str(csv_output)
         ])
@@ -221,15 +208,13 @@ Personal notes with some #work references.""")
         
         # 1. Extract initial state
         initial_output = temp_dir / "before_rename.json"
-        initial_result = runner.invoke(cli, [
-            'extract', str(test_vault),
+        initial_result = runner.invoke(cli, [str(test_vault), 'extract',
             '--output', str(initial_output)
         ])
         assert initial_result.exit_code == 0
         
         # 2. Preview rename operation
-        dry_run_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional', '--dry-run'
+        dry_run_result = runner.invoke(cli, [str(test_vault), 'rename', 'work', 'professional', '--dry-run'
         ])
         assert dry_run_result.exit_code == 0
         
@@ -239,8 +224,7 @@ Personal notes with some #work references.""")
         assert "professional" not in file1_content_before
         
         # 3. Execute actual rename
-        rename_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional'
+        rename_result = runner.invoke(cli, [str(test_vault), 'rename', 'work', 'professional'
         ])
         assert rename_result.exit_code == 0
         
@@ -253,8 +237,7 @@ Personal notes with some #work references.""")
         
         # 5. Extract final state
         final_output = temp_dir / "after_rename.json"
-        final_result = runner.invoke(cli, [
-            'extract', str(test_vault),
+        final_result = runner.invoke(cli, [str(test_vault), 'extract',
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -307,15 +290,13 @@ Content with different tags.""")
         
         # 1. Extract initial state
         initial_output = temp_dir / "before_merge.json"
-        initial_result = runner.invoke(cli, [
-            'extract', str(test_vault),
+        initial_result = runner.invoke(cli, [str(test_vault), 'extract',
             '--output', str(initial_output)
         ])
         assert initial_result.exit_code == 0
         
         # 2. Preview merge operation
-        dry_run_result = runner.invoke(cli, [
-            'merge', str(test_vault),
+        dry_run_result = runner.invoke(cli, [str(test_vault), 'merge',
             'ideas', 'thoughts', 'brainstorming',
             '--into', 'thinking',
             '--dry-run'
@@ -323,8 +304,7 @@ Content with different tags.""")
         assert dry_run_result.exit_code == 0
         
         # 3. Execute actual merge
-        merge_result = runner.invoke(cli, [
-            'merge', str(test_vault),
+        merge_result = runner.invoke(cli, [str(test_vault), 'merge',
             'ideas', 'thoughts', 'brainstorming',
             '--into', 'thinking'
         ])
@@ -332,8 +312,7 @@ Content with different tags.""")
         
         # 4. Extract final state
         final_output = temp_dir / "after_merge.json"
-        final_result = runner.invoke(cli, [
-            'extract', str(test_vault),
+        final_result = runner.invoke(cli, [str(test_vault), 'extract',
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -372,20 +351,17 @@ Content with #old-work #thoughts and #creativity tags.""")
         runner = CliRunner()
         
         # 1. First operation: rename old-work to work
-        rename1_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'old-work', 'work'
+        rename1_result = runner.invoke(cli, [str(test_vault), 'rename', 'old-work', 'work'
         ])
         assert rename1_result.exit_code == 0
         
         # 2. Second operation: rename old-notes to notes
-        rename2_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'old-notes', 'notes'
+        rename2_result = runner.invoke(cli, [str(test_vault), 'rename', 'old-notes', 'notes'
         ])
         assert rename2_result.exit_code == 0
         
         # 3. Third operation: merge thinking-related tags
-        merge_result = runner.invoke(cli, [
-            'merge', str(test_vault),
+        merge_result = runner.invoke(cli, [str(test_vault), 'merge',
             'ideas', 'brainstorming', 'thoughts', 'creativity',
             '--into', 'thinking'
         ])
@@ -393,8 +369,7 @@ Content with #old-work #thoughts and #creativity tags.""")
         
         # 4. Verify final state
         final_output = temp_dir / "sequential_final.json"
-        final_result = runner.invoke(cli, [
-            'extract', str(test_vault),
+        final_result = runner.invoke(cli, [str(test_vault), 'extract',
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -461,8 +436,7 @@ More detailed content with #project-related information.
         
         # Extract from large vault
         output_file = temp_dir / "large_vault_extract.json"
-        extract_result = runner.invoke(cli, [
-            'extract', str(large_vault),
+        extract_result = runner.invoke(cli, [str(large_vault), 'extract',
             '--output', str(output_file),
             '--verbose'
         ])
@@ -511,31 +485,26 @@ Content with #meeting information.""")
         
         # 1. Analyze current state
         initial_analysis = temp_dir / "messy_initial.json"
-        runner.invoke(cli, [
-            'extract', str(messy_vault),
+        runner.invoke(cli, [str(messy_vault), 'extract',
             '--output', str(initial_analysis)
         ])
         
         # 2. Standardize work-related tags
-        runner.invoke(cli, [
-            'rename', str(messy_vault), 'work_project', 'work-project'
+        runner.invoke(cli, [str(messy_vault), 'rename', 'work_project', 'work-project'
         ])
         
-        runner.invoke(cli, [
-            'rename', str(messy_vault), 'work project', 'work-project'
+        runner.invoke(cli, [str(messy_vault), 'rename', 'work project', 'work-project'
         ])
         
         # 3. Merge meeting-related tags
-        runner.invoke(cli, [
-            'merge', str(messy_vault),
+        runner.invoke(cli, [str(messy_vault), 'merge',
             'meeting-notes', 'meeting_notes', 'meetings',
             '--into', 'meetings'
         ])
         
         # 4. Analyze final state
         final_analysis = temp_dir / "messy_final.json"
-        final_result = runner.invoke(cli, [
-            'extract', str(messy_vault),
+        final_result = runner.invoke(cli, [str(messy_vault), 'extract',
             '--output', str(final_analysis)
         ])
         
@@ -592,8 +561,7 @@ malformed: content
         
         # Should process successfully despite errors
         output_file = temp_dir / "error_recovery.json"
-        result = runner.invoke(cli, [
-            'extract', str(error_vault),
+        result = runner.invoke(cli, [str(error_vault), 'extract',
             '--output', str(output_file),
             '--verbose'
         ])
@@ -639,8 +607,7 @@ Content for file number {i} with #test-tag-{i}.
         
         # Extract should handle many files
         output_file = temp_dir / "many_files_output.json"
-        result = runner.invoke(cli, [
-            'extract', str(many_files_vault),
+        result = runner.invoke(cli, [str(many_files_vault), 'extract',
             '--output', str(output_file)
         ])
         
@@ -687,8 +654,7 @@ With additional #large-content tags and #test-references throughout.
         
         # Should handle large files
         output_file = temp_dir / "large_files_output.json"
-        result = runner.invoke(cli, [
-            'extract', str(large_files_vault),
+        result = runner.invoke(cli, [str(large_files_vault), 'extract',
             '--output', str(output_file)
         ])
         

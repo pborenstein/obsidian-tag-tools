@@ -230,7 +230,7 @@ class TestExtractCommand:
         from main import cli
         
         runner = CliRunner()
-        result = runner.invoke(cli, ['extract', '/nonexistent/vault'])
+        result = runner.invoke(cli, ['/dummy/path', 'extract'])
         
         # Should fail gracefully
         assert result.exit_code != 0
@@ -240,13 +240,13 @@ class TestExtractCommand:
 class TestRenameCommand:
     """Tests for the rename command."""
     
-    def test_rename_command_help(self):
+    def test_rename_command_help(self, simple_vault):
         """Test rename command help message."""
         from main import cli
-        
+
         runner = CliRunner()
-        result = runner.invoke(cli, ['rename', '--help'])
-        
+        result = runner.invoke(cli, [str(simple_vault), 'rename', '--help'])
+
         assert result.exit_code == 0
         assert "rename" in result.output.lower()
         assert "--dry-run" in result.output
@@ -257,10 +257,9 @@ class TestRenameCommand:
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'rename',
-            str(simple_vault),
+            str(simple_vault), 'rename',
             'work',
-            'professional', 
+            'professional',
             '--dry-run'
         ])
         
@@ -286,7 +285,7 @@ class TestRenameCommand:
         assert result.exit_code != 0
         
         # Missing both tags
-        result = runner.invoke(cli, ['rename', '/vault'])
+        result = runner.invoke(cli, ['/dummy/path', 'rename'])
         assert result.exit_code != 0
     
     def test_rename_command_actual_execution(self, temp_dir):
@@ -306,8 +305,7 @@ Content with #work tag.""")
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'rename',
-            str(test_vault),
+            str(test_vault), 'rename',
             'work',
             'professional'
         ])
@@ -325,8 +323,7 @@ Content with #work tag.""")
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'rename',
-            str(simple_vault),
+            str(simple_vault), 'rename',
             'nonexistent-tag',
             'new-tag',
             '--dry-run'
@@ -343,8 +340,7 @@ Content with #work tag.""")
         
         # Empty tag names
         result = runner.invoke(cli, [
-            'rename',
-            str(simple_vault),
+            str(simple_vault), 'rename',
             '',
             'new-tag',
             '--dry-run'
@@ -357,12 +353,12 @@ Content with #work tag.""")
 class TestMergeCommand:
     """Tests for the merge command."""
     
-    def test_merge_command_help(self):
+    def test_merge_command_help(self, simple_vault):
         """Test merge command help message."""
         from main import cli
         
         runner = CliRunner()
-        result = runner.invoke(cli, ['merge', '--help'])
+        result = runner.invoke(cli, [str(simple_vault), 'merge', '--help'])
         
         assert result.exit_code == 0
         assert "merge" in result.output.lower()
@@ -389,8 +385,7 @@ Content""")
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'merge',
-            str(test_vault),
+            str(test_vault), 'merge',
             'ideas',
             'brainstorming', 
             'thoughts',
@@ -414,8 +409,7 @@ Content""")
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'merge',
-            str(simple_vault),
+            str(simple_vault), 'merge',
             'tag1',
             'tag2'
         ])
@@ -430,8 +424,7 @@ Content""")
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'merge',
-            str(simple_vault),
+            str(simple_vault), 'merge',
             'work',
             '--into', 'professional',
             '--dry-run'
@@ -444,12 +437,12 @@ Content""")
 class TestDeleteCommand:
     """Tests for the delete command."""
 
-    def test_delete_command_help(self):
+    def test_delete_command_help(self, simple_vault):
         """Test delete command help message."""
         from main import cli
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['delete', '--help'])
+        result = runner.invoke(cli, [str(simple_vault), 'delete', '--help'])
 
         assert result.exit_code == 0
         assert "delete" in result.output.lower()
@@ -472,8 +465,7 @@ Content with #unwanted-tag inline.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(test_vault),
+            str(test_vault), 'delete',
             'unwanted-tag',
             '--dry-run'
         ])
@@ -504,8 +496,7 @@ Content with #unwanted1 and #unwanted2.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(test_vault),
+            str(test_vault), 'delete',
             'unwanted1',
             'unwanted2',
             '--dry-run'
@@ -521,7 +512,7 @@ Content with #unwanted1 and #unwanted2.
         runner = CliRunner()
 
         # Missing tag arguments
-        result = runner.invoke(cli, ['delete', '/vault'])
+        result = runner.invoke(cli, ['/dummy/path', 'delete'])
         assert result.exit_code != 0
 
         # Missing vault path
@@ -544,8 +535,7 @@ This content has #unwanted-inline tag that will trigger warnings.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(test_vault),
+            str(test_vault), 'delete',
             'unwanted-inline',
             '--dry-run'
         ])
@@ -576,8 +566,7 @@ Content with some text.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(test_vault),
+            str(test_vault), 'delete',
             'unwanted-tag'
         ])
 
@@ -595,8 +584,7 @@ Content with some text.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(simple_vault),
+            str(simple_vault), 'delete',
             'absolutely-nonexistent-tag',
             '--dry-run'
         ])
@@ -630,8 +618,7 @@ Content here.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(test_vault),
+            str(test_vault), 'delete',
             'unwanted-tag'
         ])
 
@@ -653,8 +640,7 @@ Content here.
 
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'delete',
-            str(simple_vault),
+            str(simple_vault), 'delete',
             '',
             '--dry-run'
         ])
@@ -678,8 +664,7 @@ Content with #thoughts inline.""")
         
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'merge',
-            str(test_vault),
+            str(test_vault), 'merge',
             'ideas',
             'brainstorming',
             'thoughts',
@@ -804,13 +789,13 @@ Content with #work and #notes tags.""")
         
         # 2. Rename a tag (dry run first)
         rename_dry_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional', '--dry-run'
+            str(test_vault), 'rename', 'work', 'professional', '--dry-run'
         ])
         assert rename_dry_result.exit_code == 0
         
         # 3. Actually rename tag
         rename_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional'
+            str(test_vault), 'rename', 'work', 'professional'
         ])
         assert rename_result.exit_code == 0
         
@@ -849,161 +834,10 @@ Content with #work and #notes tags.""")
         
         # Try operations on complex vault
         rename_result = runner.invoke(cli, [
-            'rename', str(complex_vault), 'work', 'professional', '--dry-run'
+            str(complex_vault), 'rename', 'work', 'professional', '--dry-run'
         ])
         assert rename_result.exit_code == 0
 
-
-class TestCLITagTypesOptions:
-    """Test CLI with tag_types option."""
-
-    def test_extract_with_tag_types_frontmatter(self, temp_dir):
-        """Test extract command with --tag-types frontmatter."""
-        from main import cli
-        from click.testing import CliRunner
-
-        # Create test vault with mixed tags
-        vault_path = temp_dir / "tag_types_vault"
-        vault_path.mkdir()
-
-        (vault_path / "mixed.md").write_text("""---
-tags: [frontmatter-tag]
----
-Content with #inline-tag""")
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'extract', str(vault_path), '--tag-types', 'frontmatter'
-        ])
-
-        assert result.exit_code == 0
-        output = result.output
-        assert "frontmatter-tag" in output
-        assert "inline-tag" not in output
-
-    def test_extract_with_tag_types_inline(self, temp_dir):
-        """Test extract command with --tag-types inline."""
-        from main import cli
-        from click.testing import CliRunner
-
-        vault_path = temp_dir / "inline_vault"
-        vault_path.mkdir()
-
-        (vault_path / "mixed.md").write_text("""---
-tags: [frontmatter-tag]
----
-Content with #inline-tag""")
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'extract', str(vault_path), '--tag-types', 'inline'
-        ])
-
-        assert result.exit_code == 0
-        output = result.output
-        assert "frontmatter-tag" not in output
-        assert "inline-tag" in output
-
-    def test_rename_with_tag_types_option(self, temp_dir):
-        """Test rename command with --tag-types option."""
-        from main import cli
-        from click.testing import CliRunner
-
-        vault_path = temp_dir / "rename_types_vault"
-        vault_path.mkdir()
-
-        test_file = vault_path / "test.md"
-        test_file.write_text("""---
-tags: [old-tag]
----
-Content with #old-tag""")
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'rename', str(vault_path), 'old-tag', 'new-tag',
-            '--tag-types', 'frontmatter', '--dry-run'
-        ])
-
-        assert result.exit_code == 0
-        # Should not error out with tag-types option
-
-    def test_merge_with_tag_types_option(self, temp_dir):
-        """Test merge command with --tag-types option."""
-        from main import cli
-        from click.testing import CliRunner
-
-        vault_path = temp_dir / "merge_types_vault"
-        vault_path.mkdir()
-
-        test_file = vault_path / "test.md"
-        test_file.write_text("""---
-tags: [tag1, tag2]
----
-Content with #tag1 and #tag2""")
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'merge', str(vault_path), 'tag1', 'tag2',
-            '--into', 'merged-tag',
-            '--tag-types', 'inline', '--dry-run'
-        ])
-
-        assert result.exit_code == 0
-
-    def test_delete_with_tag_types_option(self, temp_dir):
-        """Test delete command with --tag-types option."""
-        from main import cli
-        from click.testing import CliRunner
-
-        vault_path = temp_dir / "delete_types_vault"
-        vault_path.mkdir()
-
-        test_file = vault_path / "test.md"
-        test_file.write_text("""---
-tags: [delete-me]
----
-Content with #delete-me""")
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'delete', str(vault_path), 'delete-me',
-            '--tag-types', 'frontmatter', '--dry-run'
-        ])
-
-        assert result.exit_code == 0
-
-    def test_invalid_tag_types_value(self, simple_vault):
-        """Test that invalid tag-types values are rejected."""
-        from main import cli
-        from click.testing import CliRunner
-
-        runner = CliRunner()
-        result = runner.invoke(cli, [
-            'extract', str(simple_vault), '--tag-types', 'invalid'
-        ])
-
-        assert result.exit_code != 0
-        assert "invalid" in result.output.lower() or "choice" in result.output.lower()
-
-    def test_tag_types_default_behavior(self, simple_vault):
-        """Test that default tag-types behavior works (both)."""
-        from main import cli
-        from click.testing import CliRunner
-
-        runner = CliRunner()
-
-        # Default behavior (should be 'both')
-        result_default = runner.invoke(cli, [str(simple_vault), 'extract'])
-
-        # Explicit 'both'
-        result_both = runner.invoke(cli, [
-            'extract', str(simple_vault), '--tag-types', 'both'
-        ])
-
-        assert result_default.exit_code == 0
-        assert result_both.exit_code == 0
-        # Output should be the same
-        assert result_default.output == result_both.output
 
 
 class TestGlobalTagTypesIntegration:

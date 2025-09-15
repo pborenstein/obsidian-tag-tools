@@ -106,15 +106,15 @@ def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
 @click.argument('old_tag')
 @click.argument('new_tag')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
 @click.pass_context
-def rename(ctx, old_tag, new_tag, dry_run, tag_types):
+def rename(ctx, old_tag, new_tag, dry_run):
     """Rename a tag across all files in the vault.
 
     OLD_TAG: Tag to rename
     NEW_TAG: New tag name
     """
     vault_path = ctx.obj['vault_path']
+    tag_types = ctx.obj['tag_types']
     operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
@@ -123,14 +123,14 @@ def rename(ctx, old_tag, new_tag, dry_run, tag_types):
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
 @click.pass_context
-def merge(ctx, source_tags, target_tag, dry_run, tag_types):
+def merge(ctx, source_tags, target_tag, dry_run):
     """Merge multiple tags into a single tag.
 
     SOURCE_TAGS: Tags to merge (space-separated)
     """
     vault_path = ctx.obj['vault_path']
+    tag_types = ctx.obj['tag_types']
     operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
