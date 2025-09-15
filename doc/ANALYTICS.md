@@ -30,17 +30,17 @@ Before running tag analysis, extract tags from your vault:
 
 ```bash
 # Extract filtered tags to JSON file (recommended for analysis)
-tagex extract /path/to/vault -o tags.json
+tagex /path/to/vault extract -o tags.json
 
 # Or extract raw tags if needed for analysis
-tagex extract /path/to/vault --no-filter -o raw_tags.json
+tagex /path/to/vault extract --no-filter -o raw_tags.json
 
 # Extract specific tag types for targeted analysis
-tagex extract /path/to/vault --tag-types frontmatter -o frontmatter_tags.json
-tagex extract /path/to/vault --tag-types inline -o inline_tags.json
+tagex /path/to/vault extract --tag-types frontmatter -o frontmatter_tags.json
+tagex /path/to/vault extract --tag-types inline -o inline_tags.json
 
 # Using uv run (alternative)
-uv run main.py extract /path/to/vault -o tags.json
+uv run main.py /path/to/vault extract -o tags.json
 ```
 
 The analysis scripts expect tag data in JSON format by default.
@@ -96,8 +96,8 @@ The analytics tools work with any extracted tag data, enabling specialized analy
 
 ```bash
 # Compare frontmatter vs inline tag patterns
-tagex extract /vault --tag-types frontmatter -o fm_tags.json
-tagex extract /vault --tag-types inline -o inline_tags.json
+tagex /vault extract --tag-types frontmatter -o fm_tags.json
+tagex /vault extract --tag-types inline -o inline_tags.json
 
 uv run tag-analysis/pair_analyzer.py fm_tags.json
 uv run tag-analysis/pair_analyzer.py inline_tags.json
@@ -380,7 +380,7 @@ $ uv run tag-analysis/merge_analyzer.py tags.json
 SEMANTIC DUPLICATES:
   Keep: writing
   Merge: writers, writering
-  Command: tagex merge /path/to/vault writers writering --into writing
+  Command: tagex /path/to/vault merge writers writering --into writing
   Total usage: 45
   Similarity scores: 0.72, 0.68
 
@@ -388,12 +388,12 @@ HIGH FILE OVERLAP:
   neurotype + neurodivergence
   Overlap: 85.2% (23/27 files)
   Suggest keeping: neurotype
-  Command: tagex rename /path/to/vault neurodivergence neurotype
+  Command: tagex /path/to/vault rename neurodivergence neurotype
 
 VARIANT PATTERNS:
   Keep: parenting
   Merge: parents
-  Command: tagex merge /path/to/vault parents --into parenting
+  Command: tagex /path/to/vault merge parents --into parenting
   Total usage: 28
 ```
 
@@ -425,7 +425,7 @@ uv run tag-analysis/merge_analyzer.py tags.json --no-filter
 uv run tag-analysis/merge_analyzer.py tags.json --no-sklearn
 
 # Manual execution of suggestions
-tagex merge /path/to/vault writers writering --into writing --dry-run
+tagex /path/to/vault merge writers writering --into writing --dry-run
 ```
 
 ### Dependencies and Fallback Strategy

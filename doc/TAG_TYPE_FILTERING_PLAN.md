@@ -137,16 +137,16 @@ tagex merge /path/to/vault tag1 tag2 --into target --frontmatter-only --dry-run
 
 ```bash
 # Extract only frontmatter tags
-tagex extract /path/to/vault --tag-types frontmatter
+tagex /path/to/vault extract --tag-types frontmatter
 
 # Rename only inline hashtags
-tagex rename /path/to/vault old-tag new-tag --tag-types inline
+tagex /path/to/vault rename old-tag new-tag --tag-types inline
 
 # Merge frontmatter tags only
-tagex merge /path/to/vault tag1 tag2 --into target --tag-types frontmatter --dry-run
+tagex /path/to/vault merge tag1 tag2 --into target --tag-types frontmatter --dry-run
 
 # Default behavior (both tag types)
-tagex extract /path/to/vault --tag-types both
+tagex /path/to/vault extract --tag-types both
 ```
 
 ## Implementation Summary
