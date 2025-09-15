@@ -304,36 +304,36 @@ def print_tag_statistics(stats, tag_types):
     vault_health = stats["vault_health"]
     distribution = stats["tag_distribution"]
 
-    print("📊 Vault Tag Statistics")
+    print("Vault Tag Statistics")
     print("=" * 50)
 
     # Basic information
-    print(f"\n🏠 Vault Overview:")
+    print(f"\nVault Overview:")
     print(f"   Path: {basic['vault_path']}")
     print(f"   Tag types: {tag_types}")
     print(f"   Files processed: {basic['files_processed']:,}")
     print(f"   Processing errors: {basic['errors']}")
 
     # Core metrics
-    print(f"\n🏷️  Tag Metrics:")
+    print(f"\nTag Metrics:")
     print(f"   Total unique tags: {stats['total_tags']:,}")
     print(f"   Total tag uses: {stats['total_tag_uses']:,}")
     print(f"   Average tags per file: {vault_health['tag_density']}")
 
     # Coverage
-    print(f"\n📈 Tag Coverage:")
+    print(f"\nTag Coverage:")
     print(f"   Files with tags: {vault_health['tagged_files']:,} ({vault_health['tag_coverage']}%)")
     print(f"   Files without tags: {vault_health['untagged_files']:,}")
 
     # Distribution analysis
-    print(f"\n📊 Tag Distribution:")
+    print(f"\nTag Distribution:")
     print(f"   Singletons (used once): {distribution['singletons']['count']:,} ({distribution['singletons']['percentage']:.1f}%)")
     print(f"   Doubletons (used twice): {distribution['doubletons']['count']:,} ({distribution['doubletons']['percentage']:.1f}%)")
     print(f"   Tripletons (used 3x): {distribution['tripletons']['count']:,} ({distribution['tripletons']['percentage']:.1f}%)")
     print(f"   Frequent tags (4+ uses): {distribution['frequent_tags']['count']:,} ({distribution['frequent_tags']['percentage']:.1f}%)")
 
     # Health metrics
-    print(f"\n🩺 Vault Health:")
+    print(f"\nVault Health:")
     print(f"   Diversity score: {vault_health['diversity_score']:.2f} (higher = more diverse)")
     print(f"   Concentration score: {vault_health['concentration_score']:.2f} (lower = more balanced)")
 
@@ -341,13 +341,13 @@ def print_tag_statistics(stats, tag_types):
     interpret_vault_health(vault_health, distribution, stats['total_tags'])
 
     # Top tags
-    print(f"\n🔝 Top {len(stats['top_tags'])} Most Used Tags:")
+    print(f"\nTop {len(stats['top_tags'])} Most Used Tags:")
     for i, (tag, count) in enumerate(stats['top_tags'], 1):
         percentage = count / stats['total_tag_uses'] * 100
         print(f"   {i:2d}. {tag:<20} {count:4d} uses ({percentage:4.1f}%)")
 
     # Usage patterns
-    print(f"\n📈 Usage Patterns:")
+    print(f"\nUsage Patterns:")
     usage_dist = stats['usage_distribution']
     for usage_count in sorted(usage_dist.keys())[:10]:  # Show first 10 patterns
         tag_count = usage_dist[usage_count]
@@ -356,27 +356,27 @@ def print_tag_statistics(stats, tag_types):
 
 def interpret_vault_health(health, distribution, total_tags):
     """Provide health interpretation and recommendations."""
-    print(f"\n💡 Health Assessment:")
+    print(f"\nHealth Assessment:")
 
     # Tag coverage assessment
     coverage = health['tag_coverage']
     if coverage >= 80:
-        print("   ✅ Excellent tag coverage - most files are tagged")
+        print("   + Excellent tag coverage - most files are tagged")
     elif coverage >= 60:
-        print("   ✨ Good tag coverage - majority of files tagged")
+        print("   + Good tag coverage - majority of files tagged")
     elif coverage >= 40:
-        print("   ⚠️  Moderate tag coverage - consider tagging more files")
+        print("   * Moderate tag coverage - consider tagging more files")
     else:
-        print("   🔴 Low tag coverage - many files lack tags")
+        print("   - Low tag coverage - many files lack tags")
 
     # Singleton analysis
     singleton_pct = distribution['singletons']['percentage']
     if singleton_pct >= 50:
-        print("   🔴 High singleton ratio - many tags used only once (consider consolidation)")
+        print("   - High singleton ratio - many tags used only once (consider consolidation)")
     elif singleton_pct >= 30:
-        print("   ⚠️  Moderate singleton ratio - some cleanup opportunities")
+        print("   * Moderate singleton ratio - some cleanup opportunities")
     else:
-        print("   ✅ Good tag reuse - low singleton ratio")
+        print("   + Good tag reuse - low singleton ratio")
 
     # Diversity assessment
     diversity = health['diversity_score']
@@ -385,13 +385,13 @@ def interpret_vault_health(health, distribution, total_tags):
         diversity_ratio = diversity / max_diversity if max_diversity > 0 else 0
 
         if diversity_ratio >= 0.8:
-            print("   ✅ High tag diversity - well-distributed usage")
+            print("   + High tag diversity - well-distributed usage")
         elif diversity_ratio >= 0.6:
-            print("   ✨ Good tag diversity - reasonably balanced")
+            print("   + Good tag diversity - reasonably balanced")
         elif diversity_ratio >= 0.4:
-            print("   ⚠️  Moderate diversity - some tags dominate")
+            print("   * Moderate diversity - some tags dominate")
         else:
-            print("   🔴 Low diversity - heavily concentrated on few tags")
+            print("   - Low diversity - heavily concentrated on few tags")
 
 
 if __name__ == "__main__":
