@@ -26,10 +26,13 @@ tag-analysis/
 
 ### Prerequisites
 
-Before running tag analysis, extract tags from your vault:
+Before running tag analysis, extract tags from your vault or view comprehensive statistics:
 
 ```bash
-# Extract filtered tags to JSON file (recommended for analysis)
+# View comprehensive vault statistics (quick overview)
+tagex /path/to/vault stats
+
+# Extract filtered tags to JSON file (recommended for detailed analysis)
 tagex /path/to/vault extract -o tags.json
 
 # Or extract raw tags if needed for analysis
@@ -111,6 +114,170 @@ This enables insights into:
 - **Frontmatter patterns**: Formal categorization and metadata
 - **Inline patterns**: Contextual and content-driven tagging
 - **Usage differences**: How different tag types are used organizationally
+
+---
+
+## Vault Statistics (`tagex stats`)
+
+**Function:** Provides comprehensive analytical overview of tag usage patterns, distribution, and vault health metrics.
+
+### Core Metrics
+
+The stats command calculates and displays:
+
+**Basic Metrics:**
+- Total unique tags and total tag uses
+- Tag density (average tags per file)
+- File coverage (percentage of files with tags)
+
+**Distribution Analysis:**
+- **Singletons**: Tags used exactly once
+- **Doubletons**: Tags used exactly twice
+- **Tripletons**: Tags used exactly three times
+- **Frequent tags**: Tags used 4+ times
+
+**Health Metrics:**
+- **Diversity score**: Shannon entropy measuring tag distribution balance
+- **Concentration score**: Gini-like coefficient showing usage concentration
+- **Health assessment**: Automated recommendations based on patterns
+
+### Understanding the Health Assessment
+
+The stats command provides automated health assessment using these indicators:
+
+**Tag Coverage Assessment:**
+- `+ Excellent` (≥80%): Most files are tagged
+- `+ Good` (≥60%): Majority of files tagged
+- `* Moderate` (≥40%): Consider tagging more files
+- `- Low` (<40%): Many files lack tags
+
+**Singleton Analysis:**
+- `+ Good` (<30%): Low singleton ratio, good tag reuse
+- `* Moderate` (30-50%): Some cleanup opportunities exist
+- `- High` (≥50%): Many tags used only once, consider consolidation
+
+**Diversity Assessment:**
+- `+ High` (≥80% of maximum): Well-distributed usage across tags
+- `+ Good` (≥60% of maximum): Reasonably balanced distribution
+- `* Moderate` (≥40% of maximum): Some tags dominate others
+- `- Low` (<40% of maximum): Heavily concentrated on few tags
+
+### Interpreting Diversity Scores
+
+**Shannon Entropy (Diversity Score):**
+- **Range**: 0 to log₂(number_of_tags)
+- **Higher values**: More even distribution across all tags
+- **Lower values**: Usage concentrated in fewer tags
+- **Example**: A vault with 100 tags has maximum diversity of ~6.6
+
+**Concentration Score:**
+- **Range**: 0 to 1
+- **Lower values**: More balanced tag usage
+- **Higher values**: Usage concentrated in few dominant tags
+- **0.0**: Perfect balance (all tags used equally)
+- **1.0**: Maximum concentration (one tag dominates completely)
+
+### Usage Examples
+
+```bash
+# Basic stats overview
+tagex /path/to/vault stats
+
+# Focus on top 10 tags with JSON output
+tagex /path/to/vault stats --top 10 --format json
+
+# Stats for frontmatter tags only
+tagex --tag-types frontmatter /path/to/vault stats
+
+# Include unfiltered tags (show technical noise)
+tagex /path/to/vault stats --no-filter
+
+# Stats with custom top tag count
+tagex /path/to/vault stats --top 25
+```
+
+### Sample Output Interpretation
+
+```
+Vault Tag Statistics
+==================================================
+
+Vault Overview:
+   Path: /Users/example/vault
+   Tag types: both
+   Files processed: 2,081
+   Processing errors: 0
+
+Tag Metrics:
+   Total unique tags: 831
+   Total tag uses: 2,864
+   Average tags per file: 1.38
+
+Tag Coverage:
+   Files with tags: 1,262 (60.6%)
+   Files without tags: 819
+
+Tag Distribution:
+   Singletons (used once): 563 (67.7%)
+   Doubletons (used twice): 106 (12.8%)
+   Tripletons (used 3x): 52 (6.3%)
+   Frequent tags (4+ uses): 110 (13.2%)
+
+Vault Health:
+   Diversity score: 7.55 (higher = more diverse)
+   Concentration score: 0.65 (lower = more balanced)
+
+Health Assessment:
+   + Good tag coverage - majority of files tagged
+   - High singleton ratio - many tags used only once (consider consolidation)
+   + Good tag diversity - reasonably balanced
+```
+
+**Interpretation:**
+- **Good coverage**: 60.6% of files have tags (above 60% threshold)
+- **High singletons**: 67.7% singleton ratio suggests cleanup opportunities
+- **Balanced diversity**: Score of 7.55 out of ~9.7 maximum shows good distribution
+- **Recommendations**: Focus on consolidating singleton tags while maintaining current tagging practices
+
+### Actionable Insights
+
+**High Singleton Ratio (>50%):**
+- Run merge analyzer to find consolidation opportunities
+- Consider standardizing similar tags
+- Review tags used only once for typos or alternatives
+
+**Low Tag Coverage (<60%):**
+- Implement consistent tagging for new files
+- Review untagged files for tagging opportunities
+- Consider batch tagging workflows
+
+**Low Diversity Score:**
+- Indicates few tags dominate the system
+- Consider diversifying tag vocabulary
+- Break down overly broad tags into more specific ones
+
+**High Concentration Score (>0.7):**
+- Usage heavily skewed toward few tags
+- Review dominant tags for over-use
+- Develop more balanced tagging strategy
+
+### Integration with Analysis Tools
+
+Stats output helps prioritize analysis workflows:
+
+```bash
+# 1. Get overview and identify issues
+tagex /vault stats
+
+# 2. If high singleton ratio, run merge analysis
+uv run tag-analysis/merge_analyzer.py tags.json
+
+# 3. If low diversity, run pair analysis for clustering insights
+uv run tag-analysis/pair_analyzer.py tags.json
+
+# 4. Apply suggested consolidations
+tagex /vault merge old-tag1 old-tag2 --into new-tag --dry-run
+```
 
 ---
 
