@@ -17,15 +17,21 @@ uv tool install --editable .
 
 # Tag operations (console script)
 tagex /path/to/vault extract [options]
-tagex /path/to/vault rename old-tag new-tag [--dry-run] [--tag-types both|frontmatter|inline]
-tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run] [--tag-types both|frontmatter|inline]
-tagex /path/to/vault delete unwanted-tag another-tag [--dry-run] [--tag-types both|frontmatter|inline]
+tagex /path/to/vault rename old-tag new-tag [--dry-run]
+tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run]
+tagex /path/to/vault delete unwanted-tag another-tag [--dry-run]
+
+# Global --tag-types option (applies to all commands)
+tagex --tag-types both|frontmatter|inline /path/to/vault COMMAND [options]
 
 # Or using uv run during development
 uv run main.py /path/to/vault extract [options]
-uv run main.py /path/to/vault rename old-tag new-tag [--tag-types both|frontmatter|inline]
-uv run main.py /path/to/vault merge tag1 tag2 --into target-tag [--tag-types both|frontmatter|inline]
-uv run main.py /path/to/vault delete unwanted-tag --dry-run [--tag-types both|frontmatter|inline]
+uv run main.py /path/to/vault rename old-tag new-tag
+uv run main.py /path/to/vault merge tag1 tag2 --into target-tag
+uv run main.py /path/to/vault delete unwanted-tag --dry-run
+
+# Global --tag-types with uv run
+uv run main.py --tag-types frontmatter /path/to/vault extract
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
@@ -55,8 +61,9 @@ uv run pytest tests/
 
 ### Key Features
 
-- **Multi-command CLI** - Extract, rename, merge, delete operations
-- **Tag type filtering** - Selective processing of frontmatter, inline, or both tag types
+- **Vault-first CLI structure** - Vault path comes first, then command
+- **Global tag type filtering** - --tag-types option applies to all operations
+- **Multi-command operations** - Extract, rename, merge, delete with consistent interface
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **Tag validation** - Filters noise, preserves meaningful tags
 - **Semantic analysis** - TF-IDF embedding-based similarity detection with morphological fallback

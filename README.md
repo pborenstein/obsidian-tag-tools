@@ -42,6 +42,11 @@ tagex /path/to/vault merge tag1 tag2 tag3 --into target-tag [--dry-run]
 
 # Delete tags from all files
 tagex /path/to/vault delete tag-to-remove another-tag --dry-run
+
+# Global --tag-types option examples
+tagex --tag-types frontmatter /path/to/vault extract
+tagex --tag-types inline /path/to/vault rename old-tag new-tag --dry-run
+tagex --tag-types both /path/to/vault merge tag1 tag2 --into new-tag
 ```
 
 Or during development:
@@ -55,6 +60,12 @@ uv run main.py /path/to/vault merge tag1 tag2 --into new-tag
 uv run main.py /path/to/vault delete old-tag
 ```
 
+### Global Options
+
+- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: both)
+- `--version`: Show version information
+- `--help`: Show help information
+
 ### Extract Command Options
 
 - `--output`, `-o`: Output file path (default: stdout)
@@ -63,12 +74,10 @@ uv run main.py /path/to/vault delete old-tag
 - `--verbose`, `-v`: Enable verbose logging
 - `--quiet`, `-q`: Suppress summary output
 - `--no-filter`: Disable tag filtering (include all raw tags)
-- `--tag-types`: Tag types to extract (`both`, `frontmatter`, `inline`) (default: both)
 
 ### Operation Command Options
 
 - `--dry-run`: Preview changes without modifying files (recommended for testing)
-- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: both)
 - All tag operations include logging and can be previewed safely
 
 ### Examples
@@ -88,10 +97,10 @@ tagex /path/to/vault extract --exclude "*.template.md" --exclude "drafts/*"
 tagex /path/to/vault extract --no-filter
 
 # Extract only frontmatter tags
-tagex /path/to/vault extract --tag-types frontmatter
+tagex --tag-types frontmatter /path/to/vault extract
 
 # Extract only inline hashtags
-tagex /path/to/vault extract --tag-types inline
+tagex --tag-types inline /path/to/vault extract
 
 # Get a list of tags sorted by frequency
 tagex /path/to/vault extract -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
@@ -109,10 +118,10 @@ tagex /path/to/vault rename work project
 tagex /path/to/vault merge personal-note diary-entry journal --into writing
 
 # Rename only frontmatter tags (leave inline tags unchanged)
-tagex /path/to/vault rename work project --tag-types frontmatter --dry-run
+tagex --tag-types frontmatter /path/to/vault rename work project --dry-run
 
 # Delete only inline tags (preserve frontmatter tags)
-tagex /path/to/vault delete obsolete-tag --tag-types inline --dry-run
+tagex --tag-types inline /path/to/vault delete obsolete-tag --dry-run
 
 # Preview deleting tags (safe)
 tagex /path/to/vault delete obsolete-tag temp-tag --dry-run
