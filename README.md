@@ -56,13 +56,13 @@ tagex --tag-types both /path/to/vault stats --format json
 Or during development:
 ```bash
 # Extract tags
-uv run main.py /path/to/vault extract [options]
+uv run python -m tagex.main /path/to/vault extract [options]
 
 # Tag operations
-uv run main.py /path/to/vault rename old-tag new-tag
-uv run main.py /path/to/vault merge tag1 tag2 --into new-tag
-uv run main.py /path/to/vault delete old-tag
-uv run main.py /path/to/vault stats --top 20
+uv run python -m tagex.main /path/to/vault rename old-tag new-tag
+uv run python -m tagex.main /path/to/vault merge tag1 tag2 --into new-tag
+uv run python -m tagex.main /path/to/vault delete old-tag
+uv run python -m tagex.main /path/to/vault stats --top 20
 ```
 
 ### Global Options

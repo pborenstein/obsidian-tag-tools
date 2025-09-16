@@ -14,7 +14,7 @@
 
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│   main.py       │      │  extractor/     │      │    parsers/     │
+│   tagex/        │      │ tagex/core/     │      │ tagex/core/     │
 │                 │      │                 │      │                 │
 │ ┌─────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
 │ │ Click CLI   │ │─────►│ │TagExtractor │ │─────►│ │frontmatter  │ │
@@ -29,7 +29,7 @@
         │                       │                       │
         ▼                       ▼                       ▼
 ┌──────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│  operations/     │      │output_formatter │      │ tag-analysis/   │
+│ tagex/core/     │      │output_formatter │      │ tag-analysis/   │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
 │ │TagOperation  │ │      │ │ JSON Format │ │      │ │pair analysis│ │
@@ -44,7 +44,7 @@
         │
         ▼
 ┌──────────────────┐
-│     utils/       │
+│   tagex/utils/  │
 │                  │
 │ ┌──────────────┐ │
 │ │file_discovery│ │
@@ -120,7 +120,7 @@ Input: Obsidian Vault
 
 ## Module Responsibilities
 
-### Main Pipeline (`main.py`)
+### Main Pipeline (`tagex/main.py`)
 ```
 ┌─────────────────────────────────────────────┐
 │              MAIN CONTROLLER                │
@@ -147,7 +147,7 @@ Commands:
 └─────────────────────────────────────────────┘
 ```
 
-### Tag Extraction Engine (`extractor/core.py`)
+### Tag Extraction Engine (`tagex/core/extractor/core.py`)
 ```
 ┌─────────────────────────────────────────────┐
 │             TAGEXTRACTOR CLASS              │
@@ -161,9 +161,10 @@ Commands:
 └─────────────────────────────────────────────┘
 ```
 
-### Parser Modules (`parsers/`)
+### Parser Modules (`tagex/core/parsers/`)
 ```
 ┌─────────────────────┐    ┌─────────────────────┐
+│tagex/core/parsers/  │    │ tagex/core/parsers/ │
 │ frontmatter_parser  │    │   inline_parser     │
 ├─────────────────────┤    ├─────────────────────┤
 │ • YAML header       │    │ • Hashtag scanning  │
@@ -174,9 +175,10 @@ Commands:
 └─────────────────────┘    └─────────────────────┘
 ```
 
-### Utility Functions (`utils/`)
+### Utility Functions (`tagex/utils/`)
 ```
 ┌─────────────────────┐    ┌─────────────────────┐
+│tagex/utils/         │    │ tagex/utils/        │
 │  file_discovery     │    │  tag_normalizer     │
 ├─────────────────────┤    ├─────────────────────┤
 │ • Markdown file     │    │ • Case normalization│
@@ -189,7 +191,7 @@ Commands:
 └─────────────────────┘    └─────────────────────┘
 ```
 
-### Tag Operations Engine (`operations/tag_operations.py`)
+### Tag Operations Engine (`tagex/core/operations/tag_operations.py`)
 ```
 ┌─────────────────────────────────────────────┐
 │           TAG OPERATION ENGINE              │
@@ -213,7 +215,7 @@ Commands:
 └─────────────────────────────────────────────┘
 ```
 
-### Output Formatter (`extractor/output_formatter.py`)
+### Output Formatter (`tagex/core/extractor/output_formatter.py`)
 ```
 ┌─────────────────────────────────────────────┐
 │            OUTPUT PROCESSORS                │
@@ -238,9 +240,9 @@ Commands:
 ```
 File Input
     │
-    ├─► frontmatter_parser.py ──┐
-    │                           │
-    └─► inline_parser.py ───────┼─► Aggregation
+    ├─► tagex/core/parsers/frontmatter_parser.py ──┐
+    │                                              │
+    └─► tagex/core/parsers/inline_parser.py ──────┼─► Aggregation
                                 │
         [future_parser.py] ─────┘
                 │
@@ -296,10 +298,10 @@ Tag Processing Flow:
 │  File Content → Parser Selection            │
 ├─────────────────────────────────────────────┤
 │ if tag_types in ('both', 'frontmatter'):    │
-│   ├─► frontmatter_parser.py                 │
+│   ├─► tagex/core/parsers/frontmatter_parser │
 │                                             │
 │ if tag_types in ('both', 'inline'):         │
-│   └─► inline_parser.py                      │
+│   └─► tagex/core/parsers/inline_parser      │
 └─────────────────────────────────────────────┘
 ```
 
@@ -307,7 +309,7 @@ Tag Processing Flow:
 
 The tool includes tag validation to filter out noise and technical artifacts:
 
-### Validation Rules (`utils/tag_normalizer.py`)
+### Validation Rules (`tagex/utils/tag_normalizer.py`)
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -463,7 +465,7 @@ The architecture supports extension through:
 4. **Analysis Modules**: The `tag-analysis/` directory provides semantic similarity detection
 5. **File Filters**: Pattern-based exclusion system can be extended
 6. **Statistics**: The statistics tracking system can be enhanced for additional metrics
-7. **Tag Validation**: Validation rules can be customized in `utils/tag_normalizer.py`
+7. **Tag Validation**: Validation rules can be customized in `tagex/utils/tag_normalizer.py`
 8. **Console Integration**: Script entry points defined in `pyproject.toml`
 9. **Operation Logging**: Structured logging system supports custom reporting
 10. **Semantic Analysis**: TF-IDF embedding-based tag merge suggestions with morphological fallback

@@ -26,7 +26,7 @@ pytest tests/
 pytest tests/test_cli.py
 
 # Run with coverage
-pytest tests/ --cov=. --cov-report=html
+pytest tests/ --cov=tagex --cov-report=html
 
 # Run with verbose output
 pytest tests/ -v

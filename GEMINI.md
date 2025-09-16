@@ -23,16 +23,16 @@ This document provides a comprehensive overview of the `tagex` project for the G
 
 ### Architecture:
 The project follows a modular architecture, ensuring a clear separation of concerns:
-- **`main.py`**: The main entry point, defining the `click`-based CLI commands (`extract`, `rename`, `merge`, `delete`). It orchestrates the other components.
-- **`extractor/`**: Contains the core logic for finding and extracting tags.
+- **`tagex/main.py`**: The main entry point, defining the `click`-based CLI commands (`extract`, `rename`, `merge`, `delete`). It orchestrates the other components.
+- **`tagex/core/extractor/`**: Contains the core logic for finding and extracting tags.
   - `core.py`: `TagExtractor` class manages the extraction pipeline.
   - `output_formatter.py`: Handles formatting the extracted data into different output types.
-- **`parsers/`**: Responsible for parsing tags from file content.
+- **`tagex/core/parsers/`**: Responsible for parsing tags from file content.
   - `frontmatter_parser.py`: Extracts tags from the YAML frontmatter block.
   - `inline_parser.py`: Extracts inline `#tags` from the markdown body.
-- **`operations/`**: Implements the logic for tag modification operations.
+- **`tagex/core/operations/`**: Implements the logic for tag modification operations.
   - `tag_operations.py`: Contains the `TagOperationEngine` base class and concrete implementations like `RenameOperation`, `MergeOperation`, and `DeleteOperation`. These classes are designed for safety, preserving file formatting and creating detailed operation logs.
-- **`utils/`**: Provides helper modules.
+- **`tagex/utils/`**: Provides helper modules.
   - `file_discovery.py`: Efficiently finds markdown files while respecting exclusion patterns.
   - `tag_normalizer.py`: Handles tag validation, cleaning, and normalization.
 - **`tests/`**: Contains a comprehensive test suite built with `pytest` to ensure correctness and stability.
@@ -83,7 +83,7 @@ tagex /path/to/vault delete obsolete-tag --dry-run
 ### Running During Development
 To run the tool without installing it globally, use `uv run`:
 ```bash
-uv run main.py /path/to/vault extract
+uv run python -m tagex.main /path/to/vault extract
 ```
 
 ### Running Tests
@@ -95,7 +95,7 @@ pytest
 
 ## 3. Development Conventions
 
-- **Modularity**: Code is organized into distinct modules (`parsers`, `extractor`, `operations`, `utils`) with clear responsibilities. New functionality should follow this pattern.
+- **Modularity**: Code is organized into distinct modules (`tagex/core/parsers`, `tagex/core/extractor`, `tagex/core/operations`, `tagex/utils`) with clear responsibilities. New functionality should follow this pattern.
 - **Type Hinting**: The codebase uses Python's type hints extensively. All new code should be fully type-hinted.
 - **Testing**: A comprehensive test suite exists in the `tests/` directory. New features or bug fixes must be accompanied by corresponding tests. The tests are structured to mirror the application's modules (e.g., `test_parsers.py`, `test_operations.py`).
 - **Safety First**: Operations that modify files are built with safety as a primary concern. They are designed to be idempotent where possible, preserve file formatting, and always offer a `--dry-run` mode.
