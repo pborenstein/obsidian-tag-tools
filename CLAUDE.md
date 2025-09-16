@@ -22,7 +22,7 @@ tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run]
 tagex /path/to/vault delete unwanted-tag another-tag [--dry-run]
 tagex /path/to/vault stats [--top N] [--format text|json] [--no-filter]
 
-# Global --tag-types option (applies to all commands)
+# Global --tag-types option (applies to all commands, default: frontmatter)
 tagex --tag-types both|frontmatter|inline /path/to/vault COMMAND [options]
 
 # Or using uv run during development
@@ -32,8 +32,9 @@ uv run main.py /path/to/vault merge tag1 tag2 --into target-tag
 uv run main.py /path/to/vault delete unwanted-tag --dry-run
 uv run main.py /path/to/vault stats [--top 10] [--format json]
 
-# Global --tag-types with uv run
-uv run main.py --tag-types frontmatter /path/to/vault extract
+# Global --tag-types with uv run (default: frontmatter)
+uv run main.py /path/to/vault extract  # frontmatter only (default)
+uv run main.py --tag-types both /path/to/vault extract  # both types
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
