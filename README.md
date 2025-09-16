@@ -18,7 +18,7 @@ tagex "$HOME/Obsidian/MyVault" stats
 # Extract all tags to JSON from your vault
 tagex "$HOME/Obsidian/MyVault" extract -f json -o tags.json
 
-# Top 20 tags (requires [jq](https://jqlang.org/))
+# Top 20 tags (requires jq (https://jqlang.org/))
 jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 
 # Dry-run a rename, then apply
