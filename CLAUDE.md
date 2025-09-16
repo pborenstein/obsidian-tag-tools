@@ -26,15 +26,15 @@ tagex /path/to/vault stats [--top N] [--format text|json] [--no-filter]
 tagex --tag-types both|frontmatter|inline /path/to/vault COMMAND [options]
 
 # Or using uv run during development
-uv run main.py /path/to/vault extract [options]
-uv run main.py /path/to/vault rename old-tag new-tag
-uv run main.py /path/to/vault merge tag1 tag2 --into target-tag
-uv run main.py /path/to/vault delete unwanted-tag --dry-run
-uv run main.py /path/to/vault stats [--top 10] [--format json]
+uv run python -m tagex.main /path/to/vault extract [options]
+uv run python -m tagex.main /path/to/vault rename old-tag new-tag
+uv run python -m tagex.main /path/to/vault merge tag1 tag2 --into target-tag
+uv run python -m tagex.main /path/to/vault delete unwanted-tag --dry-run
+uv run python -m tagex.main /path/to/vault stats [--top 10] [--format json]
 
 # Global --tag-types with uv run (default: frontmatter)
-uv run main.py /path/to/vault extract  # frontmatter only (default)
-uv run main.py --tag-types both /path/to/vault extract  # both types
+uv run python -m tagex.main /path/to/vault extract  # frontmatter only (default)
+uv run python -m tagex.main --tag-types both /path/to/vault extract  # both types
 
 # Run analysis scripts  
 uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
@@ -56,11 +56,11 @@ uv run pytest tests/
 
 ### Core Modules
 
-- **`extractor/`** - Tag extraction with filtering and validation
-- **`parsers/`** - Frontmatter and inline tag parsing
-- **`operations/`** - Tag modification (rename, merge, delete) with dry-run support
+- **`tagex/core/extractor/`** - Tag extraction with filtering and validation
+- **`tagex/core/parsers/`** - Frontmatter and inline tag parsing
+- **`tagex/core/operations/`** - Tag modification (rename, merge, delete) with dry-run support
+- **`tagex/utils/`** - File discovery, tag normalization, and validation
 - **`tag-analysis/`** - Relationship analysis and semantic similarity detection
-- **`utils/`** - File discovery, tag normalization, and validation
 
 ### Key Features
 

@@ -9,15 +9,15 @@ import click
 from collections import Counter
 import math
 
-from extractor.core import TagExtractor
-from extractor.output_formatter import (
+from .core.extractor.core import TagExtractor
+from .core.extractor.output_formatter import (
     format_as_plugin_json,
     format_as_csv,
     format_as_text,
     save_output,
     print_summary
 )
-from operations.tag_operations import RenameOperation, MergeOperation, DeleteOperation
+from .core.operations.tag_operations import RenameOperation, MergeOperation, DeleteOperation
 
 
 @click.group()
@@ -25,7 +25,7 @@ from operations.tag_operations import RenameOperation, MergeOperation, DeleteOpe
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.version_option()
 @click.pass_context
-def cli(ctx, vault_path, tag_types):
+def main(ctx, vault_path, tag_types):
     """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults.
 
     VAULT_PATH: Path to the Obsidian vault directory
@@ -36,7 +36,7 @@ def cli(ctx, vault_path, tag_types):
     ctx.obj['tag_types'] = tag_types
 
 
-@cli.command()
+@main.command()
 @click.option('--output', '-o', type=click.Path(), help='Output file path (default: stdout)')
 @click.option('--format', '-f', type=click.Choice(['json', 'csv', 'txt']), default='json', help='Output format')
 @click.option('--exclude', multiple=True, help='Patterns to exclude (can be used multiple times)')
@@ -104,7 +104,7 @@ def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
         sys.exit(1)
 
 
-@cli.command()
+@main.command()
 @click.argument('old_tag')
 @click.argument('new_tag')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
@@ -121,7 +121,7 @@ def rename(ctx, old_tag, new_tag, dry_run):
     operation.run_operation()
 
 
-@cli.command()
+@main.command()
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
@@ -137,7 +137,7 @@ def merge(ctx, source_tags, target_tag, dry_run):
     operation.run_operation()
 
 
-@cli.command()
+@main.command()
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
 @click.pass_context
@@ -155,7 +155,7 @@ def delete(ctx, tags_to_delete, dry_run):
     operation.run_operation()
 
 
-@cli.command()
+@main.command()
 @click.option('--top', '-t', type=int, default=20, help='Number of top tags to show (default: 20)')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
@@ -395,4 +395,4 @@ def interpret_vault_health(health, distribution, total_tags):
 
 
 if __name__ == "__main__":
-    cli()
+    main()

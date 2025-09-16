@@ -16,7 +16,7 @@ class TestCompleteExtractionWorkflow:
     
     def test_vault_to_json_pipeline(self, simple_vault, temp_dir):
         """Test complete pipeline from vault to JSON output."""
-        from main import cli
+        from tagex.main import main as cli
         
         output_file = temp_dir / "complete_pipeline.json"
         
@@ -52,7 +52,7 @@ class TestCompleteExtractionWorkflow:
     
     def test_filtered_vs_unfiltered_extraction(self, complex_vault, temp_dir):
         """Test comparison between filtered and unfiltered extraction."""
-        from main import cli
+        from tagex.main import main as cli
         
         filtered_output = temp_dir / "filtered.json"
         unfiltered_output = temp_dir / "unfiltered.json"
@@ -96,7 +96,7 @@ class TestCompleteExtractionWorkflow:
     
     def test_extraction_with_exclusion_patterns(self, complex_vault, temp_dir):
         """Test extraction workflow with file exclusion patterns."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Extract all files
         all_output = temp_dir / "all_files.json"
@@ -130,7 +130,7 @@ class TestCompleteExtractionWorkflow:
     
     def test_multiple_output_formats_workflow(self, simple_vault, temp_dir):
         """Test generating multiple output formats from same vault."""
-        from main import cli
+        from tagex.main import main as cli
         
         json_output = temp_dir / "tags.json"
         csv_output = temp_dir / "tags.csv"
@@ -184,7 +184,7 @@ class TestTagOperationWorkflows:
     
     def test_rename_workflow_with_verification(self, temp_dir):
         """Test complete rename workflow with before/after verification."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create test vault
         test_vault = temp_dir / "rename_workflow_vault"
@@ -256,7 +256,7 @@ Personal notes with some #work references.""")
     
     def test_merge_workflow_with_verification(self, temp_dir):
         """Test complete merge workflow with verification."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create test vault with mergeable tags
         test_vault = temp_dir / "merge_workflow_vault"
@@ -334,7 +334,7 @@ Content with different tags.""")
     
     def test_sequential_operations_workflow(self, temp_dir):
         """Test performing multiple operations in sequence."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create test vault
         test_vault = temp_dir / "sequential_ops_vault"
@@ -395,7 +395,7 @@ class TestRealWorldScenarios:
     
     def test_large_vault_processing(self, temp_dir):
         """Test processing a larger, more realistic vault."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create a larger test vault
         large_vault = temp_dir / "large_vault"
@@ -462,7 +462,7 @@ More detailed content with #project-related information.
     
     def test_vault_cleanup_workflow(self, temp_dir):
         """Test a realistic vault cleanup scenario."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create vault that needs cleanup
         messy_vault = temp_dir / "messy_vault"
@@ -528,7 +528,7 @@ Content with #meeting information.""")
     
     def test_error_recovery_workflow(self, temp_dir):
         """Test workflow handles errors gracefully and continues processing."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create vault with problematic files
         error_vault = temp_dir / "error_vault"
@@ -585,7 +585,7 @@ class TestPerformanceAndScalability:
     
     def test_many_files_workflow(self, temp_dir):
         """Test processing vault with many files."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create vault with many small files
         many_files_vault = temp_dir / "many_files_vault"
@@ -627,7 +627,7 @@ Content for file number {i} with #test-tag-{i}.
     
     def test_large_files_workflow(self, temp_dir):
         """Test processing vault with large files."""
-        from main import cli
+        from tagex.main import main as cli
         
         large_files_vault = temp_dir / "large_files_vault"
         large_files_vault.mkdir()
