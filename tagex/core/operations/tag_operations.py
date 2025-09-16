@@ -344,19 +344,23 @@ class TagOperationEngine(ABC):
         return self.operation_log
     
     def save_operation_log(self):
-        """Save detailed operation log outside vault."""
+        """Save detailed operation log in log/ directory."""
         log_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         # Use standardized operation name format
         operation_name = self.get_operation_log_name()
         log_filename = f"{operation_name}_{log_timestamp}.json"
-        
-        # Save in current working directory, not in vault
-        log_path = Path.cwd() / log_filename
-        
+
+        # Create log directory if it doesn't exist
+        log_dir = Path.cwd() / "log"
+        log_dir.mkdir(exist_ok=True)
+
+        # Save in log/ directory
+        log_path = log_dir / log_filename
+
         with open(log_path, 'w') as f:
             json.dump(self.operation_log, f, indent=2, ensure_ascii=False)
-        
-        print(f"Operation log saved: {log_filename}")
+
+        print(f"Operation log saved: log/{log_filename}")
         return log_path
     
     def generate_report(self):

@@ -205,5 +205,9 @@ temp/
 # Claude Code configuration
 .claude/
 
+# Operation log files (keep directory structure)
+log/*.json
+!log/README.md
+
 tag_migration_log.json
 tag-*.json
