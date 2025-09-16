@@ -44,7 +44,7 @@ tagex --tag-types inline /path/to/vault extract -o inline_tags.json
 tagex --tag-types both /path/to/vault extract -o all_tags.json
 
 # Using uv run (alternative)
-uv run main.py /path/to/vault extract -o tags.json
+uv run python -m tagex.main /path/to/vault extract -o tags.json
 ```
 
 The analysis scripts expect tag data in JSON format by default.
@@ -288,7 +288,7 @@ tagex /vault merge old-tag1 old-tag2 --into new-tag --dry-run
 
 ### Filtering Options
 
-- **Default behavior**: Filters out technical noise using `is_valid_tag()` from `utils/tag_normalizer.py`
+- **Default behavior**: Filters out technical noise using `is_valid_tag()` from `tagex/utils/tag_normalizer.py`
 - **--no-filter flag**: Analyzes all tags including technical artifacts
 - **Integrated filtering**: Single script handles both filtered and raw analysis
 
