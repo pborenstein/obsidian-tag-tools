@@ -22,7 +22,7 @@ from operations.tag_operations import RenameOperation, MergeOperation, DeleteOpe
 
 @click.group()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='both', help='Tag types to process (default: both)')
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.version_option()
 @click.pass_context
 def cli(ctx, vault_path, tag_types):

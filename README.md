@@ -46,11 +46,11 @@ tagex /path/to/vault delete tag-to-remove another-tag --dry-run
 # Get comprehensive vault statistics
 tagex /path/to/vault stats --top 15
 
-# Global --tag-types option examples
-tagex --tag-types frontmatter /path/to/vault extract
+# Global --tag-types option examples (frontmatter is default)
+tagex /path/to/vault extract  # frontmatter only (default)
 tagex --tag-types inline /path/to/vault rename old-tag new-tag --dry-run
 tagex --tag-types both /path/to/vault merge tag1 tag2 --into new-tag
-tagex --tag-types frontmatter /path/to/vault stats --format json
+tagex --tag-types both /path/to/vault stats --format json
 ```
 
 Or during development:
@@ -67,7 +67,7 @@ uv run main.py /path/to/vault stats --top 20
 
 ### Global Options
 
-- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: both)
+- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: frontmatter)
 - `--version`: Show version information
 - `--help`: Show help information
 
@@ -107,11 +107,14 @@ tagex /path/to/vault extract --exclude "*.template.md" --exclude "drafts/*"
 # Extract all raw tags without filtering
 tagex /path/to/vault extract --no-filter
 
-# Extract only frontmatter tags
-tagex --tag-types frontmatter /path/to/vault extract
+# Extract frontmatter tags (default behavior)
+tagex /path/to/vault extract
 
 # Extract only inline hashtags
 tagex --tag-types inline /path/to/vault extract
+
+# Extract both frontmatter and inline tags
+tagex --tag-types both /path/to/vault extract
 
 # Get a list of tags sorted by frequency
 tagex /path/to/vault extract -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
@@ -128,8 +131,8 @@ tagex /path/to/vault rename work project
 # Merge multiple related tags
 tagex /path/to/vault merge personal-note diary-entry journal --into writing
 
-# Rename only frontmatter tags (leave inline tags unchanged)
-tagex --tag-types frontmatter /path/to/vault rename work project --dry-run
+# Rename frontmatter tags (default behavior)
+tagex /path/to/vault rename work project --dry-run
 
 # Delete only inline tags (preserve frontmatter tags)
 tagex --tag-types inline /path/to/vault delete obsolete-tag --dry-run
@@ -147,8 +150,8 @@ tagex /path/to/vault stats
 # Show top 10 tags with JSON output
 tagex /path/to/vault stats --top 10 --format json
 
-# Stats for frontmatter tags only
-tagex --tag-types frontmatter /path/to/vault stats
+# Stats for frontmatter tags (default behavior)
+tagex /path/to/vault stats
 
 # Include all tags (no filtering)
 tagex /path/to/vault stats --no-filter
