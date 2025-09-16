@@ -14,8 +14,8 @@ from datetime import datetime
 from typing import Dict, List, Set, Tuple, Optional, Any
 from abc import ABC, abstractmethod
 
-from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
-from parsers.inline_parser import extract_inline_tags
+from ..parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+from ..parsers.inline_parser import extract_inline_tags
 
 
 class TagOperationEngine(ABC):

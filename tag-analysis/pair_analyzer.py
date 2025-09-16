@@ -7,7 +7,7 @@ from collections import defaultdict, Counter
 from itertools import combinations
 import sys
 import argparse
-from utils.tag_normalizer import is_valid_tag
+from tagex.utils.tag_normalizer import is_valid_tag
 
 
 def load_tag_data(json_file):

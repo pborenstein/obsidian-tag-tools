@@ -458,7 +458,7 @@ class TestAnalysisIntegration:
     
     def test_extract_to_analysis_pipeline(self, simple_vault, temp_dir):
         """Test complete pipeline from extraction to analysis."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
         
         # 1. Extract tags to JSON
@@ -492,7 +492,7 @@ class TestAnalysisIntegration:
     
     def test_analysis_with_different_extraction_formats(self, simple_vault, temp_dir):
         """Test analysis compatibility with different extraction formats."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
         
         runner = CliRunner()
@@ -521,7 +521,7 @@ class TestAnalysisIntegration:
     
     def test_filtered_vs_unfiltered_analysis(self, complex_vault, temp_dir):
         """Test analysis results with filtered vs unfiltered extraction."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
         
         runner = CliRunner()

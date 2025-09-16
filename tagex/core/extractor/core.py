@@ -6,10 +6,10 @@ from typing import Dict, List, Set
 from collections import defaultdict
 import logging
 
-from utils.file_discovery import find_markdown_files, get_relative_path
-from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
-from parsers.inline_parser import extract_inline_tags
-from utils.tag_normalizer import normalize_tags, deduplicate_tags, filter_valid_tags
+from ...utils.file_discovery import find_markdown_files, get_relative_path
+from ..parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+from ..parsers.inline_parser import extract_inline_tags
+from ...utils.tag_normalizer import normalize_tags, deduplicate_tags, filter_valid_tags
 
 
 logger = logging.getLogger(__name__)

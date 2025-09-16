@@ -29,7 +29,7 @@ import argparse
 from collections import defaultdict, Counter
 from difflib import SequenceMatcher
 import re
-from utils.tag_normalizer import is_valid_tag
+from tagex.utils.tag_normalizer import is_valid_tag
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer

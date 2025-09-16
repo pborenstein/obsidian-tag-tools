@@ -14,14 +14,14 @@ class TestCLIBasics:
     
     def test_cli_entry_point_exists(self):
         """Test that main CLI entry point exists and is importable."""
-        from main import cli
+        from tagex.main import main as cli
         
         assert cli is not None
         assert callable(cli)
     
     def test_cli_help_message(self):
         """Test CLI displays help message."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, ['--help'])
@@ -36,7 +36,7 @@ class TestCLIBasics:
     
     def test_cli_version_info(self):
         """Test CLI version information if available."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -50,7 +50,7 @@ class TestCLIBasics:
     
     def test_cli_without_args_shows_help(self):
         """Test CLI without arguments shows help or usage info."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [])
@@ -64,7 +64,7 @@ class TestExtractCommand:
     
     def test_extract_command_help(self, simple_vault):
         """Test extract command help message."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [str(simple_vault), 'extract', '--help'])
@@ -78,7 +78,7 @@ class TestExtractCommand:
     
     def test_extract_command_basic(self, simple_vault):
         """Test basic extract command execution."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [str(simple_vault), 'extract'])
@@ -104,7 +104,7 @@ class TestExtractCommand:
     
     def test_extract_command_with_output_file(self, simple_vault, temp_dir):
         """Test extract command with output file option."""
-        from main import cli
+        from tagex.main import main as cli
         
         output_file = temp_dir / "test_output.json"
         
@@ -124,7 +124,7 @@ class TestExtractCommand:
     
     def test_extract_command_csv_format(self, simple_vault, temp_dir):
         """Test extract command with CSV format."""
-        from main import cli
+        from tagex.main import main as cli
         
         output_file = temp_dir / "test_output.csv"
         
@@ -143,7 +143,7 @@ class TestExtractCommand:
     
     def test_extract_command_text_format(self, simple_vault):
         """Test extract command with text format."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -160,7 +160,7 @@ class TestExtractCommand:
     
     def test_extract_command_with_exclusions(self, complex_vault):
         """Test extract command with exclusion patterns."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -176,7 +176,7 @@ class TestExtractCommand:
     
     def test_extract_command_verbose_mode(self, simple_vault):
         """Test extract command with verbose output."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -191,7 +191,7 @@ class TestExtractCommand:
     
     def test_extract_command_quiet_mode(self, simple_vault):
         """Test extract command with quiet mode."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -206,7 +206,7 @@ class TestExtractCommand:
     
     def test_extract_command_no_filter(self, simple_vault):
         """Test extract command with --no-filter option."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -227,7 +227,7 @@ class TestExtractCommand:
     
     def test_extract_command_nonexistent_vault(self):
         """Test extract command with nonexistent vault."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, ['/dummy/path', 'extract'])
@@ -242,7 +242,7 @@ class TestRenameCommand:
     
     def test_rename_command_help(self, simple_vault):
         """Test rename command help message."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [str(simple_vault), 'rename', '--help'])
@@ -253,7 +253,7 @@ class TestRenameCommand:
     
     def test_rename_command_dry_run(self, simple_vault):
         """Test rename command in dry-run mode."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -276,7 +276,7 @@ class TestRenameCommand:
     
     def test_rename_command_missing_arguments(self):
         """Test rename command with missing arguments."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -290,7 +290,7 @@ class TestRenameCommand:
     
     def test_rename_command_actual_execution(self, temp_dir):
         """Test actual rename command execution."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create a test vault copy for modification
         test_vault = temp_dir / "rename_test_vault"
@@ -319,7 +319,7 @@ Content with #work tag.""")
     
     def test_rename_command_nonexistent_tag(self, simple_vault):
         """Test rename command with nonexistent tag."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -334,7 +334,7 @@ Content with #work tag.""")
     
     def test_rename_command_invalid_tag_names(self, simple_vault):
         """Test rename command with invalid tag names."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -355,7 +355,7 @@ class TestMergeCommand:
     
     def test_merge_command_help(self, simple_vault):
         """Test merge command help message."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [str(simple_vault), 'merge', '--help'])
@@ -367,7 +367,7 @@ class TestMergeCommand:
     
     def test_merge_command_dry_run(self, temp_dir):
         """Test merge command in dry-run mode."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create test vault with merge candidates
         test_vault = temp_dir / "merge_test_vault"
@@ -405,7 +405,7 @@ Content""")
     
     def test_merge_command_missing_target(self, simple_vault):
         """Test merge command without --into target."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -420,7 +420,7 @@ Content""")
     
     def test_merge_command_single_source_tag(self, simple_vault):
         """Test merge command with only one source tag."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -439,7 +439,7 @@ class TestDeleteCommand:
 
     def test_delete_command_help(self, simple_vault):
         """Test delete command help message."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [str(simple_vault), 'delete', '--help'])
@@ -450,7 +450,7 @@ class TestDeleteCommand:
 
     def test_delete_command_dry_run(self, temp_dir):
         """Test delete command in dry-run mode."""
-        from main import cli
+        from tagex.main import main as cli
 
         # Create test vault with tags to delete
         test_vault = temp_dir / "delete_test_vault"
@@ -482,7 +482,7 @@ Content with #unwanted-tag inline.
 
     def test_delete_command_multiple_tags(self, temp_dir):
         """Test delete command with multiple tags."""
-        from main import cli
+        from tagex.main import main as cli
 
         test_vault = temp_dir / "multi_delete_vault"
         test_vault.mkdir()
@@ -507,7 +507,7 @@ Content with #unwanted1 and #unwanted2.
 
     def test_delete_command_missing_arguments(self):
         """Test delete command with missing arguments."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
 
@@ -521,7 +521,7 @@ Content with #unwanted1 and #unwanted2.
 
     def test_delete_command_shows_warnings_for_inline(self, temp_dir, capsys):
         """Test that delete command shows warnings for inline tag deletion."""
-        from main import cli
+        from tagex.main import main as cli
 
         test_vault = temp_dir / "warning_vault"
         test_vault.mkdir()
@@ -549,7 +549,7 @@ This content has #unwanted-inline tag that will trigger warnings.
 
     def test_delete_command_actual_execution(self, temp_dir):
         """Test delete command actual execution (not dry-run)."""
-        from main import cli
+        from tagex.main import main as cli
 
         test_vault = temp_dir / "exec_delete_vault"
         test_vault.mkdir()
@@ -580,7 +580,7 @@ Content with some text.
 
     def test_delete_command_nonexistent_tag(self, simple_vault):
         """Test delete command with nonexistent tag."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -595,7 +595,7 @@ Content with some text.
 
     def test_delete_command_preserves_structure(self, temp_dir):
         """Test delete command preserves file structure."""
-        from main import cli
+        from tagex.main import main as cli
 
         test_vault = temp_dir / "structure_vault"
         test_vault.mkdir()
@@ -636,7 +636,7 @@ Content here.
 
     def test_delete_command_empty_tag_argument(self, simple_vault):
         """Test delete command with empty tag argument."""
-        from main import cli
+        from tagex.main import main as cli
 
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -651,7 +651,7 @@ Content here.
     
     def test_merge_command_actual_execution(self, temp_dir):
         """Test actual merge command execution."""
-        from main import cli
+        from tagex.main import main as cli
         
         test_vault = temp_dir / "merge_exec_vault"
         test_vault.mkdir()
@@ -680,7 +680,7 @@ class TestCLIErrorHandling:
     
     def test_invalid_command(self):
         """Test CLI with invalid command."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, ['invalid-command'])
@@ -690,7 +690,7 @@ class TestCLIErrorHandling:
     
     def test_extract_invalid_format(self, simple_vault):
         """Test extract with invalid format option."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         result = runner.invoke(cli, [
@@ -704,7 +704,7 @@ class TestCLIErrorHandling:
     
     def test_command_with_invalid_vault_path(self):
         """Test commands with invalid vault paths."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -721,7 +721,7 @@ class TestCLIErrorHandling:
         """Test CLI handling of permission errors."""
         import os
         import stat
-        from main import cli
+        from tagex.main import main as cli
         
         # Create a vault with no read permissions
         restricted_vault = temp_dir / "restricted"
@@ -753,7 +753,7 @@ Content""")
     
     def test_keyboard_interrupt_handling(self, simple_vault):
         """Test CLI handling of keyboard interrupts."""
-        from main import cli
+        from tagex.main import main as cli
         import signal
         
         runner = CliRunner()
@@ -769,7 +769,7 @@ class TestCLIIntegration:
     
     def test_full_workflow_via_cli(self, temp_dir):
         """Test complete workflow using CLI commands."""
-        from main import cli
+        from tagex.main import main as cli
         
         # Create test vault
         test_vault = temp_dir / "workflow_vault"
@@ -805,7 +805,7 @@ Content with #work and #notes tags.""")
     
     def test_cli_output_consistency(self, simple_vault, temp_dir):
         """Test that CLI output is consistent across different invocations."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -824,7 +824,7 @@ Content with #work and #notes tags.""")
     
     def test_cli_with_complex_vault(self, complex_vault):
         """Test CLI commands with complex vault structure."""
-        from main import cli
+        from tagex.main import main as cli
         
         runner = CliRunner()
         
@@ -845,7 +845,7 @@ class TestGlobalTagTypesIntegration:
 
     def test_global_tag_types_frontmatter_only_delete(self, temp_dir):
         """Test that global --tag-types frontmatter only deletes frontmatter tags, not inline."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
 
         # Create test vault with file containing both frontmatter and inline tags
@@ -879,7 +879,7 @@ This has an inline #test-tag in the content.
 
     def test_global_tag_types_inline_only_delete(self, temp_dir):
         """Test that global --tag-types inline only deletes inline tags, not frontmatter."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
 
         # Create test vault with file containing both frontmatter and inline tags
@@ -913,7 +913,7 @@ This has an inline #test-tag in the content.
 
     def test_global_tag_types_both_delete(self, temp_dir):
         """Test that global --tag-types both deletes both frontmatter and inline tags."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
 
         # Create test vault with file containing both frontmatter and inline tags
@@ -948,7 +948,7 @@ This has an inline #test-tag in the content.
 
     def test_individual_commands_no_local_tag_types_option(self, simple_vault):
         """Test that individual commands don't have their own --tag-types options."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
 
         runner = CliRunner()
@@ -964,7 +964,7 @@ This has an inline #test-tag in the content.
 
     def test_global_tag_types_with_rename_operation(self, temp_dir):
         """Test that global --tag-types works with rename operation."""
-        from main import cli
+        from tagex.main import main as cli
         from click.testing import CliRunner
 
         # Create test vault with file containing both frontmatter and inline tags
