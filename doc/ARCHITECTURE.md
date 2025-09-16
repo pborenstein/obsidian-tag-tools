@@ -29,7 +29,7 @@
         │                       │                       │
         ▼                       ▼                       ▼
 ┌──────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│ tagex/core/     │      │output_formatter │      │ tag-analysis/   │
+│ tagex/core/      │      │output_formatter │      │ tag-analysis/   │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
 │ │TagOperation  │ │      │ │ JSON Format │ │      │ │pair analysis│ │
@@ -44,7 +44,7 @@
         │
         ▼
 ┌──────────────────┐
-│   tagex/utils/  │
+│   tagex/utils/   │
 │                  │
 │ ┌──────────────┐ │
 │ │file_discovery│ │
@@ -143,7 +143,7 @@ Commands:
 │ tagex /vault merge   → MergeOperation class │
 │ tagex /vault delete  → DeleteOperation class│
 │                                             │
-│ Global --tag-types option affects all      │
+│ Global --tag-types option affects all       │
 └─────────────────────────────────────────────┘
 ```
 
@@ -242,7 +242,7 @@ File Input
     │
     ├─► tagex/core/parsers/frontmatter_parser.py ──┐
     │                                              │
-    └─► tagex/core/parsers/inline_parser.py ──────┼─► Aggregation
+    └─► tagex/core/parsers/inline_parser.py ───────┼─► Aggregation
                                 │
         [future_parser.py] ─────┘
                 │
