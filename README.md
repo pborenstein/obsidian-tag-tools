@@ -12,6 +12,9 @@ uv tool install --editable .
 # Sanity check CLI
 tagex --help
 
+# View vault statistics and health metrics
+tagex "$HOME/Obsidian/MyVault" stats
+
 # Extract all tags to JSON from your vault
 tagex "$HOME/Obsidian/MyVault" extract -f json -o tags.json
 
@@ -21,9 +24,6 @@ jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 # Dry-run a rename, then apply
 tagex "$HOME/Obsidian/MyVault" rename "work" "project" --dry-run
 tagex "$HOME/Obsidian/MyVault" rename "work" "project"
-
-# View vault statistics and health metrics
-tagex "$HOME/Obsidian/MyVault" stats
 ```
 
 ## Commands
