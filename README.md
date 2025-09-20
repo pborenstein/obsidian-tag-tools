@@ -65,140 +65,78 @@ uv run python -m tagex.main /path/to/vault delete old-tag
 uv run python -m tagex.main /path/to/vault stats --top 20
 ```
 
-### Global Options
+### Options Reference
 
-- `--tag-types`: Tag types to process (`both`, `frontmatter`, `inline`) (default: frontmatter)
-- `--version`: Show version information
-- `--help`: Show help information
-
-### Extract Command Options
-
-- `--output`, `-o`: Output file path (default: stdout)
-- `--format`, `-f`: Output format (`json`, `csv`, `txt`) (default: json)
-- `--exclude`: Patterns to exclude (can be used multiple times)
-- `--verbose`, `-v`: Enable verbose logging
-- `--quiet`, `-q`: Suppress summary output
-- `--no-filter`: Disable tag filtering (include all raw tags)
-
-### Operation Command Options
-
-- `--dry-run`: Preview changes without modifying files (recommended for testing)
-- All tag operations include logging and can be previewed safely
-
-### Stats Command Options
-
-- `--top`, `-t`: Number of top tags to display (default: 20)
-- `--format`, `-f`: Output format (`text`, `json`) (default: text)
-- `--no-filter`: Include all raw tags without filtering
+| Option | Commands | Description | Default |
+|--------|----------|-------------|----------|
+| `--tag-types` | All | Tag types to process (`both`, `frontmatter`, `inline`) | `frontmatter` |
+| `--output`, `-o` | extract | Output file path | stdout |
+| `--format`, `-f` | extract, stats | Output format (`json`, `csv`, `txt` for extract; `text`, `json` for stats) | `json`, `text` |
+| `--exclude` | extract | File patterns to exclude (repeatable) | none |
+| `--verbose`, `-v` | extract | Enable verbose logging | disabled |
+| `--quiet`, `-q` | extract | Suppress summary output | disabled |
+| `--no-filter` | extract, stats | Include all raw tags without filtering | disabled |
+| `--dry-run` | rename, merge, delete | Preview changes without modifying files | disabled |
+| `--top`, `-t` | stats | Number of top tags to display | 20 |
 
 ### Examples
 
-**Tag Extraction:**
 ```bash
-# Extract tags from vault and output as JSON
+# Extract tags (JSON output, frontmatter only by default)
 tagex /path/to/vault extract
-
-# Save tags to CSV file
 tagex /path/to/vault extract -f csv -o tags.csv
+tagex --tag-types both /path/to/vault extract --no-filter
 
-# Extract with exclusions
-tagex /path/to/vault extract --exclude "*.template.md" --exclude "drafts/*"
-
-# Extract all raw tags without filtering
-tagex /path/to/vault extract --no-filter
-
-# Extract frontmatter tags (default behavior)
-tagex /path/to/vault extract
-
-# Extract only inline hashtags
-tagex --tag-types inline /path/to/vault extract
-
-# Extract both frontmatter and inline tags
-tagex --tag-types both /path/to/vault extract
-
-# Get a list of tags sorted by frequency
-tagex /path/to/vault extract -f json | jq -r '.[] | "\(.tag) \(.tagCount)"'
-```
-
-**Tag Operations:**
-```bash
-# Preview tag rename (safe)
+# Tag operations with dry-run preview
 tagex /path/to/vault rename work project --dry-run
-
-# Actually rename tag after reviewing preview
-tagex /path/to/vault rename work project
-
-# Merge multiple related tags
-tagex /path/to/vault merge personal-note diary-entry journal --into writing
-
-# Rename frontmatter tags (default behavior)
-tagex /path/to/vault rename work project --dry-run
-
-# Delete only inline tags (preserve frontmatter tags)
+tagex /path/to/vault merge personal diary journal --into writing --dry-run
 tagex --tag-types inline /path/to/vault delete obsolete-tag --dry-run
 
-# Preview deleting tags (safe)
-tagex /path/to/vault delete obsolete-tag temp-tag --dry-run
-```
-
-**Vault Statistics:**
-
-```bash
-# Display comprehensive tag statistics
-tagex /path/to/vault stats
-
-# Show top 10 tags with JSON output
+# Vault statistics
 tagex /path/to/vault stats --top 10 --format json
-
-# Stats for frontmatter tags (default behavior)
-tagex /path/to/vault stats
-
-# Include all tags (no filtering)
-tagex /path/to/vault stats --no-filter
 ```
 
-**Complete Workflow:**
+**Workflow:**
 ```bash
-# 1. Extract and analyze tags
+# Extract, analyze, modify, verify
 tagex /vault extract -o tags.json
-# By default, analysis scripts filter noise. Use --no-filter to disable.
 uv run tag-analysis/pair_analyzer.py tags.json
-
-# 2. Preview and apply changes
-tagex /vault rename old-name new-name --dry-run
-tagex /vault rename old-name new-name
-
-# 3. Verify changes
+tagex /vault rename old-name new-name --dry-run && tagex /vault rename old-name new-name
 tagex /vault extract -o updated_tags.json
 ```
 
 ## Features
 
-**Tag Extraction:**
+### Tag Extraction
 
-- Extracts tags from frontmatter YAML
-- Extracts inline hashtags from content
-- **Selective tag type filtering** - choose frontmatter, inline, or both
-- Automatic tag validation - filters out noise (numbers, HTML entities, technical patterns) by default
-- Multiple output formats (JSON, CSV, txt)
-- File pattern exclusions
-- Statistics and summaries
+| Feature | Description |
+|---------|-------------|
+| Frontmatter YAML | Extracts tags from document metadata |
+| Inline hashtags | Extracts hashtags from content |
+| Tag type filtering | Process frontmatter, inline, or both |
+| Tag validation | Filters noise (numbers, HTML entities, technical patterns) |
+| Output formats | JSON, CSV, txt |
+| File exclusions | Pattern-based file filtering |
+| Statistics | Tag counts and vault summaries |
 
-**Tag Operations:**
+### Tag Operations
 
-- **Rename tags** across entire vault with preview mode
-- **Merge multiple tags** into consolidated tags
-- **Delete tags** from all files, with warnings for inline tag removal
-- **Selective processing** - operate on frontmatter, inline, or both tag types
-- **Safe by default** - dry-run mode prevents accidental changes
-- **Operation logging** tracks all modifications with integrity checks
-- **Preserves file structure** - no YAML corruption or formatting changes
+| Operation | Description | Safety Features |
+|-----------|-------------|----------------|
+| Rename | Single tag renaming across vault | Preview mode, dry-run |
+| Merge | Consolidate multiple tags | Multi-tag input validation |
+| Delete | Remove tags from all files | Inline tag warnings |
+| Selective processing | Target frontmatter, inline, or both | Type-specific operations |
+| Logging | Track all modifications | Integrity checks |
+| Structure preservation | Maintain file formatting | No YAML corruption |
 
-**Advanced Analysis:**
+### Advanced Analysis
 
-- Tag relationship analysis (pair analysis, clustering)
-- Hub tag identification and cluster detection
-- Comprehensive tag validation and noise filtering
+| Analysis Type | Description |
+|---------------|-------------|
+| Relationship analysis | Tag pair analysis and clustering |
+| Hub identification | Detect central tags and clusters |
+| Validation | Filter noise and validate tags |
 
 ## Installation
 
