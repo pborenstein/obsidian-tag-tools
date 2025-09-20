@@ -1,14 +1,10 @@
 # Obsidian Tag Management Tool - Architecture
 
-```
-    ╔══════════════════════════════════════════════════════════════╗
-    ║                    TAGEX PROCESSING PIPELINE                 ║
-    ║                                                              ║
-    ║    Markdown Files → Tag Extraction → Analysis → Operations   ║
-    ║                         ↓              ↓            ↓        ║
-    ║                    Tag Output    Relationships   Tag Modify  ║
-    ╚══════════════════════════════════════════════════════════════╝
-```
+## Processing Pipeline
+
+Markdown Files → Tag Extraction → Analysis → Operations
+                      ↓              ↓            ↓
+                 Tag Output    Relationships   Tag Modify
 
 ## Core Components
 
