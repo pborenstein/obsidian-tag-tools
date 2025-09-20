@@ -346,15 +346,11 @@ The tool includes tag validation to filter out noise and technical artifacts:
 | Command | Description |
 |:--------|:------------|
 | `uv tool install --editable .` | Install as editable tool |
-| `tagex /path/to/vault extract` | Run extraction with system-wide command |
-| `tagex /vault extract -o tags.json` | Extract with filtering (default) |
-| `tagex /vault extract --no-filter -o raw_tags.json` | Extract raw tags (no filtering) |
 | `tagex /vault rename old-tag new-tag --dry-run` | Tag rename operation (preview mode) |
 | `tagex /vault merge tag1 tag2 --into combined-tag --dry-run` | Tag merge operation (preview mode) |
 | `tagex /vault delete unwanted-tag another-tag --dry-run` | Tag delete operation (preview mode) |
-| `tagex --tag-types frontmatter /vault extract -o frontmatter_only.json` | Extract frontmatter tags only |
-| `tagex --tag-types inline /vault rename work project --dry-run` | Rename inline tags only |
-| `tagex --tag-types frontmatter /vault delete temp-tag --dry-run` | Delete frontmatter tags only |
+| `tagex --tag-types frontmatter /vault rename work project --dry-run` | Rename frontmatter tags only |
+| `tagex --tag-types inline /vault delete temp-tag --dry-run` | Delete inline tags only |
 
 ## Tag Operations Architecture
 
