@@ -68,7 +68,7 @@ uv run python -m tagex.main /path/to/vault stats --top 20
 ### Options Reference
 
 | Option | Commands | Description | Default |
-|--------|----------|-------------|----------|
+|:-------|:---------|:------------|:---------|
 | `--tag-types` | All | Tag types to process (`both`, `frontmatter`, `inline`) | `frontmatter` |
 | `--output`, `-o` | extract | Output file path | stdout |
 | `--format`, `-f` | extract, stats | Output format (`json`, `csv`, `txt` for extract; `text`, `json` for stats) | `json`, `text` |
@@ -110,7 +110,7 @@ tagex /vault extract -o updated_tags.json
 ### Tag Extraction
 
 | Feature | Description |
-|---------|-------------|
+|:--------|:------------|
 | Frontmatter YAML | Extracts tags from document metadata |
 | Inline hashtags | Extracts hashtags from content |
 | Tag type filtering | Process frontmatter, inline, or both |
@@ -122,7 +122,7 @@ tagex /vault extract -o updated_tags.json
 ### Tag Operations
 
 | Operation | Description | Safety Features |
-|-----------|-------------|----------------|
+|:----------|:------------|:---------------|
 | Rename | Single tag renaming across vault | Preview mode, dry-run |
 | Merge | Consolidate multiple tags | Multi-tag input validation |
 | Delete | Remove tags from all files | Inline tag warnings |
@@ -133,7 +133,7 @@ tagex /vault extract -o updated_tags.json
 ### Advanced Analysis
 
 | Analysis Type | Description |
-|---------------|-------------|
+|:--------------|:------------|
 | Relationship analysis | Tag pair analysis and clustering |
 | Hub identification | Detect central tags and clusters |
 | Validation | Filter noise and validate tags |
