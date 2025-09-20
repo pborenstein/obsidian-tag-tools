@@ -363,22 +363,6 @@ The analyzer now uses the `is_valid_tag()` function with:
 
 ---
 
-## Completed Improvements
-
-### Tag Filtering Integration
-
-- **Consolidated analysis**: Single script handles both filtered and raw analysis
-- **Command-line control**: `--no-filter` flag for complete analysis
-- **Improved accuracy**: Better noise filtering reduces false relationships
-- **Simplified workflow**: Single script with optional filtering control
-
-### Enhanced Validation
-
-- **Comprehensive rules**: Filters technical artifacts, HTML entities, short tags
-- **Pattern matching**: Detects and removes hex strings, UUIDs, version numbers
-- **Character validation**: Ensures tags use valid character sets
-- **Nested tag support**: Proper validation for hierarchical tags
-
 ## Future Applications
 
 The analytical foundation supports additional functionality:
@@ -413,28 +397,14 @@ The filtering shows that tag validation supports relationship analysis in person
 
 ### Detection Methods
 
-**1. SIMILAR NAMES** - String similarity analysis (85%+ threshold)
-- Catches likely typos and minor spelling variations
-- Examples: `writing/writng`, `tech/technology`
+| Method | Threshold | Description | Examples |
+|:-------|:----------|:------------|:---------|
+| **Similar Names** | 85%+ similarity | String similarity for typos and variations | `writing/writng`, `tech/technology` |
+| **Semantic Duplicates** | 0.6+ cosine similarity | TF-IDF embedding analysis for conceptual relationships | `music/audio`, `family/relatives` |
+| **High File Overlap** | 80%+ co-occurrence | Tags appearing together in most files | Functional equivalence detection |
+| **Variant Patterns** | Morphological rules | Plural/singular and verb form detection | `parent/parents`, `writing/writers` |
 
-**2. SEMANTIC DUPLICATES** - TF-IDF embedding analysis with morphological fallback
-- **Primary method**: Character-level n-gram embeddings (2-4 character patterns)
-- Calculates cosine similarity between tag vectors for conceptual relationships
-- Identifies semantically related tags beyond string matching
-- Examples: `music/audio`, `family/relatives`, `work/employment`
-- **Fallback method**: Dynamic morphological pattern matching for environments without scikit-learn
-- Detects plural/singular, verb forms, and common suffix patterns
-- `--no-sklearn` flag available to test fallback behavior
-
-**3. HIGH FILE OVERLAP** - Pair analysis
-- Finds tags appearing together in 80%+ of files
-- Suggests functional equivalence or subsumption
-- Shows overlap ratios and shared file counts
-
-**4. VARIANT PATTERNS** - Morphological analysis
-- Detects plural/singular forms: `parent/parents`
-- Identifies verb variations: `writing/writers`
-- Catches common suffix patterns
+**Semantic Analysis**: Uses character-level n-gram embeddings (2-4 chars) with morphological fallback when scikit-learn unavailable (`--no-sklearn` flag).
 
 ### Embedding Algorithm
 
