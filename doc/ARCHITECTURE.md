@@ -1,12 +1,15 @@
 # Obsidian Tag Management Tool - Architecture
 
-Markdown Files → Tag Extraction → Analysis → Operations
-                      ↓              ↓            ↓
-                 Tag Output    Relationships   Tag Modify
+
 
 ## Core Components
 
 ```
+Markdown Files → Tag Extraction → Analysis → Operations
+                      ↓              ↓            ↓
+                 Tag Output   Relationships   Tag Modify
+
+
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │   tagex/        │      │ tagex/core/     │      │ tagex/core/     │
 │                 │      │                 │      │                 │
