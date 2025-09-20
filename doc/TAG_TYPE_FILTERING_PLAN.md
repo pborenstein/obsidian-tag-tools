@@ -120,35 +120,13 @@ Add test cases for:
 - **Flexibility**: Supports different workflow preferences (frontmatter vs inline)
 - **Backward Compatibility**: Default behavior unchanged (both tag types)
 
-## Example Usage
-
-~~```bash
-# Extract only frontmatter tags
-tagex extract /path/to/vault --frontmatter-only
-
-# Rename only inline hashtags
-tagex rename /path/to/vault old-tag new-tag --inline-only
-
-# Merge frontmatter tags only
-tagex merge /path/to/vault tag1 tag2 --into target --frontmatter-only --dry-run
-```~~
-
-**IMPLEMENTED USAGE:**
+## Final Implementation
 
 ```bash
-# Extract only frontmatter tags
+# Tag type filtering examples
 tagex --tag-types frontmatter /path/to/vault extract
-
-# Rename only inline hashtags
 tagex --tag-types inline /path/to/vault rename old-tag new-tag
-
-# Merge frontmatter tags only
-tagex --tag-types frontmatter /path/to/vault merge tag1 tag2 --into target --dry-run
-
-# Default behavior (both tag types)
-tagex --tag-types both /path/to/vault extract
-# Or simply (both is default):
-tagex /path/to/vault extract
+tagex --tag-types both /path/to/vault extract  # default behavior
 ```
 
 ## Implementation Summary

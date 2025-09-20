@@ -464,12 +464,7 @@ See [tag-analysis/SEMANTIC_ANALYSIS.md](../tag-analysis/SEMANTIC_ANALYSIS.md) fo
 
 ### Dependencies and Fallback Strategy
 
-**Required Dependencies:** The merge analyzer includes scikit-learn as a dependency for TF-IDF embedding analysis:
-
-```bash
-# scikit-learn is included in pyproject.toml dependencies
-uv sync  # installs scikit-learn>=1.7.2
-```
+**Required Dependencies:** The merge analyzer includes scikit-learn as a dependency for TF-IDF embedding analysis. Dependencies are installed automatically with the tool.
 
 **Fallback Behavior:** If scikit-learn is unavailable or disabled with `--no-sklearn`, the system uses **dynamic morphological analysis** with generic English patterns:
 
