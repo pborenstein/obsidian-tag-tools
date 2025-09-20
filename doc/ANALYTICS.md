@@ -26,57 +26,28 @@ tag-analysis/
 
 ### Prerequisites
 
-Before running tag analysis, extract tags from your vault or view comprehensive statistics:
+Extract tags before running analysis:
 
-```bash
-# View comprehensive vault statistics (quick overview)
-tagex /path/to/vault stats
-
-# Extract filtered tags to JSON file (recommended for detailed analysis)
-tagex /path/to/vault extract -o tags.json
-
-# Or extract raw tags if needed for analysis
-tagex /path/to/vault extract --no-filter -o raw_tags.json
-
-# Extract specific tag types for targeted analysis (frontmatter is default)
-tagex /path/to/vault extract -o frontmatter_tags.json  # frontmatter only (default)
-tagex --tag-types inline /path/to/vault extract -o inline_tags.json
-tagex --tag-types both /path/to/vault extract -o all_tags.json
-
-# Using uv run (alternative)
-uv run python -m tagex.main /path/to/vault extract -o tags.json
-```
+| Command | Purpose | Output |
+|---------|---------|--------|
+| `tagex /vault stats` | Quick vault overview | Console statistics |
+| `tagex /vault extract -o tags.json` | Filtered tags for analysis | JSON file |
+| `tagex /vault extract --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
+| `tagex --tag-types both /vault extract -o all_tags.json` | Both frontmatter and inline | JSON file |
 
 The analysis scripts expect tag data in JSON format by default.
 
 ### Analysis Workflow
 
-1. **Tag Pair Analysis** - Find which tags frequently appear together:
-   ```bash
-   # Basic analysis with filtering (default behavior)
-   uv run tag-analysis/pair_analyzer.py tags.json
-   
-   # Custom minimum threshold with filtering
-   uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 5
-   
-   # Analysis without noise filtering
-   uv run tag-analysis/pair_analyzer.py tags.json --no-filter
-   ```
+| Analysis Type | Command | Purpose |
+|---------------|---------|----------|
+| **Pair Analysis** | `uv run tag-analysis/pair_analyzer.py tags.json` | Find tags that appear together |
+| **Merge Analysis** | `uv run tag-analysis/merge_analyzer.py tags.json` | Get consolidation suggestions |
 
-2. **Tag Merge Analysis** - Get suggestions for tag consolidation:
-   ```bash
-   # Basic merge analysis with embedding-based semantic detection
-   uv run tag-analysis/merge_analyzer.py tags.json
-   
-   # Custom minimum usage threshold
-   uv run tag-analysis/merge_analyzer.py tags.json --min-usage 5
-   
-   # Analysis without noise filtering
-   uv run tag-analysis/merge_analyzer.py tags.json --no-filter
-   
-   # Force pattern-based fallback (test without sklearn)
-   uv run tag-analysis/merge_analyzer.py tags.json --no-sklearn
-   ```
+**Common Options:**
+- `--min-pairs N` / `--min-usage N`: Set minimum thresholds
+- `--no-filter`: Include technical noise
+- `--no-sklearn`: Use pattern-based fallback
 
 ### Expected Output
 
@@ -94,27 +65,15 @@ The analysis helps identify:
 - Related tag clusters
 - Natural groupings and relationships
 
-### Analyzing Different Tag Types
+### Tag Type Analysis
 
-The analytics tools work with any extracted tag data, enabling specialized analysis:
+| Tag Type | Extract Command | Analysis Focus |
+|----------|----------------|----------------|
+| **Frontmatter** | `tagex /vault extract -o fm_tags.json` | Formal categorization |
+| **Inline** | `tagex --tag-types inline /vault extract -o inline_tags.json` | Content-driven tagging |
+| **Both** | `tagex --tag-types both /vault extract -o all_tags.json` | Complete pattern analysis |
 
-```bash
-# Compare frontmatter vs inline tag patterns
-tagex /vault extract -o fm_tags.json  # frontmatter only (default)
-tagex --tag-types inline /vault extract -o inline_tags.json
-
-uv run tag-analysis/pair_analyzer.py fm_tags.json
-uv run tag-analysis/pair_analyzer.py inline_tags.json
-
-# Merge analysis for specific tag types
-uv run tag-analysis/merge_analyzer.py fm_tags.json
-uv run tag-analysis/merge_analyzer.py inline_tags.json
-```
-
-This enables insights into:
-- **Frontmatter patterns**: Formal categorization and metadata
-- **Inline patterns**: Contextual and content-driven tagging
-- **Usage differences**: How different tag types are used organizationally
+Run pair or merge analysis on any extracted tag file to compare patterns across tag types.
 
 ---
 
@@ -142,26 +101,18 @@ The stats command calculates and displays:
 - **Concentration score**: Gini-like coefficient showing usage concentration
 - **Health assessment**: Automated recommendations based on patterns
 
-### Understanding the Health Assessment
+### Health Assessment Criteria
 
-The stats command provides automated health assessment using these indicators:
+| Metric | Excellent | Good | Moderate | Low |
+|--------|-----------|------|----------|-----|
+| **Tag Coverage** | ≥80% files tagged | ≥60% files tagged | ≥40% files tagged | <40% files tagged |
+| **Singleton Ratio** | <30% singletons | 30-50% singletons | 50-70% singletons | ≥70% singletons |
+| **Diversity Score** | ≥80% of maximum | ≥60% of maximum | ≥40% of maximum | <40% of maximum |
 
-**Tag Coverage Assessment:**
-- `+ Excellent` (≥80%): Most files are tagged
-- `+ Good` (≥60%): Majority of files tagged
-- `* Moderate` (≥40%): Consider tagging more files
-- `- Low` (<40%): Many files lack tags
-
-**Singleton Analysis:**
-- `+ Good` (<30%): Low singleton ratio, good tag reuse
-- `* Moderate` (30-50%): Some cleanup opportunities exist
-- `- High` (≥50%): Many tags used only once, consider consolidation
-
-**Diversity Assessment:**
-- `+ High` (≥80% of maximum): Well-distributed usage across tags
-- `+ Good` (≥60% of maximum): Reasonably balanced distribution
-- `* Moderate` (≥40% of maximum): Some tags dominate others
-- `- Low` (<40% of maximum): Heavily concentrated on few tags
+**Assessment Indicators:**
+- `+ Excellent/Good`: Healthy patterns
+- `* Moderate`: Consider improvements
+- `- Low`: Action recommended
 
 ### Interpreting Diversity Scores
 
@@ -180,22 +131,12 @@ The stats command provides automated health assessment using these indicators:
 
 ### Usage Examples
 
-```bash
-# Basic stats overview
-tagex /path/to/vault stats
-
-# Focus on top 10 tags with JSON output
-tagex /path/to/vault stats --top 10 --format json
-
-# Stats for frontmatter tags (default behavior)
-tagex /path/to/vault stats
-
-# Include unfiltered tags (show technical noise)
-tagex /path/to/vault stats --no-filter
-
-# Stats with custom top tag count
-tagex /path/to/vault stats --top 25
-```
+| Command | Description |
+|---------|-------------|
+| `tagex /vault stats` | Basic vault overview |
+| `tagex /vault stats --top 10 --format json` | Top 10 tags in JSON format |
+| `tagex /vault stats --no-filter` | Include technical noise |
+| `tagex /vault stats --top 25` | Custom top tag count |
 
 ### Sample Output Interpretation
 
@@ -262,23 +203,14 @@ Health Assessment:
 - Review dominant tags for over-use
 - Develop more balanced tagging strategy
 
-### Integration with Analysis Tools
+### Analysis Integration Workflow
 
-Stats output helps prioritize analysis workflows:
-
-```bash
-# 1. Get overview and identify issues
-tagex /vault stats
-
-# 2. If high singleton ratio, run merge analysis
-uv run tag-analysis/merge_analyzer.py tags.json
-
-# 3. If low diversity, run pair analysis for clustering insights
-uv run tag-analysis/pair_analyzer.py tags.json
-
-# 4. Apply suggested consolidations
-tagex /vault merge old-tag1 old-tag2 --into new-tag --dry-run
-```
+| Step | Command | When to Use |
+|------|---------|-------------|
+| 1. Overview | `tagex /vault stats` | Always start here |
+| 2. Merge analysis | `uv run tag-analysis/merge_analyzer.py tags.json` | High singleton ratio |
+| 3. Pair analysis | `uv run tag-analysis/pair_analyzer.py tags.json` | Low diversity score |
+| 4. Apply changes | `tagex /vault merge tag1 tag2 --into new-tag --dry-run` | After analysis review |
 
 ---
 
@@ -411,16 +343,11 @@ The analyzer now uses the `is_valid_tag()` function with:
 
 ### Usage Examples
 
-```bash
-# Filtered analysis (recommended)
-uv run tag-analysis/pair_analyzer.py tags.json
-
-# Raw analysis (all tags)
-uv run tag-analysis/pair_analyzer.py tags.json --no-filter
-
-# Filtered with custom threshold
-uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 5
-```
+| Command | Description |
+|---------|-------------|
+| `uv run tag-analysis/pair_analyzer.py tags.json` | Filtered analysis (recommended) |
+| `uv run tag-analysis/pair_analyzer.py tags.json --no-filter` | Raw analysis (all tags) |
+| `uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 5` | Custom threshold |
 
 ---
 
@@ -579,22 +506,13 @@ See [tag-analysis/SEMANTIC_ANALYSIS.md](../tag-analysis/SEMANTIC_ANALYSIS.md) fo
 
 ### Usage Examples
 
-```bash
-# Standard analysis with embeddings
-uv run tag-analysis/merge_analyzer.py tags.json
-
-# Higher usage threshold (ignore rare tags)
-uv run tag-analysis/merge_analyzer.py tags.json --min-usage 10
-
-# Include all tags (no noise filtering)
-uv run tag-analysis/merge_analyzer.py tags.json --no-filter
-
-# Test pattern-based fallback instead of embeddings
-uv run tag-analysis/merge_analyzer.py tags.json --no-sklearn
-
-# Manual execution of suggestions
-tagex /path/to/vault merge writers writering --into writing --dry-run
-```
+| Command | Description |
+|---------|-------------|
+| `uv run tag-analysis/merge_analyzer.py tags.json` | Standard embedding analysis |
+| `uv run tag-analysis/merge_analyzer.py tags.json --min-usage 10` | Higher usage threshold |
+| `uv run tag-analysis/merge_analyzer.py tags.json --no-filter` | Include all tags |
+| `uv run tag-analysis/merge_analyzer.py tags.json --no-sklearn` | Pattern-based fallback |
+| `tagex /vault merge writers writering --into writing --dry-run` | Execute suggestions |
 
 ### Dependencies and Fallback Strategy
 
