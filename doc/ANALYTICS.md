@@ -1,14 +1,5 @@
 # Obsidian Tag Management Tool - Analytics Modules Documentation
 
-```
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║                      TAG ANALYTICS ENGINE                     ║
-    ║                                                               ║
-    ║    Process raw tags through                                   ║
-    ║    tag pair analysis and clustering detection.                ║
-    ╚═══════════════════════════════════════════════════════════════╝
-```
-
 ## Overview
 
 The `tag-analysis/` directory contains analytical tools that perform tag pair analysis and graph-based clustering on tag data extracted from markdown files.
