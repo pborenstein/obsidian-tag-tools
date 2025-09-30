@@ -21,53 +21,46 @@ from .core.operations.tag_operations import RenameOperation, MergeOperation, Del
 
 
 @click.group()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.version_option()
-@click.pass_context
-def main(ctx, vault_path, tag_types):
-    """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults.
-
-    VAULT_PATH: Path to the Obsidian vault directory
-    """
-    # Store vault_path and tag_types in context for subcommands
-    ctx.ensure_object(dict)
-    ctx.obj['vault_path'] = vault_path
-    ctx.obj['tag_types'] = tag_types
+def main():
+    """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults."""
+    pass
 
 
 @main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--output', '-o', type=click.Path(), help='Output file path (default: stdout)')
 @click.option('--format', '-f', type=click.Choice(['json', 'csv', 'txt']), default='json', help='Output format')
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--exclude', multiple=True, help='Patterns to exclude (can be used multiple times)')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--quiet', '-q', is_flag=True, help='Suppress summary output')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
-@click.pass_context
-def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
-    """Extract tags from the vault."""
-    vault_path = ctx.obj['vault_path']
-    tag_types = ctx.obj['tag_types']
+def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_filter):
+    """Extract tags from the vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
+    """
     # Set up logging
     log_level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Convert exclude patterns to set
     exclude_patterns = set(exclude) if exclude else None
-    
+
     try:
         # Initialize extractor
         extractor = TagExtractor(vault_path, exclude_patterns, filter_tags=not no_filter, tag_types=tag_types)
-        
+
         # Extract tags
         tag_data = extractor.extract_tags()
-        
+
         # Get statistics
         stats = extractor.get_statistics()
-        
+
         # Format output
         if format == 'json':
             formatted_data = format_as_plugin_json(tag_data)
@@ -75,7 +68,7 @@ def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
             formatted_data = format_as_csv(tag_data)
         elif format == 'txt':
             formatted_data = format_as_text(tag_data)
-        
+
         # Save or print output
         if output:
             save_output(formatted_data, Path(output), format)
@@ -94,80 +87,84 @@ def extract(ctx, output, format, exclude, verbose, quiet, no_filter):
                 print(output_buffer.getvalue().strip())
             elif format == 'txt':
                 print(formatted_data)
-        
+
         # Print summary if not quiet
         if not quiet and output:
             print_summary(tag_data, stats)
-        
+
     except Exception as e:
         logging.error(f"Error during extraction: {e}")
         sys.exit(1)
 
 
 @main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('old_tag')
 @click.argument('new_tag')
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.pass_context
-def rename(ctx, old_tag, new_tag, dry_run):
+def rename(vault_path, old_tag, new_tag, tag_types, dry_run):
     """Rename a tag across all files in the vault.
 
+    VAULT_PATH: Path to the Obsidian vault directory
+
     OLD_TAG: Tag to rename
+
     NEW_TAG: New tag name
     """
-    vault_path = ctx.obj['vault_path']
-    tag_types = ctx.obj['tag_types']
     operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 
 @main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.pass_context
-def merge(ctx, source_tags, target_tag, dry_run):
+def merge(vault_path, source_tags, target_tag, tag_types, dry_run):
     """Merge multiple tags into a single tag.
+
+    VAULT_PATH: Path to the Obsidian vault directory
 
     SOURCE_TAGS: Tags to merge (space-separated)
     """
-    vault_path = ctx.obj['vault_path']
-    tag_types = ctx.obj['tag_types']
     operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 
 @main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('tags_to_delete', nargs=-1, required=True)
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-@click.pass_context
-def delete(ctx, tags_to_delete, dry_run):
+def delete(vault_path, tags_to_delete, tag_types, dry_run):
     """Delete tags entirely from all files in the vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
 
     TAGS_TO_DELETE: Tags to delete (space-separated)
 
     WARNING: This operation removes tags from both frontmatter and inline content.
     Use --dry-run first to preview changes. Inline tag deletion may affect readability.
     """
-    vault_path = ctx.obj['vault_path']
-    tag_types = ctx.obj['tag_types']
     operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run, tag_types=tag_types)
     operation.run_operation()
 
 
 @main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--top', '-t', type=int, default=20, help='Number of top tags to show (default: 20)')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
-@click.pass_context
-def stats(ctx, top, format, no_filter):
+def stats(vault_path, tag_types, top, format, no_filter):
     """Display comprehensive tag statistics for the vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
 
     Shows tag counts, distribution patterns, and vault health metrics.
     """
-    vault_path = ctx.obj['vault_path']
-    tag_types = ctx.obj['tag_types']
-
     # Set up logging
     logging.basicConfig(level=logging.WARNING)  # Suppress info logs for cleaner output
 
@@ -196,8 +193,7 @@ def stats(ctx, top, format, no_filter):
 
 
 @main.group()
-@click.pass_context
-def analyze(ctx):
+def analyze():
     """Analyze tag relationships and suggest improvements.
 
     Provides insights into tag usage patterns, co-occurrence, and merge opportunities.
