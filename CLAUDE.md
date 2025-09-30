@@ -16,25 +16,24 @@ uv sync
 uv tool install --editable .
 
 # Tag operations (console script)
-tagex /path/to/vault extract [options]
-tagex /path/to/vault rename old-tag new-tag [--dry-run]
-tagex /path/to/vault merge tag1 tag2 --into target-tag [--dry-run]
-tagex /path/to/vault delete unwanted-tag another-tag [--dry-run]
-tagex /path/to/vault stats [--top N] [--format text|json] [--no-filter]
+tagex extract /path/to/vault [options]
+tagex rename /path/to/vault old-tag new-tag [--dry-run]
+tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run]
+tagex delete /path/to/vault unwanted-tag another-tag [--dry-run]
+tagex stats /path/to/vault [--top N] [--format text|json] [--no-filter]
 
 # Global --tag-types option (applies to all commands, default: frontmatter)
-tagex --tag-types both|frontmatter|inline /path/to/vault COMMAND [options]
-
+# Per-command --tag-types option (applies per command, default: frontmatter)
 # Or using uv run during development
-uv run python -m tagex.main /path/to/vault extract [options]
-uv run python -m tagex.main /path/to/vault rename old-tag new-tag
-uv run python -m tagex.main /path/to/vault merge tag1 tag2 --into target-tag
-uv run python -m tagex.main /path/to/vault delete unwanted-tag --dry-run
-uv run python -m tagex.main /path/to/vault stats [--top 10] [--format json]
+uv run python -m tagex.main extract /path/to/vault [options]
+uv run python -m tagex.main rename /path/to/vault old-tag new-tag
+uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag
+uv run python -m tagex.main delete /path/to/vault unwanted-tag --dry-run
+uv run python -m tagex.main stats /path/to/vault [--top 10] [--format json]
 
 # Global --tag-types with uv run (default: frontmatter)
-uv run python -m tagex.main /path/to/vault extract  # frontmatter only (default)
-uv run python -m tagex.main --tag-types both /path/to/vault extract  # both types
+uv run python -m tagex.main extract /path/to/vault  # frontmatter only (default)
+uv run python -m tagex.main extract /path/to/vault --tag-types both  # both types
 
 # Run analysis commands
 tagex analyze pairs tags.json [--no-filter] [--min-pairs N]
