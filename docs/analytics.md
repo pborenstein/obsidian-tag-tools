@@ -2,12 +2,11 @@
 
 ## Overview
 
-The `tag-analysis/` directory contains analytical tools that perform tag pair analysis and graph-based clustering on tag data extracted from markdown files.
+The `tagex analyze` command provides analytical tools that perform tag pair analysis and merge suggestions on tag data extracted from markdown files.
 
 ```
-tag-analysis/
-├── pair_analyzer.py            ← Core analysis engine with filtering (CLI)
-└── merge_analyzer.py           ← Tag merge suggestion engine with embeddings (CLI)
+tagex analyze pairs     ← Tag co-occurrence and clustering analysis
+tagex analyze merge     ← Tag merge suggestion engine with embeddings
 
 See semantic-analysis.md for technical documentation on semantic similarity.
 ```
@@ -33,13 +32,13 @@ The analysis scripts expect tag data in JSON format by default.
 
 | Analysis Type | Command | Purpose |
 |:--------------|:--------|:---------|
-| **Pair Analysis** | `uv run tag-analysis/pair_analyzer.py tags.json` | Find tags that appear together |
-| **Merge Analysis** | `uv run tag-analysis/merge_analyzer.py tags.json` | Get consolidation suggestions |
+| **Pair Analysis** | `tagex analyze pairs tags.json` | Find tags that appear together |
+| **Merge Analysis** | `tagex analyze merge tags.json` | Get consolidation suggestions |
 
 **Common Options:**
 - `--min-pairs N` / `--min-usage N`: Set minimum thresholds
 - `--no-filter`: Include technical noise
-- `--no-sklearn`: Use pattern-based fallback
+- `--no-sklearn`: Use pattern-based fallback (merge only)
 
 ### Expected Output
 
@@ -187,8 +186,8 @@ Health Assessment:
 | Step | Command | When to Use |
 |:-----|:--------|:------------|
 | 1. Overview | `tagex /vault stats` | Always start here |
-| 2. Merge analysis | `uv run tag-analysis/merge_analyzer.py tags.json` | High singleton ratio |
-| 3. Pair analysis | `uv run tag-analysis/pair_analyzer.py tags.json` | Low diversity score |
+| 2. Merge analysis | `tagex analyze merge tags.json` | High singleton ratio |
+| 3. Pair analysis | `tagex analyze pairs tags.json` | Low diversity score |
 | 4. Apply changes | `tagex /vault merge tag1 tag2 --into new-tag --dry-run` | After analysis review |
 
 ---
@@ -256,10 +255,10 @@ for file_path, tags in file_to_tags.items():
 ### Sample Output:
 ```bash
 # Run with command line interface (with filtering)
-$ uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 3
+$ tagex analyze pairs tags.json --min-pairs 3
 
 # Run without filtering (show all tag pairs)
-$ uv run tag-analysis/pair_analyzer.py tags.json --no-filter --min-pairs 3
+$ tagex analyze pairs tags.json --no-filter --min-pairs 3
 
 Top 20 Tag Pairs:
  45  notes + work
@@ -324,9 +323,9 @@ The analyzer now uses the `is_valid_tag()` function with:
 
 | Command | Description |
 |:--------|:------------|
-| `uv run tag-analysis/pair_analyzer.py tags.json` | Filtered analysis (recommended) |
-| `uv run tag-analysis/pair_analyzer.py tags.json --no-filter` | Raw analysis (all tags) |
-| `uv run tag-analysis/pair_analyzer.py tags.json --min-pairs 5` | Custom threshold |
+| `tagex analyze pairs tags.json` | Filtered analysis (recommended) |
+| `tagex analyze pairs tags.json --no-filter` | Raw analysis (all tags) |
+| `tagex analyze pairs tags.json --min-pairs 5` | Custom threshold |
 
 ---
 
@@ -417,7 +416,7 @@ The filtering shows that tag validation supports relationship analysis in person
 ### Sample Output
 
 ```bash
-$ uv run tag-analysis/merge_analyzer.py tags.json
+$ tagex analyze merge tags.json
 
 === TAG MERGE SUGGESTIONS ===
 
@@ -457,10 +456,10 @@ See [semantic-analysis.md](semantic-analysis.md) for detailed technical implemen
 
 | Command | Description |
 |:--------|:------------|
-| `uv run tag-analysis/merge_analyzer.py tags.json` | Standard embedding analysis |
-| `uv run tag-analysis/merge_analyzer.py tags.json --min-usage 10` | Higher usage threshold |
-| `uv run tag-analysis/merge_analyzer.py tags.json --no-filter` | Include all tags |
-| `uv run tag-analysis/merge_analyzer.py tags.json --no-sklearn` | Pattern-based fallback |
+| `tagex analyze merge tags.json` | Standard embedding analysis |
+| `tagex analyze merge tags.json --min-usage 10` | Higher usage threshold |
+| `tagex analyze merge tags.json --no-filter` | Include all tags |
+| `tagex analyze merge tags.json --no-sklearn` | Pattern-based fallback |
 | `tagex /vault merge writers writering --into writing --dry-run` | Execute suggestions |
 
 ### Dependencies and Fallback Strategy

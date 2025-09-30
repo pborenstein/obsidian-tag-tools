@@ -36,9 +36,9 @@ uv run python -m tagex.main /path/to/vault stats [--top 10] [--format json]
 uv run python -m tagex.main /path/to/vault extract  # frontmatter only (default)
 uv run python -m tagex.main --tag-types both /path/to/vault extract  # both types
 
-# Run analysis scripts  
-uv run tag-analysis/pair_analyzer.py tags.json [--no-filter]
-uv run tag-analysis/merge_analyzer.py tags.json [--no-sklearn]
+# Run analysis commands
+tagex analyze pairs tags.json [--no-filter] [--min-pairs N]
+tagex analyze merge tags.json [--no-sklearn] [--min-usage N]
 
 # Run tests
 uv run pytest tests/
@@ -61,13 +61,13 @@ uv run pytest tests/
 - **`tagex/core/parsers/`** - Frontmatter and inline tag parsing
 - **`tagex/core/operations/`** - Tag modification (rename, merge, delete) with dry-run support
 - **`tagex/utils/`** - File discovery, tag normalization, and validation
-- **`tag-analysis/`** - Relationship analysis and semantic similarity detection
+- **`tagex/analysis/`** - Relationship analysis and semantic similarity detection
 
 ### Key Features
 
 - **Vault-first CLI structure** - Vault path comes first, then command
 - **Global tag type filtering** - --tag-types option applies to all operations
-- **Multi-command operations** - Extract, rename, merge, delete, stats with consistent interface
+- **Multi-command operations** - Extract, rename, merge, delete, stats, analyze with consistent interface
 - **Comprehensive statistics** - Tag distribution, vault health metrics, singleton analysis
 - **Safe by default** - Dry-run mode and comprehensive logging
 - **Tag validation** - Filters noise, preserves meaningful tags

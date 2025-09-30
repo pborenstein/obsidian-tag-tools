@@ -195,6 +195,91 @@ def stats(ctx, top, format, no_filter):
         sys.exit(1)
 
 
+@main.group()
+@click.pass_context
+def analyze(ctx):
+    """Analyze tag relationships and suggest improvements.
+
+    Provides insights into tag usage patterns, co-occurrence, and merge opportunities.
+    """
+    pass
+
+
+@analyze.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--min-pairs', type=int, default=2, help='Minimum pair threshold')
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+def pairs(input_file, min_pairs, no_filter):
+    """Analyze tag pair patterns and co-occurrence.
+
+    INPUT_FILE: JSON file containing tag data (from extract command)
+    """
+    from .analysis.pair_analyzer import load_tag_data, analyze_tag_relationships, find_tag_clusters
+    from collections import defaultdict
+
+    filter_noise = not no_filter
+
+    tag_data = load_tag_data(input_file)
+    pairs_result, file_to_tags = analyze_tag_relationships(tag_data, min_pairs, filter_noise)
+
+    # Top tag pairs
+    print("\nTop 20 Tag Pairs:")
+    for (tag1, tag2), count in sorted(pairs_result.items(), key=lambda x: x[1], reverse=True)[:20]:
+        print(f"{count:3d}  {tag1} + {tag2}")
+
+    # Find clusters
+    clusters = find_tag_clusters(pairs_result)
+    print(f"\nFound {len(clusters)} natural tag clusters:")
+    for i, cluster in enumerate(clusters, 1):
+        print(f"\nCluster {i} ({len(cluster)} tags):")
+        for tag in sorted(cluster):
+            print(f"  - {tag}")
+
+    # Most connected tags
+    tag_connections = defaultdict(int)
+    for (tag1, tag2), count in pairs_result.items():
+        tag_connections[tag1] += count
+        tag_connections[tag2] += count
+
+    print(f"\nMost Connected Tags (hub tags):")
+    for tag, total_connections in sorted(tag_connections.items(), key=lambda x: x[1], reverse=True)[:15]:
+        print(f"{total_connections:3d}  {tag}")
+
+
+@analyze.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+@click.option('--no-sklearn', is_flag=True, help='Force use of pattern-based fallback instead of embeddings')
+def merge(input_file, min_usage, no_filter, no_sklearn):
+    """Suggest tag merge opportunities.
+
+    INPUT_FILE: JSON file containing tag data (from extract command)
+
+    Identifies potential tag merges using multiple approaches:
+    - Similar names (string similarity)
+    - Semantic duplicates (TF-IDF embeddings)
+    - High file overlap
+    - Variant patterns (plural/singular, tenses)
+    """
+    from .analysis.merge_analyzer import load_tag_data, build_tag_stats, suggest_merges, print_merge_suggestions
+    import argparse
+
+    filter_noise = not no_filter
+
+    tag_data = load_tag_data(input_file)
+    tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    print(f"Analyzing {len(tag_stats)} tags for merge opportunities...")
+    print(f"Minimum usage threshold: {min_usage}")
+
+    # Create a minimal args object for the suggest_merges function
+    args = argparse.Namespace(no_sklearn=no_sklearn)
+
+    suggestions = suggest_merges(tag_stats, min_usage, args)
+    print_merge_suggestions(suggestions)
+
+
 def calculate_tag_statistics(tag_data, basic_stats, top_count):
     """Calculate comprehensive tag statistics."""
     if not tag_data:
