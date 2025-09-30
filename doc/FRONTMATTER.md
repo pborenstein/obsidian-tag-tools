@@ -1,5 +1,9 @@
 # Frontmatter Parsing: python-frontmatter vs PyYAML Analysis
 
+> **Status:** Decision Record (September 2024)
+> **Decision:** Continue using PyYAML for frontmatter parsing
+> **Rationale:** Documented below
+
 ## Executive Summary
 
 After analyzing the tagex codebase and researching alternatives, **staying with PyYAML is recommended**. The current implementation is robust, well-tested, and switching to python-frontmatter would provide minimal benefit while introducing potential risks.

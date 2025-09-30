@@ -1,5 +1,8 @@
 # Implementation Plan: Tag Type Filtering Options
 
+> **ARCHIVED:** This implementation was completed in January 2025 (commit 0110b97).
+> This document is preserved for historical reference. See ARCHITECTURE.md for current implementation details.
+
 ## Status: COMPLETED
 
 **Implementation Date:** January 2025
@@ -9,7 +12,7 @@
 
 ~~Add `--frontmatter-only` and `--inline-only` options to all tagex commands to allow users to work exclusively with frontmatter tags or inline hashtags.~~
 
-**IMPLEMENTED:** Added global `--tag-types` option with values `both` (default), `frontmatter`, and `inline` to the tagex CLI, enabling selective processing of tag types across all commands.
+**IMPLEMENTED:** Added global `--tag-types` option with values `frontmatter` (default), `both`, and `inline` to the tagex CLI, enabling selective processing of tag types across all commands.
 
 ## Current Architecture Analysis
 
