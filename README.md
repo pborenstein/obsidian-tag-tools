@@ -46,6 +46,10 @@ tagex /path/to/vault delete tag-to-remove another-tag --dry-run
 # Get comprehensive vault statistics
 tagex /path/to/vault stats --top 15
 
+# Analyze tag relationships
+tagex analyze pairs tags.json
+tagex analyze merge tags.json --min-usage 5
+
 # Global --tag-types option examples (frontmatter is default)
 tagex /path/to/vault extract  # frontmatter only (default)
 tagex --tag-types inline /path/to/vault rename old-tag new-tag --dry-run
@@ -100,7 +104,8 @@ tagex /path/to/vault stats --top 10 --format json
 ```bash
 # Extract, analyze, modify, verify
 tagex /vault extract -o tags.json
-uv run tag-analysis/pair_analyzer.py tags.json
+tagex analyze pairs tags.json
+tagex analyze merge tags.json
 tagex /vault rename old-name new-name --dry-run && tagex /vault rename old-name new-name
 tagex /vault extract -o updated_tags.json
 ```
@@ -132,9 +137,20 @@ tagex /vault extract -o updated_tags.json
 
 ### Advanced Analysis
 
+The `analyze` command provides insights into tag relationships and merge opportunities:
+
+```bash
+# Analyze tag pairs and co-occurrence
+tagex analyze pairs tags.json
+
+# Suggest tag merge opportunities
+tagex analyze merge tags.json --min-usage 3
+```
+
 | Analysis Type | Description |
 |:--------------|:------------|
-| Relationship analysis | Tag pair analysis and clustering |
+| Pairs analysis | Tag co-occurrence and clustering |
+| Merge suggestions | Semantic similarity and duplicate detection |
 | Hub identification | Detect central tags and clusters |
 | Validation | Filter noise and validate tags |
 
