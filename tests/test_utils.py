@@ -11,7 +11,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_basic(self, simple_vault):
         """Test finding markdown files in a vault."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         files = find_markdown_files(str(simple_vault))
         
@@ -30,7 +30,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_with_exclusions(self, complex_vault):
         """Test file discovery with exclusion patterns."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         # Find all files
         all_files = find_markdown_files(str(complex_vault))
@@ -49,7 +49,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_nested_directories(self, complex_vault):
         """Test finding files in nested directory structures."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         files = find_markdown_files(str(complex_vault))
         
@@ -59,7 +59,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_ignores_non_markdown(self, complex_vault):
         """Test that non-markdown files are ignored."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         files = find_markdown_files(str(complex_vault))
         
@@ -69,7 +69,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_empty_directory(self, temp_dir):
         """Test file discovery in empty directory."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         empty_dir = temp_dir / "empty"
         empty_dir.mkdir()
@@ -79,7 +79,7 @@ class TestFileDiscovery:
     
     def test_find_markdown_files_nonexistent_directory(self):
         """Test file discovery with nonexistent directory."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         # Should handle gracefully
         try:
@@ -91,7 +91,7 @@ class TestFileDiscovery:
     
     def test_exclusion_patterns_case_sensitivity(self, temp_dir):
         """Test exclusion pattern case sensitivity."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         test_vault = temp_dir / "case_vault"
         test_vault.mkdir()
@@ -112,7 +112,7 @@ class TestFileDiscovery:
     
     def test_relative_path_calculation(self, simple_vault):
         """Test that relative paths are calculated correctly."""
-        from utils.file_discovery import find_markdown_files
+        from tagex.utils.file_discovery import find_markdown_files
         
         files = find_markdown_files(str(simple_vault))
         
@@ -127,7 +127,7 @@ class TestTagNormalizer:
     
     def test_normalize_tag_basic(self):
         """Test basic tag normalization."""
-        from utils.tag_normalizer import normalize_tag
+        from tagex.utils.tag_normalizer import normalize_tag
         
         # Test case normalization (if applicable)
         normalized = normalize_tag("Work")
@@ -143,7 +143,7 @@ class TestTagNormalizer:
     
     def test_normalize_tag_special_characters(self):
         """Test normalization of tags with special characters."""
-        from utils.tag_normalizer import normalize_tag
+        from tagex.utils.tag_normalizer import normalize_tag
         
         # Test handling of valid special characters
         test_cases = [
@@ -161,7 +161,7 @@ class TestTagNormalizer:
     
     def test_normalize_tag_international(self):
         """Test normalization with international characters."""
-        from utils.tag_normalizer import normalize_tag
+        from tagex.utils.tag_normalizer import normalize_tag
         
         international_tags = ["français", "日本語", "español"]
         
@@ -173,7 +173,7 @@ class TestTagNormalizer:
     
     def test_normalize_tag_edge_cases(self):
         """Test normalization edge cases."""
-        from utils.tag_normalizer import normalize_tag
+        from tagex.utils.tag_normalizer import normalize_tag
         
         # Empty string
         normalized = normalize_tag("")
@@ -186,7 +186,7 @@ class TestTagNormalizer:
     
     def test_deduplicate_tags(self):
         """Test tag deduplication functionality."""
-        from utils.tag_normalizer import deduplicate_tags
+        from tagex.utils.tag_normalizer import deduplicate_tags
         
         tags_with_duplicates = ["work", "notes", "work", "ideas", "notes", "work"]
         
@@ -208,7 +208,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_basic(self):
         """Test basic tag validation."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Valid tags should pass
         valid_tags = ["work", "notes", "project-ideas", "2024-goals", "v1.2"]
@@ -217,7 +217,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_filters_numbers(self, invalid_tags_list):
         """Test that pure numbers are filtered out."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Pure numbers should be invalid
         numeric_tags = ["123", "456789", "0", "42"]
@@ -226,7 +226,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_filters_invalid_start(self, invalid_tags_list):
         """Test that tags starting with invalid characters are filtered."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Tags starting with non-alphanumeric should be invalid
         invalid_start_tags = ["_underscore", "-dash", ".dot"]
@@ -235,7 +235,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_filters_html_entities(self):
         """Test that HTML entities and Unicode noise are filtered."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         html_noise = ["html&entities", "&#x", "&nbsp;", "\u200b"]
         for tag in html_noise:
@@ -243,7 +243,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_filters_technical_patterns(self):
         """Test that technical patterns are filtered out.""" 
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         technical_patterns = [
             "dom-element",
@@ -261,7 +261,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_allows_valid_patterns(self, valid_tags_list):
         """Test that valid tags pass validation."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # These should all be valid
         for tag in valid_tags_list:
@@ -269,7 +269,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_character_set_validation(self):
         """Test validation of allowed character sets."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Valid character combinations
         valid_chars = [
@@ -287,7 +287,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_minimum_length(self):
         """Test minimum length validation."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Very short tags
         short_tags = ["a", "ab", "x"]
@@ -299,7 +299,7 @@ class TestTagValidation:
     
     def test_is_valid_tag_must_contain_letters(self):
         """Test that tags must contain at least some letters."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Tags without letters
         no_letters = ["123-456", "+-*/", "___", "///"]
@@ -309,7 +309,7 @@ class TestTagValidation:
     
     def test_filter_tags_list(self, valid_tags_list, invalid_tags_list):
         """Test filtering a list of tags."""
-        from utils.tag_normalizer import filter_valid_tags
+        from tagex.utils.tag_normalizer import filter_valid_tags
         
         mixed_tags = valid_tags_list + invalid_tags_list
         
@@ -320,7 +320,7 @@ class TestTagValidation:
         
         # All items in filtered list should be valid
         for tag in filtered:
-            from utils.tag_normalizer import is_valid_tag
+            from tagex.utils.tag_normalizer import is_valid_tag
             assert is_valid_tag(tag) == True, f"'{tag}' should be valid in filtered list"
 
 
@@ -329,7 +329,7 @@ class TestTagValidationIntegration:
     
     def test_validation_with_complex_vault_data(self, complex_vault):
         """Test validation using data from complex vault fixture."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Read a file and extract some test tags
         complex_file = complex_vault / "complex.md"
@@ -344,7 +344,7 @@ class TestTagValidationIntegration:
     
     def test_noise_filtering_effectiveness(self):
         """Test that noise filtering effectively removes unwanted tags."""
-        from utils.tag_normalizer import filter_valid_tags
+        from tagex.utils.tag_normalizer import filter_valid_tags
         
         # Simulate realistic noisy tag extraction
         noisy_tags = [
@@ -375,7 +375,7 @@ class TestTagValidationIntegration:
     
     def test_validation_preserves_meaningful_tags(self):
         """Test that validation doesn't over-filter meaningful tags."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # These are meaningful tags that should NOT be filtered
         meaningful_tags = [
@@ -392,7 +392,7 @@ class TestTagValidationIntegration:
     
     def test_edge_case_handling(self):
         """Test validation handles edge cases gracefully."""
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         edge_cases = [
             "",  # Empty string
@@ -415,8 +415,8 @@ class TestUtilsIntegration:
     
     def test_file_discovery_with_validation_pipeline(self, complex_vault):
         """Test complete pipeline from file discovery to tag validation."""
-        from utils.file_discovery import find_markdown_files
-        from utils.tag_normalizer import is_valid_tag
+        from tagex.utils.file_discovery import find_markdown_files
+        from tagex.utils.tag_normalizer import is_valid_tag
         
         # Discover files
         files = find_markdown_files(str(complex_vault))
@@ -439,8 +439,8 @@ class TestUtilsIntegration:
     
     def test_exclusion_and_validation_together(self, complex_vault):
         """Test file exclusion and tag validation working together."""
-        from utils.file_discovery import find_markdown_files
-        from utils.tag_normalizer import filter_valid_tags
+        from tagex.utils.file_discovery import find_markdown_files
+        from tagex.utils.tag_normalizer import filter_valid_tags
         
         # Find files excluding templates
         files = find_markdown_files(

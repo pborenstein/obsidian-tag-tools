@@ -13,7 +13,7 @@ class TestTagOperationEngine:
     
     def test_operation_engine_initialization(self):
         """Test TagOperationEngine can be initialized."""
-        from operations.tag_operations import TagOperationEngine
+        from tagex.core.operations.tag_operations import TagOperationEngine
         
         # This is an abstract base class, so we may need to test via subclasses
         # But we can test that it exists and has expected interface
@@ -21,7 +21,7 @@ class TestTagOperationEngine:
     
     def test_dry_run_mode_available(self):
         """Test that dry-run mode is available in operation engine."""
-        from operations.tag_operations import TagOperationEngine
+        from tagex.core.operations.tag_operations import TagOperationEngine
         
         # Check that dry-run functionality exists in the interface
         # This might be tested through subclasses
@@ -33,7 +33,7 @@ class TestRenameOperation:
     
     def test_rename_operation_initialization(self):
         """Test RenameOperation can be initialized."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         operation = RenameOperation(
             vault_path="/test/vault",
@@ -45,7 +45,7 @@ class TestRenameOperation:
     
     def test_rename_dry_run_mode(self, simple_vault):
         """Test rename operation in dry-run mode."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         operation = RenameOperation(
             vault_path=str(simple_vault),
@@ -66,7 +66,7 @@ class TestRenameOperation:
     
     def test_rename_actual_execution(self, temp_dir):
         """Test actual rename operation execution."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         # Create a copy of vault for modification
         test_vault = temp_dir / "rename_vault"
@@ -104,7 +104,7 @@ Content with #work inline tag.
     
     def test_rename_preserves_file_structure(self, temp_dir):
         """Test that rename operation preserves original file structure."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "structure_vault"
         test_vault.mkdir()
@@ -151,7 +151,7 @@ More content here.
     
     def test_rename_only_target_tag(self, temp_dir):
         """Test rename only affects the target tag, not other tags."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "selective_vault"
         test_vault.mkdir()
@@ -182,7 +182,7 @@ Content with #work #workflow and #workspace tags.
     
     def test_rename_handles_no_matching_files(self, simple_vault):
         """Test rename operation when no files contain the target tag."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         operation = RenameOperation(
             vault_path=str(simple_vault),
@@ -203,7 +203,7 @@ class TestMergeOperation:
     
     def test_merge_operation_initialization(self):
         """Test MergeOperation can be initialized."""
-        from operations.tag_operations import MergeOperation
+        from tagex.core.operations.tag_operations import MergeOperation
         
         operation = MergeOperation(
             vault_path="/test/vault",
@@ -215,7 +215,7 @@ class TestMergeOperation:
     
     def test_merge_dry_run_mode(self, temp_dir):
         """Test merge operation in dry-run mode."""
-        from operations.tag_operations import MergeOperation
+        from tagex.core.operations.tag_operations import MergeOperation
         
         # Create test vault with merge candidates
         test_vault = temp_dir / "merge_vault"
@@ -250,7 +250,7 @@ Content with #brainstorming""")
     
     def test_merge_actual_execution(self, temp_dir):
         """Test actual merge operation execution."""
-        from operations.tag_operations import MergeOperation
+        from tagex.core.operations.tag_operations import MergeOperation
         
         test_vault = temp_dir / "merge_exec_vault"
         test_vault.mkdir()
@@ -289,7 +289,7 @@ Content with #ideas and #brainstorming.""")
     
     def test_merge_handles_partial_matches(self, temp_dir):
         """Test merge when files only contain some of the source tags."""
-        from operations.tag_operations import MergeOperation
+        from tagex.core.operations.tag_operations import MergeOperation
         
         test_vault = temp_dir / "partial_vault"
         test_vault.mkdir()
@@ -328,7 +328,7 @@ class TestOperationLogging:
     
     def test_operation_creates_log_file(self, temp_dir):
         """Test that operations create log files."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "log_vault"
         test_vault.mkdir()
@@ -348,13 +348,12 @@ Content""")
         
         operation.run_operation()
         
-        # Should create log file in current directory (not vault)
-        # Look for log files in temp_dir or working directory
-        log_files = list(Path.cwd().glob("tag-*-op_*.json"))
-        if len(log_files) == 0:
-            # Check temp directory
-            log_files = list(temp_dir.glob("tag-*-op_*.json"))
-        
+        # Should create log file in log/ directory
+        log_dir = Path("log")
+        assert log_dir.exists(), "log directory should exist"
+
+        log_files = list(log_dir.glob("tag-*-op_*.json"))
+
         # Should have created at least one log file
         assert len(log_files) > 0
     
@@ -387,7 +386,7 @@ Content""")
     
     def test_operation_integrity_checks(self, temp_dir):
         """Test that operations include integrity checks."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "integrity_vault"
         test_vault.mkdir()
@@ -423,7 +422,7 @@ Content to check integrity."""
     
     def test_dry_run_produces_log(self, temp_dir):
         """Test that dry-run mode also produces logs."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "dry_run_vault"
         test_vault.mkdir()
@@ -455,7 +454,7 @@ class TestDeleteOperation:
 
     def test_delete_operation_initialization(self):
         """Test DeleteOperation can be initialized."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         operation = DeleteOperation(
             vault_path="/test/vault",
@@ -467,7 +466,7 @@ class TestDeleteOperation:
 
     def test_delete_single_tag_frontmatter_only(self, temp_dir):
         """Test deleting a tag that only appears in frontmatter."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "delete_vault"
         test_vault.mkdir()
@@ -502,7 +501,7 @@ Content with no inline tags.
 
     def test_delete_single_tag_inline_only(self, temp_dir):
         """Test deleting a tag that only appears inline (should warn)."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "inline_vault"
         test_vault.mkdir()
@@ -538,7 +537,7 @@ More content with #work tag.
 
     def test_delete_tag_both_locations_warns_about_inline(self, temp_dir):
         """Test deleting a tag that appears in both frontmatter and inline."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "both_vault"
         test_vault.mkdir()
@@ -575,7 +574,7 @@ Content with #unwanted-tag inline and #work inline.
 
     def test_delete_multiple_tags(self, temp_dir):
         """Test deleting multiple tags at once."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "multi_vault"
         test_vault.mkdir()
@@ -623,7 +622,7 @@ Content with #unwanted2 inline.
 
     def test_delete_dry_run_mode(self, temp_dir):
         """Test delete operation in dry-run mode."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "dry_delete_vault"
         test_vault.mkdir()
@@ -655,7 +654,7 @@ Content with #unwanted-tag inline.
 
     def test_delete_preserves_file_structure(self, temp_dir):
         """Test that delete preserves original file structure."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "structure_delete_vault"
         test_vault.mkdir()
@@ -714,7 +713,7 @@ Final content.
 
     def test_delete_nonexistent_tag(self, simple_vault):
         """Test deleting a tag that doesn't exist in any files."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         operation = DeleteOperation(
             vault_path=str(simple_vault),
@@ -731,7 +730,7 @@ Final content.
 
     def test_delete_nonexistent_tag_no_file_modifications(self, temp_dir):
         """Test that deleting nonexistent tags doesn't modify any files unnecessarily."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
         import hashlib
 
         test_vault = temp_dir / "nochange_vault"
@@ -796,7 +795,7 @@ Regular markdown with #work inline tag.""")
 
     def test_delete_empty_tag_list(self, simple_vault):
         """Test delete operation with empty tag list."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         operation = DeleteOperation(
             vault_path=str(simple_vault),
@@ -813,7 +812,7 @@ Regular markdown with #work inline tag.""")
 
     def test_delete_case_insensitive_matching(self, temp_dir):
         """Test that delete operation matches tags case-insensitively."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "case_vault"
         test_vault.mkdir()
@@ -845,7 +844,7 @@ Content with #Work and #IDEAS tags.
 
     def test_delete_handles_tag_array_formats(self, temp_dir):
         """Test delete with various YAML tag array formats."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "format_vault"
         test_vault.mkdir()
@@ -895,7 +894,7 @@ Content""")
 
     def test_delete_creates_operation_log(self, temp_dir):
         """Test that delete operation creates proper log files."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "log_delete_vault"
         test_vault.mkdir()
@@ -916,11 +915,11 @@ Content with #unwanted inline.
 
         results = operation.run_operation()
 
-        # Should create log file
-        log_files = list(Path.cwd().glob("tag-delete-op_*.json"))
-        if len(log_files) == 0:
-            log_files = list(temp_dir.glob("tag-delete-op_*.json"))
+        # Should create log file in log/ directory
+        log_dir = Path("log")
+        assert log_dir.exists(), "log directory should exist"
 
+        log_files = list(log_dir.glob("tag-delete-op_*.json"))
         assert len(log_files) > 0
 
         # Log should have delete-specific structure
@@ -931,7 +930,7 @@ Content with #unwanted inline.
 
     def test_delete_warning_content_and_format(self, temp_dir):
         """Test that warnings contain proper information."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "warning_vault"
         test_vault.mkdir()
@@ -970,7 +969,7 @@ class TestOperationEdgeCases:
 
     def test_operation_with_nonexistent_vault(self):
         """Test operation with nonexistent vault path."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
 
         operation = RenameOperation(
             vault_path="/nonexistent/vault/path",
@@ -990,7 +989,7 @@ class TestOperationEdgeCases:
     
     def test_operation_with_invalid_tag_names(self, simple_vault):
         """Test operation with invalid tag names."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         # Test with empty tag name
         operation = RenameOperation(
@@ -1013,7 +1012,7 @@ class TestOperationEdgeCases:
         """Test operation behavior with readonly files."""
         import os
         import stat
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "readonly_vault"
         test_vault.mkdir()
@@ -1050,7 +1049,7 @@ Content""")
     
     def test_concurrent_operations_safety(self, temp_dir):
         """Test that operations are safe from concurrent modification issues."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
         
         test_vault = temp_dir / "concurrent_vault"  
         test_vault.mkdir()
@@ -1094,7 +1093,7 @@ class TestOperationsWithTagTypes:
 
     def test_rename_with_frontmatter_only(self, temp_dir):
         """Test rename operation with frontmatter-only tag filtering."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
 
         test_vault = temp_dir / "frontmatter_rename_vault"
         test_vault.mkdir()
@@ -1128,7 +1127,7 @@ Content with #old-tag and #work inline tags""")
 
     def test_rename_with_inline_only(self, temp_dir):
         """Test rename operation with inline-only tag filtering."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
 
         test_vault = temp_dir / "inline_rename_vault"
         test_vault.mkdir()
@@ -1160,7 +1159,7 @@ Content with #old-tag and #work inline tags""")
 
     def test_merge_with_tag_types_filtering(self, temp_dir):
         """Test merge operation with tag_types filtering."""
-        from operations.tag_operations import MergeOperation
+        from tagex.core.operations.tag_operations import MergeOperation
 
         test_vault = temp_dir / "merge_tag_types_vault"
         test_vault.mkdir()
@@ -1191,7 +1190,7 @@ Content with #source1 and #source2 inline tags""")
 
     def test_delete_with_tag_types_filtering(self, temp_dir):
         """Test delete operation with tag_types filtering."""
-        from operations.tag_operations import DeleteOperation
+        from tagex.core.operations.tag_operations import DeleteOperation
 
         test_vault = temp_dir / "delete_tag_types_vault"
         test_vault.mkdir()
@@ -1221,7 +1220,7 @@ Content with #to-delete and #keep inline tags""")
 
     def test_operation_logs_include_tag_types(self, temp_dir):
         """Test that operation logs include tag_types setting."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
 
         test_vault = temp_dir / "log_tag_types_vault"
         test_vault.mkdir()
@@ -1247,7 +1246,7 @@ tags: [test]
 
     def test_no_matching_tag_types_produces_no_changes(self, temp_dir):
         """Test that operations produce no changes when no matching tag types exist."""
-        from operations.tag_operations import RenameOperation
+        from tagex.core.operations.tag_operations import RenameOperation
 
         test_vault = temp_dir / "no_match_vault"
         test_vault.mkdir()

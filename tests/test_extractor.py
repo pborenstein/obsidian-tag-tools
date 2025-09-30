@@ -15,7 +15,7 @@ class TestTagExtractor:
     
     def test_extractor_initialization(self, simple_vault):
         """Test TagExtractor can be initialized."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         extractor = TagExtractor(str(simple_vault))
         assert extractor is not None
@@ -24,7 +24,7 @@ class TestTagExtractor:
     
     def test_extract_from_simple_vault(self, simple_vault):
         """Test extracting tags from simple vault fixture."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         extractor = TagExtractor(str(simple_vault))
         results = extractor.extract_tags()
@@ -42,7 +42,7 @@ class TestTagExtractor:
     
     def test_extract_with_filtering(self, complex_vault):
         """Test tag extraction with filtering enabled."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         # Extract with filtering (should be default)
         extractor_filtered = TagExtractor(str(complex_vault), filter_tags=True)
@@ -61,7 +61,7 @@ class TestTagExtractor:
     
     def test_extract_with_exclusion_patterns(self, complex_vault):
         """Test extraction with file exclusion patterns."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         # Extract excluding template files
         extractor = TagExtractor(
@@ -80,7 +80,7 @@ class TestTagExtractor:
     
     def test_extract_statistics(self, simple_vault):
         """Test that extractor collects processing statistics."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         extractor = TagExtractor(str(simple_vault))
         results = extractor.extract_tags()
@@ -95,7 +95,7 @@ class TestTagExtractor:
     
     def test_extract_handles_file_errors(self, temp_dir):
         """Test extraction handles file processing errors gracefully."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         # Create a vault with a problematic file
         vault_path = temp_dir / "error_vault"
@@ -125,7 +125,7 @@ tags: [good]
     
     def test_extract_empty_vault(self, temp_dir):
         """Test extraction from empty vault."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         empty_vault = temp_dir / "empty_vault"
         empty_vault.mkdir()
@@ -140,7 +140,7 @@ tags: [good]
     
     def test_extract_vault_with_no_tags(self, temp_dir):
         """Test extraction from vault with files but no tags."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         no_tags_vault = temp_dir / "no_tags_vault"
         no_tags_vault.mkdir()
@@ -158,7 +158,7 @@ tags: [good]
     
     def test_extract_aggregates_tag_counts(self, temp_dir):
         """Test that extractor properly aggregates tag counts across files."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         vault_path = temp_dir / "count_vault"
         vault_path.mkdir()
@@ -194,7 +194,7 @@ Content""")
 
     def test_extract_with_tag_types_parameter(self, temp_dir):
         """Test tag extraction with tag_types parameter."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
 
         vault_path = temp_dir / "tag_types_vault"
         vault_path.mkdir()
@@ -226,7 +226,7 @@ Content with #inline-tag here""")
 
     def test_extract_frontmatter_only_filtering(self, temp_dir):
         """Test extracting only frontmatter tags."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
 
         vault_path = temp_dir / "frontmatter_vault"
         vault_path.mkdir()
@@ -256,7 +256,7 @@ Project details with #project-inline tag""")
 
     def test_extract_inline_only_filtering(self, temp_dir):
         """Test extracting only inline tags."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
 
         vault_path = temp_dir / "inline_vault"
         vault_path.mkdir()
@@ -290,7 +290,7 @@ class TestOutputFormatter:
     
     def test_format_as_json(self, test_output_formats):
         """Test JSON output formatting."""
-        from extractor.output_formatter import format_as_plugin_json
+        from tagex.core.extractor.output_formatter import format_as_plugin_json
         
         # Use raw tag data (what TagExtractor produces)
         tags_data = test_output_formats["raw"]
@@ -309,7 +309,7 @@ class TestOutputFormatter:
     
     def test_format_as_csv(self, test_output_formats):
         """Test CSV output formatting."""
-        from extractor.output_formatter import format_as_csv
+        from tagex.core.extractor.output_formatter import format_as_csv
         
         tags_data = test_output_formats["raw"]
         
@@ -328,7 +328,7 @@ class TestOutputFormatter:
     
     def test_format_as_text(self, test_output_formats):
         """Test text output formatting.""" 
-        from extractor.output_formatter import format_as_text
+        from tagex.core.extractor.output_formatter import format_as_text
         
         tags_data = test_output_formats["raw"]
         
@@ -343,7 +343,7 @@ class TestOutputFormatter:
     
     def test_save_output_to_file(self, temp_dir, test_output_formats):
         """Test saving output to file."""
-        from extractor.output_formatter import save_output, format_as_plugin_json
+        from tagex.core.extractor.output_formatter import save_output, format_as_plugin_json
         
         tags_data = test_output_formats["raw"]
         formatted_data = format_as_plugin_json(tags_data)
@@ -362,7 +362,7 @@ class TestOutputFormatter:
     
     def test_save_output_csv_format(self, temp_dir, test_output_formats):
         """Test saving CSV format output."""
-        from extractor.output_formatter import save_output, format_as_csv
+        from tagex.core.extractor.output_formatter import save_output, format_as_csv
         
         tags_data = test_output_formats["raw"]
         formatted_data = format_as_csv(tags_data)
@@ -376,7 +376,7 @@ class TestOutputFormatter:
     
     def test_print_summary_to_stdout(self, test_output_formats):
         """Test printing summary to stdout."""
-        from extractor.output_formatter import print_summary
+        from tagex.core.extractor.output_formatter import print_summary
         
         tags_data = test_output_formats["raw"]
         stats = {"vault_path": "/test", "files_processed": 5, "errors": 0}
@@ -397,7 +397,7 @@ class TestOutputFormatter:
     
     def test_handle_empty_data(self):
         """Test formatters handle empty data gracefully."""
-        from extractor.output_formatter import format_as_plugin_json, format_as_csv, format_as_text
+        from tagex.core.extractor.output_formatter import format_as_plugin_json, format_as_csv, format_as_text
         
         empty_data = {}  # Empty dict, not list
         
@@ -418,8 +418,8 @@ class TestExtractorIntegration:
     
     def test_full_extraction_pipeline(self, simple_vault, temp_dir):
         """Test complete extraction pipeline from vault to formatted output."""
-        from extractor.core import TagExtractor
-        from extractor.output_formatter import save_output, format_as_plugin_json, format_as_csv
+        from tagex.core.extractor.core import TagExtractor
+        from tagex.core.extractor.output_formatter import save_output, format_as_plugin_json, format_as_csv
         
         extractor = TagExtractor(str(simple_vault))
         results = extractor.extract_tags()
@@ -447,7 +447,7 @@ class TestExtractorIntegration:
     
     def test_extraction_with_complex_vault(self, complex_vault):
         """Test extraction handles complex vault structure."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         extractor = TagExtractor(str(complex_vault))
         results = extractor.extract_tags()
@@ -469,7 +469,7 @@ class TestExtractorIntegration:
     
     def test_filter_integration_with_extraction(self, complex_vault):
         """Test that tag filtering is properly integrated with extraction."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         # Test with filtering
         extractor = TagExtractor(str(complex_vault), filter_tags=True)
@@ -483,7 +483,7 @@ class TestExtractorIntegration:
     
     def test_error_resilience(self, temp_dir):
         """Test that extractor is resilient to various error conditions."""
-        from extractor.core import TagExtractor
+        from tagex.core.extractor.core import TagExtractor
         
         # Create vault with mixed good and problematic files
         vault_path = temp_dir / "mixed_vault"
