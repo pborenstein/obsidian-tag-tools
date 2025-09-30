@@ -281,9 +281,9 @@ Tag Data
 ```
 Input: Global --tag-types parameter
    │
-   ├─► 'both' (default) ──► Process frontmatter + inline
+   ├─► 'both' ──────────► Process frontmatter + inline
    │
-   ├─► 'frontmatter' ────► Process YAML tags only
+   ├─► 'frontmatter' (default) ────► Process YAML tags only
    │
    └─► 'inline' ─────────► Process hashtags only
 
