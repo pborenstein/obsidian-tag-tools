@@ -20,7 +20,7 @@ created: 2024-01-15
 # Content here
 """
         # Import should work - this tests that the module exists and is importable
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -39,7 +39,7 @@ tags:
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -58,7 +58,7 @@ category: reference
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -75,7 +75,7 @@ tags: [multiple, tags]
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -90,7 +90,7 @@ Content
 
 No frontmatter here.
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -105,7 +105,7 @@ tags: []
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -121,7 +121,7 @@ invalid_yaml: [unclosed
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
 
         # Should handle gracefully, possibly returning empty list or partial results
         frontmatter, _ = extract_frontmatter(content)
@@ -140,7 +140,7 @@ tags: ["work-project", "notes & ideas", "special/category"]
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -160,7 +160,7 @@ tags:
 
 Content
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
         
         frontmatter, _ = extract_frontmatter(content)
         tags = extract_tags_from_frontmatter(frontmatter)
@@ -179,7 +179,7 @@ class TestInlineParser:
 
 This content has #work and #notes tags.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert set(tags) == {"work", "notes"}
@@ -189,7 +189,7 @@ This content has #work and #notes tags.
         content = """
 Content with #project-ideas #work_notes #tech-stack and #2024-goals.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "project-ideas" in tags
@@ -202,7 +202,7 @@ Content with #project-ideas #work_notes #tech-stack and #2024-goals.
         content = """
 Tags like #category/subcategory and #work/project/planning.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "category/subcategory" in tags
@@ -214,7 +214,7 @@ Tags like #category/subcategory and #work/project/planning.
 Links like https://example.com/#section and http://site.com/#anchor should be ignored.
 But #real-tag should be extracted.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "real-tag" in tags
@@ -236,7 +236,7 @@ print("Hello #world")
 
 Another #normal-tag here.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "tag" in tags
@@ -252,7 +252,7 @@ Another #normal-tag here.
 Valid #tag and #another-tag.
 But not in email@domain.com#fragment or word#notag.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "tag" in tags
@@ -265,7 +265,7 @@ But not in email@domain.com#fragment or word#notag.
         content = """
 Tags with #français #日本語 #español characters.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "français" in tags
@@ -274,7 +274,7 @@ Tags with #français #日本語 #español characters.
     
     def test_empty_content(self):
         """Test handling of empty content."""
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags("")
         assert tags == []
@@ -285,7 +285,7 @@ Tags with #français #日本語 #español characters.
 This is just regular content without any tags.
 No hashtags here at all.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert tags == []
@@ -296,7 +296,7 @@ No hashtags here at all.
 This has #work multiple times. Another #work tag here.
 And one more #work for good measure.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         # Should handle duplicates appropriately (either deduplicated or counted)
@@ -307,7 +307,7 @@ And one more #work for good measure.
         content = """
 Tags like #work, #notes. #ideas! #project? #research; should all work.
 """
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.inline_parser import extract_inline_tags
         
         tags = extract_inline_tags(content)
         assert "work" in tags
@@ -330,8 +330,8 @@ tags: [work, notes]
 
 This content has #ideas and #project inline tags.
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.inline_parser import extract_inline_tags
 
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
@@ -352,8 +352,8 @@ tags: [work, notes]
 
 More content with #work and #research tags.
 """
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.inline_parser import extract_inline_tags
 
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
@@ -369,8 +369,8 @@ More content with #work and #research tags.
         complex_file = complex_vault / "complex.md"
         content = complex_file.read_text()
 
-        from parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
-        from parsers.inline_parser import extract_inline_tags
+        from tagex.core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+        from tagex.core.parsers.inline_parser import extract_inline_tags
 
         frontmatter, _ = extract_frontmatter(content)
         frontmatter_tags = extract_tags_from_frontmatter(frontmatter)
