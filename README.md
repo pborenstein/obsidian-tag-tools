@@ -157,6 +157,7 @@ uv sync
 
 | Document | Description |
 | :----------|:-------------|
-| [ARCHITECTURE.md](doc/ARCHITECTURE.md) | System architecture and component design |
-| [ANALYTICS.md](doc/ANALYTICS.md) | Tag analysis tools and usage guide |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and component design |
+| [ANALYTICS.md](docs/ANALYTICS.md) | Tag analysis tools and usage guide |
+| [SEMANTIC_ANALYSIS.md](docs/SEMANTIC_ANALYSIS.md) | Semantic similarity detection algorithms |
 
