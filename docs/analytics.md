@@ -7,8 +7,9 @@ The `tag-analysis/` directory contains analytical tools that perform tag pair an
 ```
 tag-analysis/
 ├── pair_analyzer.py            ← Core analysis engine with filtering (CLI)
-├── merge_analyzer.py           ← Tag merge suggestion engine with embeddings (CLI)
-└── SEMANTIC_ANALYSIS.md        ← Technical documentation on semantic similarity
+└── merge_analyzer.py           ← Tag merge suggestion engine with embeddings (CLI)
+
+See semantic-analysis.md for technical documentation on semantic similarity.
 ```
 
 ---
@@ -450,7 +451,7 @@ The embedding method uses character-level n-grams instead of word-level features
 - **Language independence**: Works across different languages and naming conventions
 - **Semantic detection**: Identifies conceptual relationships that morphological patterns cannot capture
 
-See [tag-analysis/SEMANTIC_ANALYSIS.md](../tag-analysis/SEMANTIC_ANALYSIS.md) for detailed technical implementation.
+See [semantic-analysis.md](semantic-analysis.md) for detailed technical implementation.
 
 ### Usage Examples
 
