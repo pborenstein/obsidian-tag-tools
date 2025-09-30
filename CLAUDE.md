@@ -46,10 +46,11 @@ uv run pytest tests/
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture and diagrams
-- [docs/ANALYTICS.md](docs/ANALYTICS.md) - Tag analysis tools documentation
-- [docs/TESTING_NARRATIVE.md](docs/TESTING_NARRATIVE.md) - Test development narrative
-- [docs/SEMANTIC_ANALYSIS.md](docs/SEMANTIC_ANALYSIS.md) - Semantic similarity detection
+- [docs/README.md](docs/README.md) - Documentation index with reading flows
+- [docs/architecture.md](docs/architecture.md) - System architecture and diagrams
+- [docs/analytics.md](docs/analytics.md) - Tag analysis tools documentation
+- [docs/testing-narrative.md](docs/testing-narrative.md) - Test development narrative
+- [docs/semantic-analysis.md](docs/semantic-analysis.md) - Semantic similarity detection
 - [tests/README.md](tests/README.md) - Test suite documentation
 
 ## Architecture Notes

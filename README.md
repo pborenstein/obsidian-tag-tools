@@ -155,9 +155,13 @@ uv sync
 
 ## Documentation
 
+See the [docs/](docs/) directory for comprehensive documentation with suggested reading flows.
+
+Key resources:
+
 | Document | Description |
 | :----------|:-------------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and component design |
-| [ANALYTICS.md](docs/ANALYTICS.md) | Tag analysis tools and usage guide |
-| [SEMANTIC_ANALYSIS.md](docs/SEMANTIC_ANALYSIS.md) | Semantic similarity detection algorithms |
+| [architecture.md](docs/architecture.md) | System architecture and component design |
+| [analytics.md](docs/analytics.md) | Tag analysis tools and usage guide |
+| [semantic-analysis.md](docs/semantic-analysis.md) | Semantic similarity detection algorithms |
 
