@@ -32,41 +32,41 @@ The tool provides comprehensive tag management through multiple commands:
 
 ```bash
 # Extract tags from vault
-tagex /path/to/vault extract [options]
+tagex extract /path/to/vault [options]
 
 # Rename a tag across all files
-tagex /path/to/vault rename old-tag new-tag [--dry-run]
+tagex rename /path/to/vault old-tag new-tag [--dry-run]
 
 # Merge multiple tags into one
-tagex /path/to/vault merge tag1 tag2 tag3 --into target-tag [--dry-run]
+tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
 
 # Delete tags from all files
-tagex /path/to/vault delete tag-to-remove another-tag --dry-run
+tagex delete /path/to/vault tag-to-remove another-tag --dry-run
 
 # Get comprehensive vault statistics
-tagex /path/to/vault stats --top 15
+tagex stats /path/to/vault --top 15
 
 # Analyze tag relationships
 tagex analyze pairs tags.json
 tagex analyze merge tags.json --min-usage 5
 
 # Global --tag-types option examples (frontmatter is default)
-tagex /path/to/vault extract  # frontmatter only (default)
-tagex --tag-types inline /path/to/vault rename old-tag new-tag --dry-run
-tagex --tag-types both /path/to/vault merge tag1 tag2 --into new-tag
-tagex --tag-types both /path/to/vault stats --format json
+tagex extract /path/to/vault  # frontmatter only (default)
+tagex rename /path/to/vault --tag-types inline old-tag new-tag --dry-run
+tagex merge /path/to/vault --tag-types both tag1 tag2 --into new-tag
+tagex stats /path/to/vault --tag-types both --format json
 ```
 
 Or during development:
 ```bash
 # Extract tags
-uv run python -m tagex.main /path/to/vault extract [options]
+uv run python -m tagex.main extract /path/to/vault [options]
 
 # Tag operations
-uv run python -m tagex.main /path/to/vault rename old-tag new-tag
+uv run python -m tagex.main rename /path/to/vault old-tag new-tag
 uv run python -m tagex.main /path/to/vault merge tag1 tag2 --into new-tag
 uv run python -m tagex.main /path/to/vault delete old-tag
-uv run python -m tagex.main /path/to/vault stats --top 20
+uv run python -m tagex.main stats /path/to/vault --top 20
 ```
 
 ### Options Reference
@@ -87,27 +87,27 @@ uv run python -m tagex.main /path/to/vault stats --top 20
 
 ```bash
 # Extract tags (JSON output, frontmatter only by default)
-tagex /path/to/vault extract
-tagex /path/to/vault extract -f csv -o tags.csv
-tagex --tag-types both /path/to/vault extract --no-filter
+tagex extract /path/to/vault
+tagex extract /path/to/vault -f csv -o tags.csv
+tagex extract /path/to/vault --tag-types both --no-filter
 
 # Tag operations with dry-run preview
-tagex /path/to/vault rename work project --dry-run
-tagex /path/to/vault merge personal diary journal --into writing --dry-run
-tagex --tag-types inline /path/to/vault delete obsolete-tag --dry-run
+tagex rename /path/to/vault work project --dry-run
+tagex merge /path/to/vault personal diary journal --into writing --dry-run
+tagex delete /path/to/vault --tag-types inline obsolete-tag --dry-run
 
 # Vault statistics
-tagex /path/to/vault stats --top 10 --format json
+tagex stats /path/to/vault --top 10 --format json
 ```
 
 **Workflow:**
 ```bash
 # Extract, analyze, modify, verify
-tagex /vault extract -o tags.json
+tagex extract /vault -o tags.json
 tagex analyze pairs tags.json
 tagex analyze merge tags.json
-tagex /vault rename old-name new-name --dry-run && tagex /vault rename old-name new-name
-tagex /vault extract -o updated_tags.json
+tagex rename /vault old-name new-name --dry-run && tagex rename /vault old-name new-name
+tagex extract /vault -o updated_tags.json
 ```
 
 ## Features
