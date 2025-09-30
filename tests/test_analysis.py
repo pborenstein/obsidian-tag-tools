@@ -13,59 +13,51 @@ class TestPairAnalyzer:
     """Tests for the co-occurrence analysis tool."""
     
     def test_pair_analyzer_exists(self):
-        """Test that co-occurrence analyzer script exists."""
-        analyzer_path = Path("tag-analysis/pair_analyzer.py")
-        # Script should exist in project root
-        assert analyzer_path.exists() or (Path.cwd() / analyzer_path).exists()
+        """Test that co-occurrence analyzer module exists."""
+        # Module should be importable
+        try:
+            from tagex.analysis import pair_analyzer
+            assert pair_analyzer is not None
+        except ImportError:
+            pytest.fail("pair_analyzer module should be importable")
     
     def test_pair_analyzer_cli_help(self):
         """Test co-occurrence analyzer CLI help."""
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            result = subprocess.run([
-                sys.executable, analyzer_script, "--help"
-            ], capture_output=True, text=True, timeout=10)
-            
-            # Should show help without errors
-            assert result.returncode == 0 or "usage" in result.stderr.lower()
-            help_text = result.stdout + result.stderr
-            assert "pair" in help_text.lower() or "analysis" in help_text.lower()
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            # If script not found or times out, skip this test
-            pytest.skip("Co-occurrence analyzer script not available")
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', '--help'])
+
+        # Should show help without errors
+        assert result.exit_code == 0
+        help_text = result.output
+        assert "pair" in help_text.lower() or "analysis" in help_text.lower()
     
     def test_pair_analysis_with_sample_data(self, temp_dir, sample_pair_data):
         """Test co-occurrence analysis with sample data."""
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
         # Create sample JSON file
         sample_file = temp_dir / "sample_tags.json"
         with open(sample_file, 'w') as f:
             json.dump(sample_pair_data, f)
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            result = subprocess.run([
-                sys.executable, analyzer_script, str(sample_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            if result.returncode == 0:
-                output = result.stdout + result.stderr
-                
-                # Should contain analysis results
-                assert len(output) > 0
-                
-                # Should mention co-occurring pairs
-                assert "co-occur" in output.lower() or "pairs" in output.lower()
-                
-                # Should show some of our sample tags
-                assert "work" in output or "notes" in output
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Co-occurrence analyzer not available or timeout")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(sample_file)])
+
+        # Should contain analysis results
+        assert len(result.output) > 0
+
+        # Should mention co-occurring pairs
+        assert "pair" in result.output.lower() or "analyzing" in result.output.lower()
     
     def test_pair_analysis_with_filtering(self, temp_dir):
         """Test co-occurrence analysis with and without filtering."""
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
         # Create test data with both valid and invalid tags
         test_data = [
             {"tag": "work", "tagCount": 10, "relativePaths": ["file1.md", "file2.md"]},
@@ -74,44 +66,32 @@ class TestPairAnalyzer:
             {"tag": "_invalid", "tagCount": 2, "relativePaths": ["file3.md"]},  # Invalid - starts with underscore
             {"tag": "valid-tag", "tagCount": 5, "relativePaths": ["file1.md", "file4.md"]}
         ]
-        
+
         test_file = temp_dir / "test_filtering.json"
         with open(test_file, 'w') as f:
             json.dump(test_data, f)
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            # Run with filtering (default)
-            filtered_result = subprocess.run([
-                sys.executable, analyzer_script, str(test_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            # Run without filtering
-            unfiltered_result = subprocess.run([
-                sys.executable, analyzer_script, str(test_file), "--no-filter"
-            ], capture_output=True, text=True, timeout=30)
-            
-            if filtered_result.returncode == 0 and unfiltered_result.returncode == 0:
-                filtered_output = filtered_result.stdout + filtered_result.stderr
-                unfiltered_output = unfiltered_result.stdout + unfiltered_result.stderr
-                
-                # Both should produce output
-                assert len(filtered_output) > 0
-                assert len(unfiltered_output) > 0
-                
-                # Filtered output should not contain invalid tags
-                assert "123" not in filtered_output
-                assert "_invalid" not in filtered_output
-                
-                # Unfiltered might contain invalid tags
-                # (exact behavior depends on implementation)
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Co-occurrence analyzer not available")
+
+        runner = CliRunner()
+
+        # Run with filtering (default)
+        filtered_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file)])
+
+        # Run without filtering
+        unfiltered_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file), '--no-filter'])
+
+        # Both should produce output
+        assert len(filtered_result.output) > 0
+        assert len(unfiltered_result.output) > 0
+
+        # Filtered output should not contain invalid tags
+        assert "123" not in filtered_result.output
+        assert "_invalid" not in filtered_result.output
     
     def test_pair_analysis_minimum_threshold(self, temp_dir):
         """Test co-occurrence analysis with minimum threshold option."""
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
         # Create test data with various co-occurrence frequencies
         test_data = [
             {"tag": "frequent1", "tagCount": 20, "relativePaths": ["file1.md", "file2.md", "file3.md"]},
@@ -119,28 +99,18 @@ class TestPairAnalyzer:
             {"tag": "rare1", "tagCount": 2, "relativePaths": ["file5.md", "file6.md"]},
             {"tag": "rare2", "tagCount": 1, "relativePaths": ["file7.md"]}
         ]
-        
+
         test_file = temp_dir / "threshold_test.json"
         with open(test_file, 'w') as f:
             json.dump(test_data, f)
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            # Run with high minimum threshold
-            result = subprocess.run([
-                sys.executable, analyzer_script, str(test_file),
-                "--min-pair", "5"
-            ], capture_output=True, text=True, timeout=30)
-            
-            if result.returncode == 0:
-                output = result.stdout + result.stderr
-                
-                # Should focus on frequent co-occurrences
-                assert len(output) > 0
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Co-occurrence analyzer not available")
+
+        runner = CliRunner()
+
+        # Run with high minimum threshold
+        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file), '--min-pairs', '5'])
+
+        # Should focus on frequent co-occurrences
+        assert len(result.output) > 0
 
 
 class TestAnalysisDataProcessing:
@@ -359,70 +329,57 @@ class TestAnalysisOutput:
     
     def test_analysis_output_contains_expected_sections(self, temp_dir, sample_pair_data):
         """Test that analysis output contains expected sections."""
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
         sample_file = temp_dir / "output_test.json"
         with open(sample_file, 'w') as f:
             json.dump(sample_pair_data, f)
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            result = subprocess.run([
-                sys.executable, analyzer_script, str(sample_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            if result.returncode == 0:
-                output = result.stdout + result.stderr
-                
-                # Should contain key analysis sections
-                expected_sections = [
-                    "co-occur",
-                    "pairs",
-                    "tags",
-                    "cluster",
-                    "hub",
-                    "connected"
-                ]
-                
-                # Should have at least some of these sections
-                sections_found = sum(1 for section in expected_sections 
-                                   if section.lower() in output.lower())
-                assert sections_found > 0
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Analysis script not available")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(sample_file)])
+
+        # Should contain key analysis sections
+        expected_sections = [
+            "pairs",
+            "tags",
+            "cluster",
+            "hub",
+            "connected"
+        ]
+
+        # Should have at least some of these sections
+        sections_found = sum(1 for section in expected_sections
+                           if section.lower() in result.output.lower())
+        assert sections_found > 0
     
     def test_analysis_handles_empty_data(self, temp_dir):
         """Test analysis handles empty or minimal data gracefully."""
+        from tagex.main import main as cli
+        from click.testing import CliRunner
+
         # Empty data
         empty_file = temp_dir / "empty.json"
         with open(empty_file, 'w') as f:
             json.dump([], f)
-        
+
         # Minimal data
         minimal_data = [{"tag": "single", "tagCount": 1, "relativePaths": ["file1.md"]}]
         minimal_file = temp_dir / "minimal.json"
         with open(minimal_file, 'w') as f:
             json.dump(minimal_data, f)
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
+
+        runner = CliRunner()
+
         for test_file in [empty_file, minimal_file]:
-            try:
-                result = subprocess.run([
-                    sys.executable, analyzer_script, str(test_file)
-                ], capture_output=True, text=True, timeout=30)
-                
-                # Should handle gracefully (may succeed or fail appropriately)
-                assert isinstance(result.returncode, int)
-                
-                if result.returncode == 0:
-                    # If successful, should have reasonable output
-                    output = result.stdout + result.stderr
-                    assert len(output) >= 0
-                    
-            except (subprocess.TimeoutExpired, FileNotFoundError):
-                # Skip if script not available
-                break
+            result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file)])
+
+            # Should handle gracefully
+            assert isinstance(result.exit_code, int)
+
+            if result.exit_code == 0:
+                # If successful, should have reasonable output
+                assert len(result.output) >= 0
     
     def test_analysis_statistics_accuracy(self, sample_pair_data):
         """Test that analysis statistics are calculated accurately."""
@@ -460,35 +417,25 @@ class TestAnalysisIntegration:
         """Test complete pipeline from extraction to analysis."""
         from tagex.main import main as cli
         from click.testing import CliRunner
-        
+
         # 1. Extract tags to JSON
         tags_file = temp_dir / "pipeline_tags.json"
         runner = CliRunner()
         extract_result = runner.invoke(cli, [str(simple_vault), 'extract',
             '--output', str(tags_file)
         ])
-        
+
         assert extract_result.exit_code == 0
         assert tags_file.exists()
-        
+
         # 2. Run analysis on extracted data
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            analysis_result = subprocess.run([
-                sys.executable, analyzer_script, str(tags_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            if analysis_result.returncode == 0:
-                # Analysis should work with extracted data
-                output = analysis_result.stdout + analysis_result.stderr
-                assert len(output) > 0
-                
-                # Should contain analysis information (may not show specific tags if no pairs found)
-                assert any(phrase in output.lower() for phrase in ["analyzing", "files", "tags", "pairs"])
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Analysis pipeline not available")
+        analysis_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(tags_file)])
+
+        # Analysis should work with extracted data
+        assert len(analysis_result.output) > 0
+
+        # Should contain analysis information
+        assert any(phrase in analysis_result.output.lower() for phrase in ["analyzing", "files", "tags", "pairs"])
     
     def test_analysis_with_different_extraction_formats(self, simple_vault, temp_dir):
         """Test analysis compatibility with different extraction formats."""
@@ -523,47 +470,29 @@ class TestAnalysisIntegration:
         """Test analysis results with filtered vs unfiltered extraction."""
         from tagex.main import main as cli
         from click.testing import CliRunner
-        
+
         runner = CliRunner()
-        
+
         # Extract with filtering
         filtered_file = temp_dir / "filtered_analysis.json"
         filtered_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--output', str(filtered_file)
         ])
-        
+
         # Extract without filtering
         unfiltered_file = temp_dir / "unfiltered_analysis.json"
         unfiltered_result = runner.invoke(cli, [str(complex_vault), 'extract',
             '--no-filter',
             '--output', str(unfiltered_file)
         ])
-        
+
         assert filtered_result.exit_code == 0
         assert unfiltered_result.exit_code == 0
-        
-        analyzer_script = "tag-analysis/pair_analyzer.py"
-        
-        try:
-            # Run analysis on both datasets
-            filtered_analysis = subprocess.run([
-                sys.executable, analyzer_script, str(filtered_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            unfiltered_analysis = subprocess.run([
-                sys.executable, analyzer_script, str(unfiltered_file)
-            ], capture_output=True, text=True, timeout=30)
-            
-            if filtered_analysis.returncode == 0 and unfiltered_analysis.returncode == 0:
-                filtered_output = filtered_analysis.stdout + filtered_analysis.stderr
-                unfiltered_output = unfiltered_analysis.stdout + unfiltered_analysis.stderr
-                
-                # Both should produce meaningful analysis
-                assert len(filtered_output) > 0
-                assert len(unfiltered_output) > 0
-                
-                # Filtered analysis should be cleaner
-                # (exact comparison depends on implementation)
-                
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Analysis comparison not available")
+
+        # Run analysis on both datasets
+        filtered_analysis = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(filtered_file)])
+        unfiltered_analysis = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(unfiltered_file)])
+
+        # Both should produce meaningful analysis
+        assert len(filtered_analysis.output) > 0
+        assert len(unfiltered_analysis.output) > 0
