@@ -21,10 +21,10 @@ Extract tags before running analysis:
 
 | Command | Purpose | Output |
 |:--------|:--------|:-------|
-| `tagex /vault stats` | Quick vault overview | Console statistics |
-| `tagex /vault extract -o tags.json` | Filtered tags for analysis | JSON file |
-| `tagex /vault extract --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
-| `tagex --tag-types both /vault extract -o all_tags.json` | Both frontmatter and inline | JSON file |
+| `tagex stats /vault` | Quick vault overview | Console statistics |
+| `tagex extract /vault -o tags.json` | Filtered tags for analysis | JSON file |
+| `tagex extract /vault --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
+| `tagex extract /vault --tag-types both -o all_tags.json` | Both frontmatter and inline | JSON file |
 
 The analysis scripts expect tag data in JSON format by default.
 
@@ -60,9 +60,9 @@ The analysis helps identify:
 
 | Tag Type | Extract Command | Analysis Focus |
 |:---------|:----------------|:---------------|
-| **Frontmatter** | `tagex /vault extract -o fm_tags.json` | Formal categorization |
+| **Frontmatter** | `tagex extract /vault -o fm_tags.json` | Formal categorization |
 | **Inline** | `tagex --tag-types inline /vault extract -o inline_tags.json` | Content-driven tagging |
-| **Both** | `tagex --tag-types both /vault extract -o all_tags.json` | Complete pattern analysis |
+| **Both** | `tagex extract /vault --tag-types both -o all_tags.json` | Complete pattern analysis |
 
 Run pair or merge analysis on any extracted tag file to compare patterns across tag types.
 
@@ -124,10 +124,10 @@ The stats command calculates and displays:
 
 | Command | Description |
 |:--------|:------------|
-| `tagex /vault stats` | Basic vault overview |
-| `tagex /vault stats --top 10 --format json` | Top 10 tags in JSON format |
-| `tagex /vault stats --no-filter` | Include technical noise |
-| `tagex /vault stats --top 25` | Custom top tag count |
+| `tagex stats /vault` | Basic vault overview |
+| `tagex stats /vault --top 10 --format json` | Top 10 tags in JSON format |
+| `tagex stats /vault --no-filter` | Include technical noise |
+| `tagex stats /vault --top 25` | Custom top tag count |
 
 ### Sample Output Interpretation
 
@@ -185,10 +185,10 @@ Health Assessment:
 
 | Step | Command | When to Use |
 |:-----|:--------|:------------|
-| 1. Overview | `tagex /vault stats` | Always start here |
+| 1. Overview | `tagex stats /vault` | Always start here |
 | 2. Merge analysis | `tagex analyze merge tags.json` | High singleton ratio |
 | 3. Pair analysis | `tagex analyze pairs tags.json` | Low diversity score |
-| 4. Apply changes | `tagex /vault merge tag1 tag2 --into new-tag --dry-run` | After analysis review |
+| 4. Apply changes | `tagex merge /vault tag1 tag2 --into new-tag --dry-run` | After analysis review |
 
 ---
 
@@ -460,7 +460,7 @@ See [semantic-analysis.md](semantic-analysis.md) for detailed technical implemen
 | `tagex analyze merge tags.json --min-usage 10` | Higher usage threshold |
 | `tagex analyze merge tags.json --no-filter` | Include all tags |
 | `tagex analyze merge tags.json --no-sklearn` | Pattern-based fallback |
-| `tagex /vault merge writers writering --into writing --dry-run` | Execute suggestions |
+| `tagex merge /vault writers writering --into writing --dry-run` | Execute suggestions |
 
 ### Dependencies and Fallback Strategy
 
