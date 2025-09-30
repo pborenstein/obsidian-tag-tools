@@ -21,8 +21,7 @@ class TestCompleteExtractionWorkflow:
         output_file = temp_dir / "complete_pipeline.json"
         
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            str(simple_vault), 'extract',
+        result = runner.invoke(cli, ['extract', str(simple_vault),
             '--format', 'json',
             '--output', str(output_file),
             '--verbose'
@@ -60,12 +59,12 @@ class TestCompleteExtractionWorkflow:
         runner = CliRunner()
         
         # Extract with filtering (default)
-        filtered_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        filtered_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--output', str(filtered_output)
         ])
         
         # Extract without filtering
-        unfiltered_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        unfiltered_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--no-filter',
             '--output', str(unfiltered_output)
         ])
@@ -101,13 +100,13 @@ class TestCompleteExtractionWorkflow:
         # Extract all files
         all_output = temp_dir / "all_files.json"
         runner = CliRunner()
-        all_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        all_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--output', str(all_output)
         ])
         
         # Extract excluding templates
         excluded_output = temp_dir / "excluded_templates.json"
-        excluded_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        excluded_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--exclude', '*.template.md',
             '--exclude', 'templates/*',
             '--output', str(excluded_output)
@@ -138,13 +137,13 @@ class TestCompleteExtractionWorkflow:
         runner = CliRunner()
         
         # Generate JSON output
-        json_result = runner.invoke(cli, [str(simple_vault), 'extract',
+        json_result = runner.invoke(cli, ['extract', str(simple_vault),
             '--format', 'json',
             '--output', str(json_output)
         ])
         
         # Generate CSV output
-        csv_result = runner.invoke(cli, [str(simple_vault), 'extract',
+        csv_result = runner.invoke(cli, ['extract', str(simple_vault),
             '--format', 'csv',
             '--output', str(csv_output)
         ])

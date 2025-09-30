@@ -27,7 +27,7 @@ class TestPairAnalyzer:
         from click.testing import CliRunner
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', '--help'])
+        result = runner.invoke(cli, ['analyze', 'pairs', '--help'])
 
         # Should show help without errors
         assert result.exit_code == 0
@@ -45,7 +45,7 @@ class TestPairAnalyzer:
             json.dump(sample_pair_data, f)
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(sample_file)])
+        result = runner.invoke(cli, ['analyze', 'pairs', str(sample_file)])
 
         # Should contain analysis results
         assert len(result.output) > 0
@@ -74,10 +74,10 @@ class TestPairAnalyzer:
         runner = CliRunner()
 
         # Run with filtering (default)
-        filtered_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file)])
+        filtered_result = runner.invoke(cli, ['analyze', 'pairs', str(test_file)])
 
         # Run without filtering
-        unfiltered_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file), '--no-filter'])
+        unfiltered_result = runner.invoke(cli, ['analyze', 'pairs', str(test_file), '--no-filter'])
 
         # Both should produce output
         assert len(filtered_result.output) > 0
@@ -107,7 +107,7 @@ class TestPairAnalyzer:
         runner = CliRunner()
 
         # Run with high minimum threshold
-        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file), '--min-pairs', '5'])
+        result = runner.invoke(cli, ['analyze', 'pairs', str(test_file), '--min-pairs', '5'])
 
         # Should focus on frequent co-occurrences
         assert len(result.output) > 0
@@ -337,7 +337,7 @@ class TestAnalysisOutput:
             json.dump(sample_pair_data, f)
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(sample_file)])
+        result = runner.invoke(cli, ['analyze', 'pairs', str(sample_file)])
 
         # Should contain key analysis sections
         expected_sections = [
@@ -372,7 +372,7 @@ class TestAnalysisOutput:
         runner = CliRunner()
 
         for test_file in [empty_file, minimal_file]:
-            result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(test_file)])
+            result = runner.invoke(cli, ['analyze', 'pairs', str(test_file)])
 
             # Should handle gracefully
             assert isinstance(result.exit_code, int)
@@ -421,7 +421,7 @@ class TestAnalysisIntegration:
         # 1. Extract tags to JSON
         tags_file = temp_dir / "pipeline_tags.json"
         runner = CliRunner()
-        extract_result = runner.invoke(cli, [str(simple_vault), 'extract',
+        extract_result = runner.invoke(cli, ['extract', str(simple_vault),
             '--output', str(tags_file)
         ])
 
@@ -429,7 +429,7 @@ class TestAnalysisIntegration:
         assert tags_file.exists()
 
         # 2. Run analysis on extracted data
-        analysis_result = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(tags_file)])
+        analysis_result = runner.invoke(cli, ['analyze', 'pairs', str(tags_file)])
 
         # Analysis should work with extracted data
         assert len(analysis_result.output) > 0
@@ -446,7 +446,7 @@ class TestAnalysisIntegration:
         
         # Extract in JSON format (should work with analysis)
         json_file = temp_dir / "format_test.json"
-        json_result = runner.invoke(cli, [str(simple_vault), 'extract',
+        json_result = runner.invoke(cli, ['extract', str(simple_vault),
             '--format', 'json',
             '--output', str(json_file)
         ])
@@ -475,13 +475,13 @@ class TestAnalysisIntegration:
 
         # Extract with filtering
         filtered_file = temp_dir / "filtered_analysis.json"
-        filtered_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        filtered_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--output', str(filtered_file)
         ])
 
         # Extract without filtering
         unfiltered_file = temp_dir / "unfiltered_analysis.json"
-        unfiltered_result = runner.invoke(cli, [str(complex_vault), 'extract',
+        unfiltered_result = runner.invoke(cli, ['extract', str(complex_vault),
             '--no-filter',
             '--output', str(unfiltered_file)
         ])
@@ -490,8 +490,8 @@ class TestAnalysisIntegration:
         assert unfiltered_result.exit_code == 0
 
         # Run analysis on both datasets
-        filtered_analysis = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(filtered_file)])
-        unfiltered_analysis = runner.invoke(cli, ['/tmp', 'analyze', 'pairs', str(unfiltered_file)])
+        filtered_analysis = runner.invoke(cli, ['analyze', 'pairs', str(filtered_file)])
+        unfiltered_analysis = runner.invoke(cli, ['analyze', 'pairs', str(unfiltered_file)])
 
         # Both should produce meaningful analysis
         assert len(filtered_analysis.output) > 0
