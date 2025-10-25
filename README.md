@@ -2,8 +2,20 @@
 
 Extract, analyze, and modify tags in Obsidian vault markdown files using the `tagex` command-line tool.
 
+## Project Overview
 
-## Quick start
+tagex is a command-line tool for managing tags across entire Obsidian vaults. It provides comprehensive tag extraction, analysis, and modification operations with safety features like dry-run mode and operation logging.
+
+**Key capabilities:**
+
+- Extract tags from frontmatter YAML and inline hashtags
+- Analyze tag relationships and co-occurrence patterns
+- Rename, merge, and delete tags across entire vaults
+- Generate vault health metrics and statistics
+- Detect semantic similarities for tag consolidation
+- Safe operations with preview and logging
+
+## Quick Start
 
 ```bash
 # Install (editably) with uv
@@ -156,28 +168,55 @@ tagex analyze merge tags.json --min-usage 3
 
 ## Installation
 
-This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+### Prerequisites
 
-Install as a global command:
+- Python 3.10 or higher
+- [uv](https://docs.astral.sh/uv/) package manager (recommended)
+
+### Install tagex
+
+**As a command-line tool** (recommended):
+
 ```bash
 uv tool install --editable .
 ```
 
-Or install dependencies for development:
+**For development**:
+
 ```bash
+# Clone repository
+git clone <repository-url>
+cd tagex
+
+# Install dependencies
 uv sync
+
+# Run tests
+uv run pytest tests/
 ```
+
+**Verify installation**:
+
+```bash
+tagex --help
+tagex --version
+```
+
+See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if you encounter issues.
 
 
 ## Documentation
 
-See the [docs/](docs/) directory for comprehensive documentation with suggested reading flows.
+See [docs/README.md](docs/README.md) for the complete documentation index with suggested reading flows.
 
-Key resources:
+### Quick Links
 
-| Document | Description |
-| :----------|:-------------|
-| [architecture.md](docs/architecture.md) | System architecture and component design |
-| [analytics.md](docs/analytics.md) | Tag analysis tools and usage guide |
-| [semantic-analysis.md](docs/semantic-analysis.md) | Semantic similarity detection algorithms |
+| Document | Description | Audience |
+|:---------|:------------|:---------|
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Vault setup, git integration, and best practices | Users & Developers |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and component design | Developers |
+| [docs/ANALYTICS.md](docs/ANALYTICS.md) | Tag analysis tools and usage guide | Users & Developers |
+| [docs/SEMANTIC_ANALYSIS.md](docs/SEMANTIC_ANALYSIS.md) | Semantic similarity detection algorithms | Developers |
+| [tests/README.md](tests/README.md) | Test suite organization and usage | Developers |
 
