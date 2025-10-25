@@ -207,13 +207,13 @@ Personal notes with some #work references.""")
         
         # 1. Extract initial state
         initial_output = temp_dir / "before_rename.json"
-        initial_result = runner.invoke(cli, [str(test_vault), 'extract',
+        initial_result = runner.invoke(cli, ['extract', str(test_vault),
             '--output', str(initial_output)
         ])
         assert initial_result.exit_code == 0
-        
+
         # 2. Preview rename operation
-        dry_run_result = runner.invoke(cli, [str(test_vault), 'rename', 'work', 'professional', '--dry-run'
+        dry_run_result = runner.invoke(cli, ['rename', str(test_vault), 'work', 'professional', '--dry-run'
         ])
         assert dry_run_result.exit_code == 0
         
@@ -223,7 +223,7 @@ Personal notes with some #work references.""")
         assert "professional" not in file1_content_before
         
         # 3. Execute actual rename
-        rename_result = runner.invoke(cli, [str(test_vault), 'rename', 'work', 'professional'
+        rename_result = runner.invoke(cli, ['rename', str(test_vault), 'work', 'professional'
         ])
         assert rename_result.exit_code == 0
         
@@ -236,7 +236,7 @@ Personal notes with some #work references.""")
         
         # 5. Extract final state
         final_output = temp_dir / "after_rename.json"
-        final_result = runner.invoke(cli, [str(test_vault), 'extract',
+        final_result = runner.invoke(cli, ['extract', str(test_vault),
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -289,29 +289,29 @@ Content with different tags.""")
         
         # 1. Extract initial state
         initial_output = temp_dir / "before_merge.json"
-        initial_result = runner.invoke(cli, [str(test_vault), 'extract',
+        initial_result = runner.invoke(cli, ['extract', str(test_vault),
             '--output', str(initial_output)
         ])
         assert initial_result.exit_code == 0
-        
+
         # 2. Preview merge operation
-        dry_run_result = runner.invoke(cli, [str(test_vault), 'merge',
+        dry_run_result = runner.invoke(cli, ['merge', str(test_vault),
             'ideas', 'thoughts', 'brainstorming',
             '--into', 'thinking',
             '--dry-run'
         ])
         assert dry_run_result.exit_code == 0
-        
+
         # 3. Execute actual merge
-        merge_result = runner.invoke(cli, [str(test_vault), 'merge',
+        merge_result = runner.invoke(cli, ['merge', str(test_vault),
             'ideas', 'thoughts', 'brainstorming',
             '--into', 'thinking'
         ])
         assert merge_result.exit_code == 0
-        
+
         # 4. Extract final state
         final_output = temp_dir / "after_merge.json"
-        final_result = runner.invoke(cli, [str(test_vault), 'extract',
+        final_result = runner.invoke(cli, ['extract', str(test_vault),
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -350,25 +350,25 @@ Content with #old-work #thoughts and #creativity tags.""")
         runner = CliRunner()
         
         # 1. First operation: rename old-work to work
-        rename1_result = runner.invoke(cli, [str(test_vault), 'rename', 'old-work', 'work'
+        rename1_result = runner.invoke(cli, ['rename', str(test_vault), 'old-work', 'work'
         ])
         assert rename1_result.exit_code == 0
-        
+
         # 2. Second operation: rename old-notes to notes
-        rename2_result = runner.invoke(cli, [str(test_vault), 'rename', 'old-notes', 'notes'
+        rename2_result = runner.invoke(cli, ['rename', str(test_vault), 'old-notes', 'notes'
         ])
         assert rename2_result.exit_code == 0
-        
+
         # 3. Third operation: merge thinking-related tags
-        merge_result = runner.invoke(cli, [str(test_vault), 'merge',
+        merge_result = runner.invoke(cli, ['merge', str(test_vault),
             'ideas', 'brainstorming', 'thoughts', 'creativity',
             '--into', 'thinking'
         ])
         assert merge_result.exit_code == 0
-        
+
         # 4. Verify final state
         final_output = temp_dir / "sequential_final.json"
-        final_result = runner.invoke(cli, [str(test_vault), 'extract',
+        final_result = runner.invoke(cli, ['extract', str(test_vault),
             '--output', str(final_output)
         ])
         assert final_result.exit_code == 0
@@ -435,11 +435,11 @@ More detailed content with #project-related information.
         
         # Extract from large vault
         output_file = temp_dir / "large_vault_extract.json"
-        extract_result = runner.invoke(cli, [str(large_vault), 'extract',
+        extract_result = runner.invoke(cli, ['extract', str(large_vault),
             '--output', str(output_file),
             '--verbose'
         ])
-        
+
         assert extract_result.exit_code == 0
         assert output_file.exists()
         
@@ -484,29 +484,29 @@ Content with #meeting information.""")
         
         # 1. Analyze current state
         initial_analysis = temp_dir / "messy_initial.json"
-        runner.invoke(cli, [str(messy_vault), 'extract',
+        runner.invoke(cli, ['extract', str(messy_vault),
             '--output', str(initial_analysis)
         ])
-        
+
         # 2. Standardize work-related tags
-        runner.invoke(cli, [str(messy_vault), 'rename', 'work_project', 'work-project'
+        runner.invoke(cli, ['rename', str(messy_vault), 'work_project', 'work-project'
         ])
-        
-        runner.invoke(cli, [str(messy_vault), 'rename', 'work project', 'work-project'
+
+        runner.invoke(cli, ['rename', str(messy_vault), 'work project', 'work-project'
         ])
-        
+
         # 3. Merge meeting-related tags
-        runner.invoke(cli, [str(messy_vault), 'merge',
+        runner.invoke(cli, ['merge', str(messy_vault),
             'meeting-notes', 'meeting_notes', 'meetings',
             '--into', 'meetings'
         ])
-        
+
         # 4. Analyze final state
         final_analysis = temp_dir / "messy_final.json"
-        final_result = runner.invoke(cli, [str(messy_vault), 'extract',
+        final_result = runner.invoke(cli, ['extract', str(messy_vault),
             '--output', str(final_analysis)
         ])
-        
+
         assert final_result.exit_code == 0
         
         # Verify cleanup worked
@@ -560,11 +560,11 @@ malformed: content
         
         # Should process successfully despite errors
         output_file = temp_dir / "error_recovery.json"
-        result = runner.invoke(cli, [str(error_vault), 'extract',
+        result = runner.invoke(cli, ['extract', str(error_vault),
             '--output', str(output_file),
             '--verbose'
         ])
-        
+
         # Should succeed (even if some files caused errors)
         assert result.exit_code == 0
         assert output_file.exists()
@@ -606,10 +606,10 @@ Content for file number {i} with #test-tag-{i}.
         
         # Extract should handle many files
         output_file = temp_dir / "many_files_output.json"
-        result = runner.invoke(cli, [str(many_files_vault), 'extract',
+        result = runner.invoke(cli, ['extract', str(many_files_vault),
             '--output', str(output_file)
         ])
-        
+
         assert result.exit_code == 0
         assert output_file.exists()
         
@@ -653,10 +653,10 @@ With additional #large-content tags and #test-references throughout.
         
         # Should handle large files
         output_file = temp_dir / "large_files_output.json"
-        result = runner.invoke(cli, [str(large_files_vault), 'extract',
+        result = runner.invoke(cli, ['extract', str(large_files_vault),
             '--output', str(output_file)
         ])
-        
+
         assert result.exit_code == 0
         assert output_file.exists()
         
