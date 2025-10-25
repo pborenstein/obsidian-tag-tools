@@ -45,6 +45,12 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 | [CONFIGURATION.md](CONFIGURATION.md) | Vault setup, git integration, naming conventions, best practices | Users & Developers |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
 
+### Future Plans
+
+| Document | Description | Audience |
+|:---------|:------------|:---------|
+| [TAG_QUALITY_IMPROVEMENTS.md](TAG_QUALITY_IMPROVEMENTS.md) | Planned enhancements for tag quality analysis (plurals, synonyms, overbroad detection) | Developers |
+
 ### Archive
 
 | Document | Description | Audience |
