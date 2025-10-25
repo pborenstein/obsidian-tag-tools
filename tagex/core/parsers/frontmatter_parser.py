@@ -59,12 +59,12 @@ def extract_tags_from_frontmatter(frontmatter: Optional[Dict[str, Any]]) -> List
     return tags
 
 
-def _parse_tag_value(tag_value: Union[str, List[str], None]) -> List[str]:
+def _parse_tag_value(tag_value: Any) -> List[str]:
     """
     Parse tag value from frontmatter into list of strings.
 
     Args:
-        tag_value: Value from frontmatter (can be string, list, or None)
+        tag_value: Value from frontmatter (can be string, list, None, or other types)
 
     Returns:
         List of tag strings

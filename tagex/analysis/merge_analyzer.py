@@ -51,7 +51,7 @@ def load_tag_data(json_file: str) -> List[Dict[str, Any]]:
         List of tag dictionaries
     """
     with open(json_file, 'r') as f:
-        return json.load(f)
+        return json.load(f)  # type: ignore[no-any-return]
 
 
 def build_tag_stats(tag_data: List[Dict[str, Any]], filter_noise: bool = False) -> Dict[str, Dict[str, Any]]:
@@ -354,7 +354,7 @@ def suggest_merges(
     Returns:
         Dictionary of suggestion categories with lists of suggestions
     """
-    suggestions = {
+    suggestions: Dict[str, List[Dict[str, Any]]] = {
         'similar_names': [],
         'semantic_duplicates': [],
         'high_overlap': [],
@@ -377,7 +377,7 @@ def suggest_merges(
         })
     
     # Find semantic duplicates using embeddings or fallback
-    if args.no_sklearn:
+    if args and args.no_sklearn:
         print("Using pattern-based fallback (--no-sklearn specified)")
         suggestions['semantic_duplicates'] = find_semantic_duplicates_pattern(filtered_tags)
     else:

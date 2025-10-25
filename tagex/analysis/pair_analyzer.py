@@ -21,7 +21,7 @@ def load_tag_data(json_file: str) -> List[Dict[str, Any]]:
         List of tag dictionaries
     """
     with open(json_file, 'r') as f:
-        return json.load(f)
+        return json.load(f)  # type: ignore[no-any-return]
 
 
 def build_file_to_tags_map(tag_data: List[Dict[str, Any]], filter_noise: bool = False) -> Dict[str, Set[str]]:
