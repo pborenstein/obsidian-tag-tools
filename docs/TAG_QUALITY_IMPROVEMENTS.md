@@ -56,6 +56,8 @@ tax-break → tax-breaks   (compound words)
 
 ### Proposed Solution
 
+> **Convention**: This project **prefers plural tags over singular tags** (e.g., `books` not `book`, `ideas` not `idea`). All normalization suggestions default to the plural form unless the singular is significantly more common in the vault.
+
 #### A. Irregular Plural Dictionary
 
 ```python
@@ -93,6 +95,9 @@ IRREGULAR_SINGULARS = {v: k for k, v in IRREGULAR_PLURALS.items()}
 ```python
 def normalize_plural_forms(tag: str) -> Set[str]:
     """Generate all possible singular/plural forms of a tag.
+
+    Note: This project prefers plural forms. When suggesting merges,
+    the plural form should be recommended as the canonical form.
 
     Returns:
         Set of normalized forms (both singular and plural)
@@ -173,7 +178,10 @@ def normalize_compound_plurals(tag: str) -> Set[str]:
 # Update find_variant_patterns() in merge_analyzer.py
 
 def find_plural_variants(tags: Iterable[str]) -> Dict[str, List[str]]:
-    """Find singular/plural variants using enhanced detection."""
+    """Find singular/plural variants using enhanced detection.
+
+    Convention: Prefer plural forms as canonical (books not book).
+    """
     from tagex.utils.plural_normalizer import normalize_plural_forms, normalize_compound_plurals
 
     variant_groups = defaultdict(set)
@@ -183,9 +191,14 @@ def find_plural_variants(tags: Iterable[str]) -> Dict[str, List[str]]:
         forms = normalize_plural_forms(tag)
         forms.update(normalize_compound_plurals(tag))
 
-        # Use alphabetically first form as canonical key
-        canonical = sorted(forms)[0].lower()
-        variant_groups[canonical].add(tag)
+        # Prefer plural form as canonical
+        # Sort by: 1) plural preference, 2) length (longer usually plural), 3) alphabetical
+        canonical = max(forms, key=lambda t: (
+            t.lower().endswith('s') or t.lower() in IRREGULAR_PLURALS.values(),  # Prefer plurals
+            len(t),  # Longer forms (often plurals)
+            t.lower()  # Alphabetical for tiebreaker
+        ))
+        variant_groups[canonical.lower()].add(tag)
 
     # Return only groups with multiple variants
     return {k: list(v) for k, v in variant_groups.items() if len(v) > 1}
@@ -198,14 +211,17 @@ def find_plural_variants(tags: Iterable[str]) -> Dict[str, List[str]]:
 tagex analyze plurals /vault
 
 Output:
-  Plural Variant Groups:
-    family (45 uses) / families (3 uses) → Suggest: merge into 'family'
-    child (12 uses) / children (8 uses) → Suggest: merge into 'children'
-    tax-break (5 uses) / tax-breaks (2 uses) → Suggest: merge into 'tax-break'
+  Plural Variant Groups (prefers plural forms):
+    family (45 uses) / families (3 uses) → Suggest: merge into 'families' (plural preferred)
+    child (12 uses) / children (8 uses) → Suggest: merge into 'children' (plural form)
+    tax-break (5 uses) / tax-breaks (2 uses) → Suggest: merge into 'tax-breaks' (plural preferred)
 
-# Auto-merge with most common form
+# Auto-merge preferring plural forms
 tagex normalize plurals /vault --dry-run
 tagex normalize plurals /vault --apply
+
+# Override to prefer singular in specific cases
+tagex normalize plurals /vault --prefer-singular --dry-run
 ```
 
 ---
