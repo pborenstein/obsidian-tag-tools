@@ -7,7 +7,7 @@ This analyzer identifies potential tag merges using multiple approaches:
 1. SIMILAR NAMES: Uses string similarity (85%+ threshold) to catch likely typos
    and minor variations like "writing/writng" or "tech/technology"
 
-2. SEMANTIC DUPLICATES: Uses TF-IDF character-level n-gram embeddings to find 
+2. SEMANTIC DUPLICATES: Uses TF-IDF character-level n-gram embeddings to find
    semantically similar tags beyond simple string matching. Analyzes character
    patterns (2-4 char n-grams) and calculates cosine similarity to identify
    conceptually related tags like "music/audio" or "family/relatives".
@@ -29,6 +29,7 @@ import argparse
 from collections import defaultdict, Counter
 from difflib import SequenceMatcher
 import re
+from typing import Dict, List, Set, Any, Optional, Iterable
 from tagex.utils.tag_normalizer import is_valid_tag
 
 try:
@@ -40,16 +41,31 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 
-def load_tag_data(json_file):
-    """Load tag data from JSON file."""
+def load_tag_data(json_file: str) -> List[Dict[str, Any]]:
+    """Load tag data from JSON file.
+
+    Args:
+        json_file: Path to JSON file containing tag data
+
+    Returns:
+        List of tag dictionaries
+    """
     with open(json_file, 'r') as f:
-        return json.load(f)
+        return json.load(f)  # type: ignore[no-any-return]
 
 
-def build_tag_stats(tag_data, filter_noise=False):
-    """Build tag usage statistics."""
-    tag_stats = {}
-    
+def build_tag_stats(tag_data: List[Dict[str, Any]], filter_noise: bool = False) -> Dict[str, Dict[str, Any]]:
+    """Build tag usage statistics.
+
+    Args:
+        tag_data: List of tag dictionaries
+        filter_noise: Whether to filter out invalid tags
+
+    Returns:
+        Dictionary mapping tag names to their statistics
+    """
+    tag_stats: Dict[str, Dict[str, Any]] = {}
+
     for tag_info in tag_data:
         tag = tag_info['tag']
         if filter_noise and not is_valid_tag(tag):
@@ -58,73 +74,99 @@ def build_tag_stats(tag_data, filter_noise=False):
             'count': tag_info['tagCount'],
             'files': set(tag_info['relativePaths'])
         }
-    
+
     return tag_stats
 
 
-def find_similar_tags(tags, similarity_threshold=0.85):
-    """Find tags with very similar names (likely typos/variants)."""
-    similar_groups = []
-    processed = set()
-    
+def find_similar_tags(tags: Iterable[str], similarity_threshold: float = 0.85) -> List[List[str]]:
+    """Find tags with very similar names (likely typos/variants).
+
+    Args:
+        tags: Iterable of tag strings
+        similarity_threshold: Minimum similarity ratio (0-1) to consider tags similar
+
+    Returns:
+        List of groups of similar tags
+    """
+    similar_groups: List[List[str]] = []
+    processed: Set[str] = set()
+
     tags_list = list(tags)
     for i, tag1 in enumerate(tags_list):
         if tag1 in processed:
             continue
-            
+
         group = [tag1]
         processed.add(tag1)
-        
+
         for j, tag2 in enumerate(tags_list[i+1:], i+1):
             if tag2 in processed:
                 continue
-            
+
             # Only consider very similar tags to avoid false positives
             if len(tag1) > 3 and len(tag2) > 3:
                 similarity = SequenceMatcher(None, tag1.lower(), tag2.lower()).ratio()
                 if similarity >= similarity_threshold:
                     group.append(tag2)
                     processed.add(tag2)
-        
+
         if len(group) > 1:
             similar_groups.append(group)
-    
+
     return similar_groups
 
 
-def find_variant_patterns(tags):
-    """Find tags that are likely variants of each other."""
-    variants = defaultdict(list)
-    
+def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
+    """Find tags that are likely variants of each other.
+
+    Args:
+        tags: Iterable of tag strings
+
+    Returns:
+        Dictionary mapping base forms to lists of variant tags
+    """
+    variants: Dict[str, List[str]] = defaultdict(list)
+
     # Group by base patterns
     for tag in tags:
         # Remove common suffixes/prefixes that might indicate variants
         base = tag.lower()
-        
+
         # Remove plural 's'
         if base.endswith('s') and len(base) > 3:
             singular = base[:-1]
             variants[singular].append(tag)
-        
+
         # Remove -ing suffix
         if base.endswith('ing'):
             base_form = base[:-3]
             variants[base_form].append(tag)
-        
-        # Remove -ed suffix  
+
+        # Remove -ed suffix
         if base.endswith('ed'):
             base_form = base[:-2]
             variants[base_form].append(tag)
-        
+
         # Add the tag to its own base form
         variants[base].append(tag)
-    
+
     # Return only groups with multiple variants
     return {k: list(set(v)) for k, v in variants.items() if len(set(v)) > 1}
 
 
-def find_semantic_duplicates_embedding(tag_stats, similarity_threshold=0.6):
-    """Find semantically similar tags using TF-IDF embeddings."""
+def find_semantic_duplicates_embedding(
+    tag_stats: Dict[str, Dict[str, Any]],
+    similarity_threshold: float = 0.6
+) -> List[Dict[str, Any]]:
+    """Find semantically similar tags using TF-IDF embeddings.
+
+    Args:
+        tag_stats: Dictionary mapping tag names to their statistics
+        similarity_threshold: Minimum cosine similarity to consider tags semantically similar
+
+    Returns:
+        List of semantic duplicate groups with metadata
+    """
     if not SKLEARN_AVAILABLE:
         print("Warning: sklearn not available, falling back to pattern matching")
         return find_semantic_duplicates_pattern(tag_stats)
@@ -184,8 +226,15 @@ def find_semantic_duplicates_embedding(tag_stats, similarity_threshold=0.6):
         return find_semantic_duplicates_pattern(tag_stats)
 
 
-def find_semantic_duplicates_pattern(tag_stats):
-    """Fallback pattern-based semantic duplicate detection using generic morphological patterns."""
+def find_semantic_duplicates_pattern(tag_stats: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Fallback pattern-based semantic duplicate detection using generic morphological patterns.
+
+    Args:
+        tag_stats: Dictionary mapping tag names to their statistics
+
+    Returns:
+        List of semantic duplicate groups with metadata
+    """
     duplicates = []
     
     # Find word stem groups dynamically
@@ -249,8 +298,19 @@ def find_semantic_duplicates_pattern(tag_stats):
     return duplicates
 
 
-def find_overlapping_tags(tag_stats, overlap_threshold=0.8):
-    """Find tags with significant file overlap."""
+def find_overlapping_tags(
+    tag_stats: Dict[str, Dict[str, Any]],
+    overlap_threshold: float = 0.8
+) -> List[Dict[str, Any]]:
+    """Find tags with significant file overlap.
+
+    Args:
+        tag_stats: Dictionary mapping tag names to their statistics
+        overlap_threshold: Minimum overlap ratio (0-1) to consider tags overlapping
+
+    Returns:
+        List of overlapping tag pairs with metadata
+    """
     overlaps = []
     tags_list = list(tag_stats.keys())
     
@@ -279,9 +339,22 @@ def find_overlapping_tags(tag_stats, overlap_threshold=0.8):
     return sorted(overlaps, key=lambda x: x['overlap_ratio'], reverse=True)
 
 
-def suggest_merges(tag_stats, min_usage=3, args=None):
-    """Generate merge suggestions."""
-    suggestions = {
+def suggest_merges(
+    tag_stats: Dict[str, Dict[str, Any]],
+    min_usage: int = 3,
+    args: Optional[argparse.Namespace] = None
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Generate merge suggestions.
+
+    Args:
+        tag_stats: Dictionary mapping tag names to their statistics
+        min_usage: Minimum tag usage count to consider
+        args: Command-line arguments (optional)
+
+    Returns:
+        Dictionary of suggestion categories with lists of suggestions
+    """
+    suggestions: Dict[str, List[Dict[str, Any]]] = {
         'similar_names': [],
         'semantic_duplicates': [],
         'high_overlap': [],
@@ -304,7 +377,7 @@ def suggest_merges(tag_stats, min_usage=3, args=None):
         })
     
     # Find semantic duplicates using embeddings or fallback
-    if args.no_sklearn:
+    if args and args.no_sklearn:
         print("Using pattern-based fallback (--no-sklearn specified)")
         suggestions['semantic_duplicates'] = find_semantic_duplicates_pattern(filtered_tags)
     else:
@@ -328,8 +401,12 @@ def suggest_merges(tag_stats, min_usage=3, args=None):
     return suggestions
 
 
-def print_merge_suggestions(suggestions):
-    """Print merge suggestions in a readable format."""
+def print_merge_suggestions(suggestions: Dict[str, List[Dict[str, Any]]]) -> None:
+    """Print merge suggestions in a readable format.
+
+    Args:
+        suggestions: Dictionary of suggestion categories with lists of suggestions
+    """
     
     print("=== TAG MERGE SUGGESTIONS ===\n")
     
@@ -375,7 +452,8 @@ def print_merge_suggestions(suggestions):
             print()
 
 
-def main():
+def main() -> None:
+    """Main entry point for merge analyzer CLI."""
     parser = argparse.ArgumentParser(description='Analyze and suggest tag merges')
     parser.add_argument('input_file', help='JSON file containing tag data')
     parser.add_argument('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
