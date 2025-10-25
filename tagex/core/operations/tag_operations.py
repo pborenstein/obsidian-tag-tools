@@ -25,7 +25,7 @@ class TagOperationEngine(ABC):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
         self.tag_types = tag_types
-        self.operation_log = {
+        self.operation_log: Dict[str, Any] = {
             "operation": self.__class__.__name__.lower(),
             "timestamp": datetime.now().isoformat(),
             "vault_path": str(self.vault_path),
@@ -225,7 +225,7 @@ class TagOperationEngine(ABC):
         
         return '\n'.join(transformed_lines)
     
-    def _transform_yaml_tag_value(self, value: str, tag_transform_func) -> str:
+    def _transform_yaml_tag_value(self, value: str, tag_transform_func) -> Optional[str]:
         """Transform a YAML tag value while preserving format."""
         value = value.strip()
         

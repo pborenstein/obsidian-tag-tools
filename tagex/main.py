@@ -5,8 +5,9 @@ Obsidian Tag Extractor - Extract tags from Obsidian vault markdown files
 import logging
 import sys
 from pathlib import Path
+from typing import Any, Dict
 import click
-from collections import Counter
+from collections import Counter, defaultdict
 import math
 
 from .core.extractor.core import TagExtractor
@@ -62,6 +63,7 @@ def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_f
         stats = extractor.get_statistics()
 
         # Format output
+        formatted_data: Any
         if format == 'json':
             formatted_data = format_as_plugin_json(tag_data)
         elif format == 'csv':
@@ -232,7 +234,7 @@ def pairs(input_file, min_pairs, no_filter):
             print(f"  - {tag}")
 
     # Most connected tags
-    tag_connections = defaultdict(int)
+    tag_connections: Dict[str, int] = defaultdict(int)
     for (tag1, tag2), count in pairs_result.items():
         tag_connections[tag1] += count
         tag_connections[tag2] += count
@@ -242,12 +244,12 @@ def pairs(input_file, min_pairs, no_filter):
         print(f"{total_connections:3d}  {tag}")
 
 
-@analyze.command()
+@analyze.command('merge')
 @click.argument('input_file', type=click.Path(exists=True))
 @click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--no-sklearn', is_flag=True, help='Force use of pattern-based fallback instead of embeddings')
-def merge(input_file, min_usage, no_filter, no_sklearn):
+def analyze_merge(input_file, min_usage, no_filter, no_sklearn):
     """Suggest tag merge opportunities.
 
     INPUT_FILE: JSON file containing tag data (from extract command)

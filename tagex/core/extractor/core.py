@@ -2,7 +2,7 @@
 Core tag extraction pipeline.
 """
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional, Any
 from collections import defaultdict
 import logging
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class TagExtractor:
     """Main tag extraction engine."""
     
-    def __init__(self, vault_path: str, exclude_patterns: Set[str] = None, filter_tags: bool = True, tag_types: str = 'both'):
+    def __init__(self, vault_path: str, exclude_patterns: Optional[Set[str]] = None, filter_tags: bool = True, tag_types: str = 'both'):
         """
         Initialize the tag extractor.
 
@@ -49,7 +49,7 @@ class TagExtractor:
         logger.info(f"Found {len(markdown_files)} markdown files")
         
         # Process each file
-        tag_data = defaultdict(lambda: {"count": 0, "files": set()})
+        tag_data: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"count": 0, "files": set()})
         
         for file_path in markdown_files:
             try:
