@@ -2,17 +2,17 @@
 Frontmatter parser for extracting tags from YAML frontmatter in markdown files.
 """
 import re
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple, Dict, Any
 import yaml
 
 
-def extract_frontmatter(content: str) -> tuple[Optional[dict], str]:
+def extract_frontmatter(content: str) -> Tuple[Optional[Dict[str, Any]], str]:
     """
     Extract YAML frontmatter from markdown content.
-    
+
     Args:
         content: Full markdown file content
-        
+
     Returns:
         Tuple of (frontmatter_dict, remaining_content)
     """
@@ -35,13 +35,13 @@ def extract_frontmatter(content: str) -> tuple[Optional[dict], str]:
         return None, content
 
 
-def extract_tags_from_frontmatter(frontmatter: dict) -> List[str]:
+def extract_tags_from_frontmatter(frontmatter: Optional[Dict[str, Any]]) -> List[str]:
     """
     Extract tags from frontmatter dictionary.
-    
+
     Args:
         frontmatter: Parsed YAML frontmatter as dictionary
-        
+
     Returns:
         List of tag strings
     """
@@ -62,10 +62,10 @@ def extract_tags_from_frontmatter(frontmatter: dict) -> List[str]:
 def _parse_tag_value(tag_value: Union[str, List[str], None]) -> List[str]:
     """
     Parse tag value from frontmatter into list of strings.
-    
+
     Args:
         tag_value: Value from frontmatter (can be string, list, or None)
-        
+
     Returns:
         List of tag strings
     """
