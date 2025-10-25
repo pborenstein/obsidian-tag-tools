@@ -5,51 +5,53 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 ## Quick Navigation
 
 - **New to tagex?** Start with the [main README](../README.md) for installation and quick start
-- **Understanding the system?** See [Architecture Overview](architecture.md)
-- **Using analysis tools?** Check out the [Analytics Guide](analytics.md)
-- **Deep technical dive?** Read [Semantic Analysis](semantic-analysis.md)
+- **Setting up your vault?** See [Configuration Guide](CONFIGURATION.md) for best practices
+- **Encountering issues?** Check [Troubleshooting](TROUBLESHOOTING.md) for solutions
+- **Understanding the system?** See [Architecture Overview](ARCHITECTURE.md)
+- **Using analysis tools?** Check out the [Analytics Guide](ANALYTICS.md)
+- **Deep technical dive?** Read [Semantic Analysis](SEMANTIC_ANALYSIS.md)
 
 ## Suggested Reading Flow
 
 ### For New Users
 
 1. **[Main README](../README.md)** - Installation, commands, and basic usage
-2. **[Architecture Overview](architecture.md)** - Understanding how tagex works
-3. **[Analytics Guide](analytics.md)** - Tag analysis, statistics, and relationship detection
+2. **[Configuration Guide](CONFIGURATION.md)** - Vault setup and best practices
+3. **[Architecture Overview](ARCHITECTURE.md)** - Understanding how tagex works
+4. **[Analytics Guide](ANALYTICS.md)** - Tag analysis, statistics, and relationship detection
+5. **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### For Contributors
 
-1. **[Architecture Overview](architecture.md)** - System design and component organization
-2. **[Testing Narrative](testing-narrative.md)** - Development approach and testing philosophy
-3. **[Decision Records](decisions/)** - Architectural decisions and rationale
+1. **[Architecture Overview](ARCHITECTURE.md)** - System design and component organization
+2. **[Testing Narrative](TESTING_NARRATIVE.md)** - Development approach and testing philosophy
+3. **[Archive](archive/)** - Historical decisions and completed plans
 
 ### For Algorithm Deep Dives
 
-1. **[Semantic Analysis](semantic-analysis.md)** - TF-IDF, cosine similarity, and morphological fallback
-2. **[Analytics Guide](analytics.md)** - Pair analysis, hub detection, and merge recommendations
+1. **[Semantic Analysis](SEMANTIC_ANALYSIS.md)** - TF-IDF, cosine similarity, and morphological fallback
+2. **[Analytics Guide](ANALYTICS.md)** - Pair analysis, hub detection, and merge recommendations
 
 ## Documentation Files
 
 ### Core Documentation
 
-| Document | Description |
-|:---------|:------------|
-| [architecture.md](architecture.md) | System architecture, data flow, component design |
-| [analytics.md](analytics.md) | Tag analysis tools, statistics, relationship detection |
-| [semantic-analysis.md](semantic-analysis.md) | Semantic similarity algorithms and implementation |
-| [testing-narrative.md](testing-narrative.md) | Test development story and approach |
-
-### Decision Records
-
-| Document | Description |
-|:---------|:------------|
-| [decisions/frontmatter-parser.md](decisions/frontmatter-parser.md) | PyYAML vs python-frontmatter analysis |
+| Document | Description | Audience |
+|:---------|:------------|:---------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
+| [ANALYTICS.md](ANALYTICS.md) | Tag analysis tools, statistics, relationship detection | Users & Developers |
+| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity algorithms and implementation | Developers |
+| [TESTING_NARRATIVE.md](TESTING_NARRATIVE.md) | Test development story and approach | Developers |
+| [CONFIGURATION.md](CONFIGURATION.md) | Vault setup, git integration, naming conventions, best practices | Users & Developers |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
 
 ### Archive
 
-| Document | Description |
-|:---------|:------------|
-| [archive/tag-type-filtering-plan.md](archive/tag-type-filtering-plan.md) | Historical implementation plan (completed) |
+| Document | Description | Audience |
+|:---------|:------------|:---------|
+| [archive/FRONTMATTER_PARSER_DECISION.md](archive/FRONTMATTER_PARSER_DECISION.md) | PyYAML vs python-frontmatter analysis (Sep 2024) | Developers |
+| [archive/TAG_TYPE_FILTERING_PLAN.md](archive/TAG_TYPE_FILTERING_PLAN.md) | Historical implementation plan (completed) | Developers |
+| [archive/EVALUATION_2025_09_30.md](archive/EVALUATION_2025_09_30.md) | Documentation quality assessment and recommendations | Developers |
 
 ## Additional Resources
 
