@@ -19,6 +19,10 @@ This analyzer identifies potential tag merges using multiple approaches:
 4. VARIANT PATTERNS: Detects morphological variants like plural/singular
    forms and verb tenses (writing/writers, parent/parenting).
 
+   Note: This project prefers PLURAL forms as canonical (books not book,
+   ideas not idea, projects not project). When suggesting merges, the plural
+   form is recommended unless usage patterns strongly indicate otherwise.
+
 The embedding approach is particularly effective at catching semantic relationships
 that simple string matching misses, using character-level features that work well
 for short tag text.
@@ -119,6 +123,10 @@ def find_similar_tags(tags: Iterable[str], similarity_threshold: float = 0.85) -
 def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
     """Find tags that are likely variants of each other.
 
+    Convention: This function groups variants but does NOT determine which
+    form to prefer. Downstream code should prefer PLURAL forms when suggesting
+    merges (e.g., books not book, ideas not idea).
+
     Args:
         tags: Iterable of tag strings
 
@@ -132,7 +140,7 @@ def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
         # Remove common suffixes/prefixes that might indicate variants
         base = tag.lower()
 
-        # Remove plural 's'
+        # Remove plural 's' (but prefer plural in suggestions)
         if base.endswith('s') and len(base) > 3:
             singular = base[:-1]
             variants[singular].append(tag)
@@ -229,6 +237,10 @@ def find_semantic_duplicates_embedding(
 def find_semantic_duplicates_pattern(tag_stats: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Fallback pattern-based semantic duplicate detection using generic morphological patterns.
 
+    Convention: When suggesting which tag to keep from a group, prefer PLURAL forms
+    (e.g., books not book). The 'suggested_keep' field should select the plural variant
+    when available, falling back to most-used tag if no clear plural exists.
+
     Args:
         tag_stats: Dictionary mapping tag names to their statistics
 
@@ -236,21 +248,21 @@ def find_semantic_duplicates_pattern(tag_stats: Dict[str, Dict[str, Any]]) -> Li
         List of semantic duplicate groups with metadata
     """
     duplicates = []
-    
+
     # Find word stem groups dynamically
     stem_groups = defaultdict(list)
-    
+
     for tag in tag_stats.keys():
         tag_lower = tag.lower()
-        
+
         # Group by common morphological patterns
         if len(tag_lower) <= 3:
             continue  # Skip very short tags
-            
+
         # Remove common suffixes to find stems
         stems = set()
-        
-        # Plural/singular patterns
+
+        # Plural/singular patterns (prefer plural in suggestions)
         if tag_lower.endswith('s') and len(tag_lower) > 4:
             stems.add(tag_lower[:-1])  # remove 's'
         
@@ -287,11 +299,16 @@ def find_semantic_duplicates_pattern(tag_stats: Dict[str, Dict[str, Any]]) -> Li
         if len(tags) > 1:
             # Sort by usage count
             sorted_tags = sorted(tags, key=lambda t: tag_stats[t]['count'], reverse=True)
+
+            # Prefer plural form if available, otherwise most-used
+            plural_candidates = [t for t in sorted_tags if t.lower().endswith('s')]
+            suggested_keep = plural_candidates[0] if plural_candidates else sorted_tags[0]
+
             duplicates.append({
                 'method': 'pattern',
                 'stem': stem,
                 'tags': sorted_tags,
-                'suggested_keep': sorted_tags[0],
+                'suggested_keep': suggested_keep,
                 'total_usage': sum(tag_stats[tag]['count'] for tag in sorted_tags)
             })
     
