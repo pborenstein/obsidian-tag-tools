@@ -5,6 +5,7 @@ Best practices and recommendations for configuring tagex with your Obsidian vaul
 ## Table of Contents
 
 - [Vault Setup](#vault-setup)
+- [Tagex Configuration](#tagex-configuration)
 - [Git Integration](#git-integration)
 - [Tag Naming Conventions](#tag-naming-conventions)
 - [Frontmatter vs Inline Tags](#frontmatter-vs-inline-tags)
@@ -54,17 +55,170 @@ tagex --help
    tagex stats /path/to/vault
    ```
 
-2. **Extract tags to verify setup**:
+2. **Initialize tagex configuration**:
+
+   ```bash
+   tagex init /path/to/vault
+   ```
+
+   This creates:
+   - `.tagex/config.yaml` - Plural preferences and other settings
+   - `.tagex/synonyms.yaml` - User-defined synonym mappings
+   - `.tagex/README.md` - Documentation about the configuration
+
+3. **Extract tags to verify setup**:
 
    ```bash
    tagex extract /path/to/vault -o tags.json
    ```
 
-3. **Review extraction results**:
+4. **Review extraction results**:
 
    ```bash
    # View top 20 tags
    jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
+   ```
+
+## Tagex Configuration
+
+Tagex stores vault-specific configuration in the `.tagex/` directory within your vault.
+
+### Directory Structure
+
+```
+your-vault/
+├── .tagex/
+│   ├── config.yaml      # General settings (plural preferences, etc.)
+│   ├── synonyms.yaml    # User-defined synonym mappings
+│   └── README.md        # Configuration documentation
+├── .obsidian/           # Obsidian's configuration
+└── your-notes.md
+```
+
+### Initializing Configuration
+
+Create the `.tagex/` directory with template files:
+
+```bash
+# Initialize with default templates
+tagex init /path/to/vault
+
+# Reinitialize (overwrites existing files)
+tagex init /path/to/vault --force
+```
+
+### Configuration Files
+
+#### config.yaml
+
+Controls general tagex behavior:
+
+```yaml
+# .tagex/config.yaml
+
+plural:
+  # Preference mode: usage, plural, or singular
+  preference: usage
+
+  # Minimum usage ratio to prefer most-used form (usage mode only)
+  # Example: If tag1 has 10 uses and tag2 has 3 uses, ratio is 3.33
+  # With threshold 2.0, prefer tag1 (10 > 3 * 2.0)
+  usage_ratio_threshold: 2.0
+```
+
+**Plural preference modes:**
+
+| Mode | Behavior | Example |
+|:-----|:---------|:--------|
+| `usage` | Prefer most-used form | `book (67)` + `books (12)` → `book` |
+| `plural` | Always prefer plurals | `book (67)` + `books (12)` → `books` |
+| `singular` | Always prefer singulars | `books (67)` + `book (12)` → `book` |
+
+#### synonyms.yaml
+
+Define explicit synonym relationships:
+
+```yaml
+# .tagex/synonyms.yaml
+
+# Canonical tag as key, synonyms as list values
+python:
+  - py
+  - python3
+  - python-lang
+
+javascript:
+  - js
+  - ecmascript
+
+neuro:
+  - neurodivergent
+  - neurodivergence
+  - neurotype
+
+tech:
+  - technology
+  - technical
+```
+
+**Usage:**
+- Tags listed under a key will be suggested for merge into that key
+- The `analyze synonyms` command respects these mappings
+- Helps codify vault-specific terminology decisions
+
+### Validating Configuration
+
+Check configuration files for errors:
+
+```bash
+# Basic validation
+tagex validate /path/to/vault
+
+# Strict mode (treats warnings as errors)
+tagex validate /path/to/vault --strict
+```
+
+**What gets validated:**
+- YAML syntax correctness
+- Valid preference modes
+- Numeric values in acceptable ranges
+- Synonym conflicts (e.g., canonical tag also listed as synonym)
+- File existence and readability
+
+### Configuration Best Practices
+
+1. **Version control your configuration:**
+   ```bash
+   git add .tagex/
+   git commit -m "Add tagex configuration"
+   ```
+
+2. **Document decisions in synonyms.yaml:**
+   ```yaml
+   # Use 'tech' over 'technology' for brevity
+   tech:
+     - technology
+     - technical
+   ```
+
+3. **Start with usage mode:**
+   - Least disruptive to existing vault
+   - Respects established patterns
+   - Can always switch later
+
+4. **Validate after editing:**
+   ```bash
+   # Edit configuration
+   vim .tagex/config.yaml
+
+   # Validate changes
+   tagex validate /path/to/vault
+   ```
+
+5. **Use init --force to reset:**
+   ```bash
+   # If configuration becomes corrupted
+   tagex init /path/to/vault --force
    ```
 
 ## Git Integration
@@ -74,6 +228,9 @@ tagex --help
 Add these patterns to your vault's `.gitignore`:
 
 ```gitignore
+# tagex configuration (TRACK THIS - it's vault-specific)
+# .tagex/
+
 # tagex outputs (optional - decide based on workflow)
 tags.json
 tags.csv
@@ -98,6 +255,8 @@ env/
 # OS files
 .DS_Store
 ```
+
+**Recommendation:** Track `.tagex/` in git to preserve configuration decisions across machines and share with collaborators.
 
 ### Using Git with Tag Operations
 
@@ -134,6 +293,7 @@ git merge tag-cleanup
 
 **Do track:**
 
+- `.tagex/` directory (configuration and synonym mappings)
 - Operation logs (for audit trail)
 - Tag extraction results (for analysis history)
 - Documentation of tag conventions
