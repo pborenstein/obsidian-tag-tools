@@ -3,7 +3,7 @@ Tests for plural normalization utilities.
 """
 
 import pytest
-from tagex.utils.plural_normalizer import (
+from tagex.analysis.plural_normalizer import (
     normalize_plural_forms,
     normalize_compound_plurals,
     get_preferred_form,
@@ -131,12 +131,26 @@ class TestPreferredForm:
         # Should prefer 'book' since it's 10x more common
         assert preferred == 'book'
 
-    def test_still_prefers_plural_with_similar_usage(self):
+    def test_prefers_most_used_with_default_usage_mode(self):
         forms = {'book', 'books'}
         usage_counts = {'book': 10, 'books': 8}  # Similar usage
+        # Default mode is 'usage', so it prefers most-used (book)
         preferred = get_preferred_form(forms, usage_counts)
-        # Should prefer plural since usage is similar
+        assert preferred == 'book'
+
+    def test_prefers_plural_with_plural_mode(self):
+        forms = {'book', 'books'}
+        usage_counts = {'book': 10, 'books': 8}
+        # With preference='plural', always prefer plural form
+        preferred = get_preferred_form(forms, usage_counts, preference='plural')
         assert preferred == 'books'
+
+    def test_prefers_singular_with_singular_mode(self):
+        forms = {'book', 'books'}
+        usage_counts = {'book': 8, 'books': 10}
+        # With preference='singular', always prefer singular form
+        preferred = get_preferred_form(forms, usage_counts, preference='singular')
+        assert preferred == 'book'
 
     def test_empty_forms(self):
         preferred = get_preferred_form(set())

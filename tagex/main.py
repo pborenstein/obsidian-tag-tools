@@ -156,6 +156,273 @@ def delete(vault_path, tags_to_delete, tag_types, dry_run):
 
 @main.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration files')
+def init(vault_path, force):
+    """Initialize tagex configuration files in a vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
+
+    Creates template configuration files:
+    - .tagex-config.yaml: General configuration (plural preference, etc.)
+    - .tagex-synonyms.yaml: Tag synonym definitions
+    - .tagex-README.md: Documentation for the configuration files
+    """
+    from pathlib import Path
+    import shutil
+
+    vault = Path(vault_path)
+
+    # Define file paths
+    config_file = vault / '.tagex-config.yaml'
+    synonyms_file = vault / '.tagex-synonyms.yaml'
+    readme_file = vault / '.tagex-README.md'
+
+    # Check for existing files
+    existing_files = []
+    if config_file.exists():
+        existing_files.append('.tagex-config.yaml')
+    if synonyms_file.exists():
+        existing_files.append('.tagex-synonyms.yaml')
+    if readme_file.exists():
+        existing_files.append('.tagex-README.md')
+
+    if existing_files and not force:
+        print("Configuration files already exist:")
+        for f in existing_files:
+            print(f"  - {f}")
+        print("\nUse --force to overwrite existing files")
+        sys.exit(1)
+
+    # Get the example files from the package
+    package_dir = Path(__file__).parent.parent
+    example_config = package_dir / '.tagex-config.example.yaml'
+    example_synonyms = package_dir / '.tagex-synonyms.example.yaml'
+
+    # Create configuration files
+    files_created = []
+
+    if example_config.exists():
+        shutil.copy(example_config, config_file)
+        files_created.append('.tagex-config.yaml')
+
+    if example_synonyms.exists():
+        shutil.copy(example_synonyms, synonyms_file)
+        files_created.append('.tagex-synonyms.yaml')
+
+    # Create README
+    readme_content = """# Tagex Configuration
+
+This directory contains configuration files for tagex, a tag management tool for Obsidian vaults.
+
+## Configuration Files
+
+### .tagex-config.yaml
+General configuration for tag processing behavior.
+
+Key settings:
+- **plural.preference**: How to choose between singular/plural variants
+  - `usage`: Prefer most-used form (default)
+  - `plural`: Always prefer plural forms
+  - `singular`: Always prefer singular forms
+- **plural.usage_ratio_threshold**: Minimum usage ratio for preference (default: 2.0)
+
+### .tagex-synonyms.yaml
+Defines synonym relationships between tags.
+
+Format:
+```yaml
+canonical-tag:
+  - synonym1
+  - synonym2
+```
+
+When tagex analyzes your vault, it will recognize these relationships and suggest merges.
+
+## Using the Configuration
+
+Configuration is automatically loaded when you run tagex commands on this vault:
+
+```bash
+# Uses vault's configuration
+tagex analyze plurals /path/to/vault
+
+# Override configuration with command-line option
+tagex analyze plurals /path/to/vault --prefer plural
+```
+
+## Validation
+
+To check if your configuration files are valid:
+
+```bash
+tagex validate /path/to/vault
+```
+
+## Documentation
+
+For more information, see:
+- [Main Documentation](https://github.com/yourusername/tagex/docs)
+- [Configuration Guide](https://github.com/yourusername/tagex/docs/CONFIGURATION.md)
+"""
+
+    with open(readme_file, 'w') as f:
+        f.write(readme_content)
+    files_created.append('.tagex-README.md')
+
+    # Print success message
+    print(f"\nInitialized tagex configuration in: {vault_path}")
+    print("\nCreated files:")
+    for f in files_created:
+        print(f"  ✓ {f}")
+
+    print("\nNext steps:")
+    print("  1. Edit .tagex-config.yaml to set your preferences")
+    print("  2. Edit .tagex-synonyms.yaml to define tag synonyms")
+    print("  3. Run: tagex validate " + str(vault_path))
+    print("  4. Run: tagex analyze plurals " + str(vault_path))
+
+
+@main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--strict', is_flag=True, help='Treat warnings as errors')
+def validate(vault_path, strict):
+    """Validate tagex configuration files in a vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory
+
+    Checks:
+    - Configuration file syntax (YAML validity)
+    - Synonym file syntax and structure
+    - Configuration value ranges and types
+    - Tag references (warnings for undefined tags)
+    """
+    from pathlib import Path
+    import yaml
+
+    vault = Path(vault_path)
+
+    # Define file paths
+    config_file = vault / '.tagex-config.yaml'
+    synonyms_file = vault / '.tagex-synonyms.yaml'
+
+    errors = []
+    warnings = []
+
+    print(f"Validating tagex configuration in: {vault_path}\n")
+
+    # Validate config file
+    if config_file.exists():
+        print("Checking .tagex-config.yaml...")
+        try:
+            with open(config_file, 'r') as f:
+                config_data = yaml.safe_load(f)
+
+            if config_data is None:
+                warnings.append(".tagex-config.yaml is empty")
+            else:
+                # Validate plural configuration
+                if 'plural' in config_data:
+                    plural_config = config_data['plural']
+
+                    # Check preference value
+                    if 'preference' in plural_config:
+                        pref = plural_config['preference']
+                        if pref not in ['usage', 'plural', 'singular']:
+                            errors.append(f"Invalid plural.preference: '{pref}' (must be 'usage', 'plural', or 'singular')")
+
+                    # Check usage_ratio_threshold
+                    if 'usage_ratio_threshold' in plural_config:
+                        ratio = plural_config['usage_ratio_threshold']
+                        if not isinstance(ratio, (int, float)):
+                            errors.append(f"Invalid plural.usage_ratio_threshold: must be a number")
+                        elif ratio <= 0:
+                            errors.append(f"Invalid plural.usage_ratio_threshold: must be > 0")
+
+            print("  ✓ YAML syntax valid")
+
+        except yaml.YAMLError as e:
+            errors.append(f"YAML syntax error in .tagex-config.yaml: {e}")
+        except Exception as e:
+            errors.append(f"Error reading .tagex-config.yaml: {e}")
+    else:
+        warnings.append(".tagex-config.yaml not found (using defaults)")
+
+    # Validate synonyms file
+    if synonyms_file.exists():
+        print("Checking .tagex-synonyms.yaml...")
+        try:
+            with open(synonyms_file, 'r') as f:
+                synonyms_data = yaml.safe_load(f)
+
+            if synonyms_data is None:
+                warnings.append(".tagex-synonyms.yaml is empty")
+            elif not isinstance(synonyms_data, dict):
+                errors.append(".tagex-synonyms.yaml must contain a dictionary")
+            else:
+                # Validate structure
+                canonical_tags = set()
+                synonym_tags = set()
+
+                for canonical, synonyms in synonyms_data.items():
+                    if not isinstance(canonical, str):
+                        errors.append(f"Invalid canonical tag (must be string): {canonical}")
+                        continue
+
+                    canonical_tags.add(canonical)
+
+                    if not isinstance(synonyms, list):
+                        errors.append(f"Synonyms for '{canonical}' must be a list")
+                        continue
+
+                    for syn in synonyms:
+                        if not isinstance(syn, str):
+                            errors.append(f"Invalid synonym for '{canonical}' (must be string): {syn}")
+                        elif syn in synonym_tags:
+                            errors.append(f"Duplicate synonym definition: '{syn}' appears multiple times")
+                        else:
+                            synonym_tags.add(syn)
+
+                # Check for conflicts (canonical tag also listed as synonym)
+                conflicts = canonical_tags & synonym_tags
+                if conflicts:
+                    for tag in conflicts:
+                        errors.append(f"Conflict: '{tag}' is both canonical and synonym")
+
+                print(f"  ✓ YAML syntax valid")
+                print(f"  ✓ Found {len(canonical_tags)} canonical tags")
+                print(f"  ✓ Found {len(synonym_tags)} synonym mappings")
+
+        except yaml.YAMLError as e:
+            errors.append(f"YAML syntax error in .tagex-synonyms.yaml: {e}")
+        except Exception as e:
+            errors.append(f"Error reading .tagex-synonyms.yaml: {e}")
+    else:
+        warnings.append(".tagex-synonyms.yaml not found")
+
+    # Print results
+    print()
+    if warnings:
+        print("Warnings:")
+        for w in warnings:
+            print(f"  ⚠ {w}")
+        print()
+
+    if errors:
+        print("Errors:")
+        for e in errors:
+            print(f"  ✗ {e}")
+        print("\nValidation FAILED")
+        sys.exit(1)
+    elif warnings and strict:
+        print("Validation FAILED (strict mode)")
+        sys.exit(1)
+    else:
+        print("✓ Validation PASSED")
+        print("\nConfiguration is valid and ready to use.")
+
+
+@main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--top', '-t', type=int, default=20, help='Number of top tags to show (default: 20)')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
@@ -194,6 +461,191 @@ def stats(vault_path, tag_types, top, format, no_filter):
         sys.exit(1)
 
 
+@main.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
+@click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
+def health(vault_path, tag_types, no_filter):
+    """Generate comprehensive vault health report.
+
+    VAULT_PATH: Path to the Obsidian vault directory
+
+    Runs all analyses and generates a unified report with:
+    - Critical issues requiring immediate attention
+    - Moderate issues for cleanup
+    - Recommended actions prioritized by impact
+    - Overall vault health score
+    """
+    from .core.extractor.core import TagExtractor
+    from .analysis.merge_analyzer import build_tag_stats, suggest_merges
+    from .analysis.plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
+    from .config.plural_config import PluralConfig
+    from .core.extractor.output_formatter import format_as_plugin_json
+    from collections import defaultdict
+    import argparse
+
+    print(f"Analyzing vault health: {vault_path}\n")
+    print("=" * 70)
+
+    filter_tags = not no_filter
+
+    # Extract tags
+    print("\n1. Extracting tags...")
+    extractor = TagExtractor(vault_path, filter_tags=filter_tags, tag_types=tag_types)
+    tag_data_dict = extractor.extract_tags()
+    tag_data = format_as_plugin_json(tag_data_dict)
+    tag_stats = build_tag_stats(tag_data, filter_tags)
+    basic_stats = extractor.get_statistics()
+
+    total_tags = len(tag_stats)
+    total_files = basic_stats['files_processed']
+
+    print(f"   Found {total_tags} unique tags across {total_files} files")
+
+    # Analyze plural variants
+    print("\n2. Analyzing plural/singular variants...")
+    config = PluralConfig.from_vault(vault_path)
+    variant_groups = defaultdict(set)
+
+    for tag in tag_stats.keys():
+        forms = normalize_plural_forms(tag)
+        forms.update(normalize_compound_plurals(tag))
+        usage_counts = {t: tag_stats.get(t, {}).get('count', 0) for t in forms}
+        canonical = get_preferred_form(forms, usage_counts, config.preference.value, config.usage_ratio_threshold)
+        variant_groups[canonical].add(tag)
+
+    plural_groups = {k: v for k, v in variant_groups.items() if len(v) > 1}
+    plural_merges = sum(len(variants) - 1 for variants in plural_groups.values())
+
+    print(f"   Found {len(plural_groups)} plural variant groups")
+    print(f"   Potential merges: {plural_merges}")
+
+    # Analyze merge opportunities
+    print("\n3. Analyzing merge opportunities...")
+    args = argparse.Namespace(no_sklearn=False)
+    merge_suggestions = suggest_merges(tag_stats, min_usage=2, args=args)
+
+    # Count suggestions by type
+    similar_count = len(merge_suggestions.get('similar_names', []))
+    semantic_count = len(merge_suggestions.get('semantic_duplicates', []))
+    overlap_count = len(merge_suggestions.get('high_file_overlap', []))
+    variant_count = len(merge_suggestions.get('variant_patterns', []))
+
+    total_merge_suggestions = similar_count + semantic_count + overlap_count + variant_count
+
+    print(f"   Similar names: {similar_count}")
+    print(f"   Semantic duplicates: {semantic_count}")
+    print(f"   High file overlap: {overlap_count}")
+    print(f"   Variant patterns: {variant_count}")
+
+    # Calculate health metrics
+    print("\n4. Calculating vault health metrics...")
+
+    # Singleton ratio (tags used only once)
+    singletons = sum(1 for stats in tag_stats.values() if stats['count'] == 1)
+    singleton_ratio = singletons / total_tags if total_tags > 0 else 0
+
+    # Tag coverage (files with tags)
+    tagged_files = set()
+    for stats in tag_stats.values():
+        tagged_files.update(stats['files'])
+    tag_coverage = len(tagged_files) / total_files if total_files > 0 else 0
+
+    # Generate health score (0-100)
+    health_score = 100
+    # Deduct for high singleton ratio
+    if singleton_ratio > 0.5:
+        health_score -= 20
+    elif singleton_ratio > 0.3:
+        health_score -= 10
+
+    # Deduct for low tag coverage
+    if tag_coverage < 0.4:
+        health_score -= 20
+    elif tag_coverage < 0.6:
+        health_score -= 10
+
+    # Deduct for cleanup opportunities
+    cleanup_potential = plural_merges + total_merge_suggestions
+    if cleanup_potential > total_tags * 0.3:
+        health_score -= 20
+    elif cleanup_potential > total_tags * 0.15:
+        health_score -= 10
+
+    # Print report
+    print("\n" + "=" * 70)
+    print("VAULT HEALTH REPORT")
+    print("=" * 70)
+
+    # Overall score
+    print(f"\nOVERALL HEALTH SCORE: {health_score}/100")
+    if health_score >= 80:
+        print("Status: Excellent - Well-maintained tag structure")
+    elif health_score >= 60:
+        print("Status: Good - Some cleanup opportunities")
+    elif health_score >= 40:
+        print("Status: Fair - Moderate cleanup needed")
+    else:
+        print("Status: Needs Attention - Significant cleanup recommended")
+
+    # Critical Issues
+    critical_issues = []
+    if singleton_ratio > 0.5:
+        critical_issues.append(f"High singleton ratio ({singleton_ratio:.1%}) - many tags used only once")
+    if tag_coverage < 0.4:
+        critical_issues.append(f"Low tag coverage ({tag_coverage:.1%}) - many files lack tags")
+
+    if critical_issues:
+        print("\nCRITICAL ISSUES (fix first):")
+        for i, issue in enumerate(critical_issues, 1):
+            print(f"  {i}. {issue}")
+
+    # Moderate Issues
+    moderate_issues = []
+    if 0.3 <= singleton_ratio <= 0.5:
+        moderate_issues.append(f"Moderate singleton ratio ({singleton_ratio:.1%})")
+    if plural_merges > 0:
+        moderate_issues.append(f"{plural_merges} plural/singular variants to consolidate")
+    if total_merge_suggestions > 0:
+        moderate_issues.append(f"{total_merge_suggestions} potential tag merges")
+
+    if moderate_issues:
+        print("\nMODERATE ISSUES:")
+        for i, issue in enumerate(moderate_issues, 1):
+            print(f"  {i}. {issue}")
+
+    # Recommended Actions
+    print("\nRECOMMENDED ACTIONS (prioritized by impact):")
+    action_num = 1
+
+    if plural_merges > 5:
+        print(f"  {action_num}. Consolidate plural/singular variants")
+        print(f"     Run: tagex analyze plurals {vault_path}")
+        action_num += 1
+
+    if total_merge_suggestions > 5:
+        print(f"  {action_num}. Review merge suggestions")
+        print(f"     Run: tagex analyze merge {vault_path}")
+        action_num += 1
+
+    if singleton_ratio > 0.3:
+        print(f"  {action_num}. Review singleton tags (used only once)")
+        print(f"     Run: tagex stats {vault_path}")
+        action_num += 1
+
+    if tag_coverage < 0.6:
+        print(f"  {action_num}. Increase tag coverage by tagging more files")
+        print(f"     Currently: {tag_coverage:.1%} of files have tags")
+        action_num += 1
+
+    print("\n" + "=" * 70)
+    print("\nFor detailed analysis, run individual analyze commands:")
+    print(f"  tagex analyze plurals {vault_path}")
+    print(f"  tagex analyze merge {vault_path}")
+    print(f"  tagex analyze quality {vault_path}")
+    print(f"  tagex analyze synonyms {vault_path}")
+
+
 @main.group()
 def analyze():
     """Analyze tag relationships and suggest improvements.
@@ -204,20 +656,30 @@ def analyze():
 
 
 @analyze.command()
-@click.argument('input_file', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--min-pairs', type=int, default=2, help='Minimum pair threshold')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
-def pairs(input_file, min_pairs, no_filter):
+def pairs(input_path, tag_types, min_pairs, no_filter):
     """Analyze tag pair patterns and co-occurrence.
 
-    INPUT_FILE: JSON file containing tag data (from extract command)
+    INPUT_PATH: Vault directory or JSON file containing tag data
     """
-    from .analysis.pair_analyzer import load_tag_data, analyze_tag_relationships, find_tag_clusters
+    from .analysis.pair_analyzer import analyze_tag_relationships, find_tag_clusters
+    from .utils.input_handler import load_or_extract_tags, get_input_type
     from collections import defaultdict
 
     filter_noise = not no_filter
 
-    tag_data = load_tag_data(input_file)
+    # Show which mode we're using
+    input_type = get_input_type(input_path)
+    if input_type == 'vault':
+        print(f"Extracting tags from vault: {input_path}")
+        print(f"Tag types: {tag_types}\n")
+    else:
+        print(f"Loading tags from JSON: {input_path}\n")
+
+    tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     pairs_result, file_to_tags = analyze_tag_relationships(tag_data, min_pairs, filter_noise)
 
     # Top tag pairs
@@ -245,14 +707,15 @@ def pairs(input_file, min_pairs, no_filter):
 
 
 @analyze.command('merge')
-@click.argument('input_file', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--no-sklearn', is_flag=True, help='Force use of pattern-based fallback instead of embeddings')
-def analyze_merge(input_file, min_usage, no_filter, no_sklearn):
+def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
     """Suggest tag merge opportunities.
 
-    INPUT_FILE: JSON file containing tag data (from extract command)
+    INPUT_PATH: Vault directory or JSON file containing tag data
 
     Identifies potential tag merges using multiple approaches:
     - Similar names (string similarity)
@@ -260,12 +723,21 @@ def analyze_merge(input_file, min_usage, no_filter, no_sklearn):
     - High file overlap
     - Variant patterns (plural/singular, tenses)
     """
-    from .analysis.merge_analyzer import load_tag_data, build_tag_stats, suggest_merges, print_merge_suggestions
+    from .analysis.merge_analyzer import build_tag_stats, suggest_merges, print_merge_suggestions
+    from .utils.input_handler import load_or_extract_tags, get_input_type
     import argparse
 
     filter_noise = not no_filter
 
-    tag_data = load_tag_data(input_file)
+    # Show which mode we're using
+    input_type = get_input_type(input_path)
+    if input_type == 'vault':
+        print(f"Extracting tags from vault: {input_path}")
+        print(f"Tag types: {tag_types}\n")
+    else:
+        print(f"Loading tags from JSON: {input_path}\n")
+
+    tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
 
     print(f"Analyzing {len(tag_stats)} tags for merge opportunities...")
@@ -478,27 +950,37 @@ def interpret_vault_health(health, distribution, total_tags):
 
 
 @analyze.command()
-@click.argument('input_file', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
 @click.option('--max-items', type=int, default=10, help='Maximum items to show per section')
-def quality(input_file, no_filter, format, max_items):
+def quality(input_path, tag_types, no_filter, format, max_items):
     """Analyze tag quality (overbroad tags, specificity).
 
-    INPUT_FILE: JSON file containing tag data (from extract command)
+    INPUT_PATH: Vault directory or JSON file containing tag data
 
     Identifies:
     - Overbroad tags (used too generally)
     - Tag specificity scores
     - Refinement suggestions
     """
-    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
+    from .analysis.merge_analyzer import build_tag_stats
     from .analysis.breadth_analyzer import analyze_tag_quality, format_quality_report
+    from .utils.input_handler import load_or_extract_tags, get_input_type
     import json
 
     filter_noise = not no_filter
 
-    tag_data = load_tag_data(input_file)
+    # Show which mode we're using
+    input_type = get_input_type(input_path)
+    if input_type == 'vault':
+        print(f"Extracting tags from vault: {input_path}")
+        print(f"Tag types: {tag_types}\n")
+    else:
+        print(f"Loading tags from JSON: {input_path}\n")
+
+    tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
 
     # Get total files
@@ -521,24 +1003,34 @@ def quality(input_file, no_filter, format, max_items):
 
 
 @analyze.command()
-@click.argument('input_file', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--min-similarity', type=float, default=0.7, help='Minimum context similarity threshold')
 @click.option('--min-shared', type=int, default=3, help='Minimum shared files for co-occurrence')
-def synonyms(input_file, no_filter, min_similarity, min_shared):
+def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared):
     """Detect potential synonym tags.
 
-    INPUT_FILE: JSON file containing tag data (from extract command)
+    INPUT_PATH: Vault directory or JSON file containing tag data
 
     Uses co-occurrence analysis to find tags that appear in similar contexts
     and are likely conceptual equivalents.
     """
-    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
+    from .analysis.merge_analyzer import build_tag_stats
     from .analysis.synonym_analyzer import detect_synonyms_by_context, find_acronym_expansions
+    from .utils.input_handler import load_or_extract_tags, get_input_type
 
     filter_noise = not no_filter
 
-    tag_data = load_tag_data(input_file)
+    # Show which mode we're using
+    input_type = get_input_type(input_path)
+    if input_type == 'vault':
+        print(f"Extracting tags from vault: {input_path}")
+        print(f"Tag types: {tag_types}\n")
+    else:
+        print(f"Loading tags from JSON: {input_path}\n")
+
+    tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
 
     print(f"Analyzing {len(tag_stats)} tags for synonym relationships...")
@@ -578,32 +1070,63 @@ def synonyms(input_file, no_filter, min_similarity, min_shared):
 
 
 @analyze.command()
-@click.argument('input_file', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True))
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
-def plurals(input_file, no_filter):
+@click.option('--prefer', type=click.Choice(['usage', 'plural', 'singular']), help='Override preference mode (default: usage-based or from config)')
+def plurals(input_path, tag_types, no_filter, prefer):
     """Detect singular/plural variants.
 
-    INPUT_FILE: JSON file containing tag data (from extract command)
+    INPUT_PATH: Vault directory or JSON file containing tag data
 
     Uses enhanced plural detection including irregular plurals
     (child/children) and complex patterns (-ies/-y, -ves/-f).
-    Convention: Prefers plural forms as canonical.
+
+    Preference modes:
+    - usage: Prefer most-used form (default)
+    - plural: Always prefer plural forms
+    - singular: Always prefer singular forms
     """
-    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
-    from tagex.utils.plural_normalizer import (
+    from .analysis.merge_analyzer import build_tag_stats
+    from .utils.input_handler import load_or_extract_tags, get_input_type
+    from .config.plural_config import PluralConfig
+    from .analysis.plural_normalizer import (
         normalize_plural_forms,
         normalize_compound_plurals,
         get_preferred_form
     )
     from collections import defaultdict
+    from pathlib import Path
 
     filter_noise = not no_filter
 
-    tag_data = load_tag_data(input_file)
+    # Show which mode we're using
+    input_type = get_input_type(input_path)
+    if input_type == 'vault':
+        print(f"Extracting tags from vault: {input_path}")
+        print(f"Tag types: {tag_types}\n")
+        vault_path = input_path
+    else:
+        print(f"Loading tags from JSON: {input_path}\n")
+        # For JSON input, try to find vault path from config or use current dir
+        vault_path = str(Path.cwd())
+
+    # Load configuration
+    config = PluralConfig.from_vault(vault_path)
+
+    # Override with command-line option if provided
+    preference = prefer if prefer else config.preference.value
+    usage_ratio = config.usage_ratio_threshold
+
+    tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
 
     print(f"Analyzing {len(tag_stats)} tags for plural variants...")
-    print("Convention: Prefers plural forms as canonical\n")
+    print(f"Preference mode: {preference}")
+    if preference == 'usage':
+        print(f"Usage ratio threshold: {usage_ratio}x\n")
+    else:
+        print()
 
     # Group tags by their plural forms
     variant_groups = defaultdict(set)
@@ -613,10 +1136,9 @@ def plurals(input_file, no_filter):
         forms = normalize_plural_forms(tag)
         forms.update(normalize_compound_plurals(tag))
 
-        # Get preferred form (usually plural)
-        # Pass usage counts to help with decision
+        # Get preferred form based on configuration
         usage_counts = {t: tag_stats.get(t, {}).get('count', 0) for t in forms}
-        canonical = get_preferred_form(forms, usage_counts)
+        canonical = get_preferred_form(forms, usage_counts, preference, usage_ratio)
 
         variant_groups[canonical].add(tag)
 
@@ -633,13 +1155,21 @@ def plurals(input_file, no_filter):
             reverse=True
         )
 
+        # Generate suggestion text based on preference mode
+        if preference == 'usage':
+            suggestion_reason = "most-used form"
+        elif preference == 'plural':
+            suggestion_reason = "plural preferred"
+        else:  # singular
+            suggestion_reason = "singular preferred"
+
         for canonical, variants in sorted_groups[:20]:
             print(f"  Group (canonical: {canonical}):")
             for tag in sorted(variants, key=lambda t: tag_stats[t]['count'], reverse=True):
                 count = tag_stats[tag]['count']
                 is_canonical = ' [preferred]' if tag == canonical else ''
                 print(f"    - {tag} ({count} uses){is_canonical}")
-            print(f"    → Suggestion: merge all into '{canonical}' (plural preferred)")
+            print(f"    → Suggestion: merge all into '{canonical}' ({suggestion_reason})")
             print()
     else:
         print("No plural variant groups found.\n")

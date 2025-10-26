@@ -1,0 +1,61 @@
+# Example Configuration for Tagex
+#
+# This file configures how tagex processes tags in your vault.
+#
+# SETUP:
+# 1. Copy this file to your vault root as .tagex-config.yaml
+# 2. Customize the settings for your vault's needs
+# 3. Settings will be automatically loaded by tagex commands
+#
+# All settings are optional and have sensible defaults.
+
+# Plural/Singular Preference
+# Controls how tagex chooses between plural and singular tag variants
+plural:
+  # Preference mode:
+  #   - usage: Prefer the most-used form (default)
+  #   - plural: Always prefer plural forms (books, ideas, projects)
+  #   - singular: Always prefer singular forms (book, idea, project)
+  preference: usage
+
+  # Usage ratio threshold (only applies when preference: usage)
+  # A form must be used at least this many times more than alternatives
+  # to be preferred. Default: 2.0
+  #
+  # Examples:
+  #   - 2.0: "books" (10 uses) beats "book" (4 uses) → 10/4 = 2.5 ratio ✓
+  #   - 2.0: "books" (10 uses) vs "book" (6 uses) → 10/6 = 1.67 ratio ✗
+  #          (ratio too small, falls back to preference mode)
+  usage_ratio_threshold: 2.0
+
+# Future Configuration Options
+# (These are placeholders for future features)
+
+# Tag Filtering
+# filter:
+#   # Minimum tag length to consider valid
+#   min_length: 2
+#
+#   # Maximum tag length to consider valid
+#   max_length: 50
+#
+#   # Patterns to exclude (regex)
+#   exclude_patterns:
+#     - '^temp-'
+#     - '^draft-'
+
+# Similarity Detection
+# similarity:
+#   # Minimum similarity threshold for merge suggestions (0.0-1.0)
+#   threshold: 0.85
+#
+#   # Whether to use TF-IDF embeddings (requires scikit-learn)
+#   use_embeddings: true
+
+# Output Preferences
+# output:
+#   # Default output format (text, json, html)
+#   format: text
+#
+#   # Maximum number of items to show in reports
+#   max_items: 20
