@@ -8,8 +8,13 @@ The `tagex analyze` command provides comprehensive analytical tools for understa
 tagex analyze pairs      ← Tag co-occurrence and clustering analysis
 tagex analyze merge      ← Tag merge suggestion engine with embeddings
 tagex analyze quality    ← Overbroad tag detection and specificity scoring
-tagex analyze synonyms   ← Context-based synonym detection via co-occurrence
+tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers
 tagex analyze plurals    ← Singular/plural variant detection
+
+# New configuration and health commands
+tagex init /vault        ← Initialize .tagex/ configuration directory
+tagex validate /vault    ← Validate configuration files
+tagex health /vault      ← Comprehensive vault health report
 
 See SEMANTIC_ANALYSIS.md for technical documentation on semantic similarity.
 ```
@@ -81,12 +86,18 @@ Legend:
 | Goal | Command |
 |:-----|:--------|
 | Get overall vault health metrics | `tagex stats /vault` |
-| Find singular/plural splits (book/books) | `tagex analyze plurals tags.json` |
-| Find synonyms (python/py, music/audio) | `tagex analyze synonyms tags.json` |
-| Find spelling/morphological variants (writing/writers) | `tagex analyze merge tags.json` |
-| Find tags that are too generic (notes, misc) | `tagex analyze quality tags.json` |
-| Understand which tags appear together | `tagex analyze pairs tags.json` |
+| Get comprehensive health report with all analyses | `tagex health /vault` |
+| Initialize tagex configuration | `tagex init /vault` |
+| Validate configuration files | `tagex validate /vault` |
+| Find singular/plural splits (book/books) | `tagex analyze plurals /vault` |
+| Find semantic synonyms (film/movies, tech/technology) | `tagex analyze synonyms /vault` |
+| Find related tags (co-occurrence patterns) | `tagex analyze synonyms /vault --show-related` |
+| Find spelling/morphological variants (writing/writers) | `tagex analyze merge /vault` |
+| Find tags that are too generic (notes, misc) | `tagex analyze quality /vault` |
+| Understand which tags appear together | `tagex analyze pairs /vault` |
 | Clean up all duplicates systematically | Run all 4: plurals, synonyms, merge, quality |
+
+**Note:** All `analyze` commands now accept either a vault path (auto-extracts tags) or a JSON file (pre-extracted tags).
 
 ---
 
@@ -107,18 +118,25 @@ The analysis scripts expect tag data in JSON format by default.
 
 ### Analysis Workflow
 
-| Analysis Type | Command | Purpose |
-|:--------------|:--------|:---------|
-| **Pair Analysis** | `tagex analyze pairs tags.json` | Find tags that appear together |
-| **Merge Analysis** | `tagex analyze merge tags.json` | Get consolidation suggestions |
-| **Quality Analysis** | `tagex analyze quality tags.json` | Detect overbroad and generic tags |
-| **Synonym Analysis** | `tagex analyze synonyms tags.json` | Find context-based synonym candidates |
-| **Plural Analysis** | `tagex analyze plurals tags.json` | Detect singular/plural variants |
+All analysis commands now support **dual input modes**:
+- **Vault path**: Automatically extracts tags before analysis
+- **JSON file**: Uses pre-extracted tag data
+
+| Analysis Type | Command (Vault) | Command (JSON) | Purpose |
+|:--------------|:----------------|:---------------|:---------|
+| **Pair Analysis** | `tagex analyze pairs /vault` | `tagex analyze pairs tags.json` | Find tags that appear together |
+| **Merge Analysis** | `tagex analyze merge /vault` | `tagex analyze merge tags.json` | Get consolidation suggestions |
+| **Quality Analysis** | `tagex analyze quality /vault` | `tagex analyze quality tags.json` | Detect overbroad and generic tags |
+| **Synonym Analysis** | `tagex analyze synonyms /vault` | `tagex analyze synonyms tags.json` | Find semantic synonym candidates |
+| **Plural Analysis** | `tagex analyze plurals /vault` | `tagex analyze plurals tags.json` | Detect singular/plural variants |
 
 **Common Options:**
 - `--min-pairs N` / `--min-usage N` / `--min-shared N`: Set minimum thresholds
 - `--no-filter`: Include technical noise
 - `--no-sklearn`: Use pattern-based fallback (merge only)
+- `--no-transformers`: Use pattern-based fallback (synonyms only)
+- `--show-related`: Show related tags based on co-occurrence (synonyms only)
+- `--prefer usage|plural|singular`: Override plural preference (plurals only)
 
 ### Expected Output
 
@@ -822,25 +840,25 @@ The quality analyzer helps you:
 
 ## Synonym Analyzer (`synonym_analyzer.py`)
 
-**Function:** Detects tags that mean the same thing but use different words, based on contextual co-occurrence patterns (Jaccard similarity).
+**Function:** Detects tags with similar meanings using semantic embeddings from sentence-transformers. Distinguishes between true synonyms (alternative names for the same concept) and related tags (co-occurring topics).
 
 ### Why This Matters
 
 Synonyms fragment your knowledge graph, splitting conceptually related notes across multiple tags. This silently degrades your vault's usefulness over time:
 
 **Problems solved:**
-- **Fragmented searches:** Looking for "python" misses notes tagged "py"
+- **Fragmented searches:** Looking for "film" misses notes tagged "movies"
 - **Incomplete context:** Related notes scattered across synonym tags
 - **Duplicate effort:** Creating multiple tags for the same concept
 - **Lost connections:** Graph view shows separate clusters that should be connected
 
 **Real impact:**
 - Consolidate "tech" (89 uses) + "technology" (5 uses) = 94 uses under one tag
-- Unite "python" (67) + "py" (23) = 90 uses for better discoverability
-- Merge "ai" + "ml" + "machine-learning" into coherent category
+- Unite "film" (67) + "movies" (23) = 90 uses for better discoverability
+- Merge semantic equivalents: "poem" + "poetry", "mcps" + "mcp"
 - Strengthen tag-based relationships by eliminating semantic duplicates
 
-**Why context-based detection works:** Tags with identical meanings appear with the same other tags. "Python" and "py" both co-occur with {data, jupyter, pandas} because they mean the same thing.
+**Key improvement:** Previous co-occurrence based detection was fundamentally flawed - it suggested "parenting + sons" as synonyms just because they appeared together. The new semantic approach correctly identifies tags that are **alternatives** for the same concept, not just related topics.
 
 ### The Synonym Problem
 
@@ -848,9 +866,9 @@ Tags with different names but equivalent meanings fragment your knowledge graph:
 
 ```
 tech (89 uses) ~ technology (5 uses)
-music (45 uses) ~ audio (12 uses)
-ai (34 uses) ~ artificial-intelligence (3 uses) ~ ml (8 uses)
-python (67 uses) ~ py (23 uses)
+film (45 uses) ~ movies (12 uses)
+poem (34 uses) ~ poetry (8 uses)
+mcps (67 uses) ~ mcp (23 uses)
 ```
 
 These duplicates reduce discoverability and make tag-based searches less effective.
@@ -859,96 +877,119 @@ These duplicates reduce discoverability and make tag-based searches less effecti
 
 | Method | Approach | Strength |
 |:-------|:---------|:---------|
-| **Context Similarity** | Jaccard similarity on co-occurring tags | Identifies functional equivalence |
+| **Semantic Similarity** | Sentence-transformer embeddings on tag names | Identifies true alternatives |
+| **Co-occurrence Filtering** | Excludes pairs that appear together frequently | Filters related topics |
+| **Pattern Matching** | Morphological analysis fallback | Works without transformers |
 | **Acronym Detection** | First-letter matching | Catches common abbreviations |
-| **Transitive Grouping** | Builds synonym groups | Finds multi-way relationships |
 
-### Algorithm: Context-Based Detection
+### Algorithm: Semantic Detection
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ Tag Co-         │───►│ Build            │───►│ Calculate       │
-│ occurrence Data │    │ Context Sets     │    │ Jaccard Scores  │
+│ Tag Names       │───►│ Embed with       │───►│ Calculate       │
+│ (not contexts)  │    │ all-MiniLM-L6-v2 │    │ Cosine Similarity│
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                                 │                        │
                                 ▼                        ▼
                        ┌──────────────────┐    ┌─────────────────┐
-                       │ "python" appears │───►│ Similarity ≥ 0.7│
-                       │ with: {data,     │    │ → Synonyms      │
-                       │ jupyter, pandas} │    │                 │
-                       │ "py" appears     │    │                 │
-                       │ with: {data,     │    │                 │
-                       │ jupyter, pandas} │    │                 │
+                       │ "film" embedding │───►│ Similarity ≥ 0.7│
+                       │ "movies" embed.  │    │ AND co-occur <30%│
+                       │                  │    │ → Synonyms      │
                        └──────────────────┘    └─────────────────┘
 ```
 
-**Jaccard Similarity:**
+**Key difference from old approach:**
+- **Old:** Analyzed which tags appeared **together** (co-occurrence) → found related topics
+- **New:** Analyzes tag **names** for semantic similarity → finds alternative names
+
+**Semantic Similarity:**
 ```
-           |tags that python appears with ∩ tags that py appears with|
-J(A,B) = ───────────────────────────────────────────────────────────
-           |tags that python appears with ∪ tags that py appears with|
+cosine_similarity(embed("film"), embed("movies")) = 0.872
 ```
 
-If python and py appear with the same other tags, they're likely synonyms.
+**Co-occurrence Filter:**
+```
+If film and movies appear together in >30% of files → related topics, not synonyms
+If film and movies rarely appear together → true alternatives (synonyms)
+```
 
 ### Sample Output
 
 ```bash
-$ tagex analyze synonyms tags.json --min-shared 3
+$ tagex analyze synonyms /vault --min-similarity 0.7
 
 === SYNONYM ANALYSIS ===
+Detected using: sentence-transformers (semantic similarity)
 
-CONTEXT-BASED SYNONYMS (Jaccard similarity ≥ 0.70):
+SEMANTIC SYNONYMS (similarity ≥ 0.70, co-occurrence ≤ 30%):
 
   Group 1:
-    python (67 uses) ~ py (23 uses)
-    Context similarity: 0.85
-    Shared context tags: data, jupyter, pandas, visualization, numpy, scikit-learn
-    Suggestion: Merge 'py' → 'python'
+    film (67 uses) ≈ movies (23 uses)
+    Semantic similarity: 0.872
+    Co-occurrence: 8% (appear together in 5/65 files)
+    Suggestion: Merge 'movies' → 'film'
 
   Group 2:
-    ai (34 uses) ~ ml (8 uses) ~ machine-learning (3 uses)
-    Context similarity: 0.78 (ai~ml), 0.72 (ml~machine-learning)
-    Shared context tags: neural-networks, deep-learning, transformers, pytorch
-    Suggestion: Merge 'ai', 'ml' → 'machine-learning'
+    poem (34 uses) ≈ poetry (8 uses)
+    Semantic similarity: 0.849
+    Co-occurrence: 12% (appear together in 3/42 files)
+    Suggestion: Merge 'poetry' → 'poem'
 
   Group 3:
-    music (45 uses) ~ audio (12 uses)
-    Context similarity: 0.71
-    Shared context tags: production, mixing, daw, recording, synthesis
-    Suggestion: Merge 'audio' → 'music'
+    mcps (12 uses) ≈ mcp (45 uses)
+    Semantic similarity: 0.941
+    Co-occurrence: 5% (appear together in 2/57 files)
+    Suggestion: Merge 'mcps' → 'mcp'
 
 
-ACRONYM MATCHES:
+RELATED TAGS (high co-occurrence - NOT synonyms):
+(Use --show-related to display these)
 
-  ai ↔ artificial-intelligence
-    Uses: ai (34), artificial-intelligence (3)
-    First-letter match: TRUE
-    Suggestion: Merge 'artificial-intelligence' → 'ai' (more common)
+  parenting + sons
+    Semantic similarity: 0.45 (not synonyms)
+    Co-occurrence: 78% (related topics, not alternatives)
+    Recommendation: Keep separate - these are related concepts, not duplicates
 
-  ml ↔ machine-learning
-    Uses: ml (8), machine-learning (3)
-    First-letter match: TRUE
-    Suggestion: Already grouped above
+  reddit + rodeo
+    Semantic similarity: 0.23 (not synonyms)
+    Co-occurrence: 12% (coincidental co-occurrence)
+    Recommendation: Keep separate - unrelated tags
 ```
 
 ### User-Defined Synonyms
 
-You can create a `.tagex-synonyms.yaml` file in your vault root to define explicit synonym relationships:
+You can create a `.tagex/synonyms.yaml` file in your vault to define explicit synonym relationships:
 
 ```yaml
-# .tagex-synonyms.yaml
+# .tagex/synonyms.yaml
 
-# Synonym groups (first tag is canonical)
-synonyms:
-  - [neuro, neurodivergent, neurodivergence, neurotype]
-  - [adhd, add, attention-deficit]
-  - [tech, technology, technical]
+# Canonical form as key, synonyms as list values
+python:
+  - py
+  - python3
 
-# Simple preferences (all map to key)
-prefer:
-  python: [py, python3]
-  javascript: [js, ecmascript]
+javascript:
+  - js
+  - ecmascript
+
+neuro:
+  - neurodivergent
+  - neurodivergence
+  - neurotype
+
+tech:
+  - technology
+  - technical
+```
+
+**Initialize configuration:**
+```bash
+# Create .tagex/ directory with template files
+tagex init /vault
+
+# Edit .tagex/synonyms.yaml with your mappings
+# Then validate the configuration
+tagex validate /vault
 ```
 
 **Loading configuration:**
@@ -964,28 +1005,36 @@ synonyms = config.get_synonyms("python")  # Returns {"py", "python3"}
 
 | Command | Description |
 |:--------|:------------|
-| `tagex analyze synonyms tags.json` | Standard synonym detection |
-| `tagex analyze synonyms tags.json --min-shared 5` | Require 5+ shared context tags |
-| `tagex analyze synonyms tags.json --min-similarity 0.8` | Higher similarity threshold |
-| `tagex analyze synonyms tags.json --no-filter` | Include all tags |
+| `tagex analyze synonyms /vault` | Auto-extract and detect synonyms |
+| `tagex analyze synonyms tags.json` | Analyze pre-extracted tags |
+| `tagex analyze synonyms /vault --min-similarity 0.8` | Higher similarity threshold |
+| `tagex analyze synonyms /vault --show-related` | Show related tags (co-occurrence) |
+| `tagex analyze synonyms /vault --no-transformers` | Pattern-based fallback |
+| `tagex analyze synonyms /vault --no-filter` | Include all tags |
 
-### Why Context Similarity Works
+### Why Semantic Similarity Works
 
-Tags that mean the same thing tend to:
+The new approach analyzes tag names directly to understand meaning:
 
-1. **Appear in similar files** with similar topics
-2. **Co-occur with the same other tags** (share context)
-3. **Have high Jaccard overlap** in their co-occurrence sets
+1. **Embeds tag names** using pre-trained language models
+2. **Measures semantic distance** between tag meanings
+3. **Filters co-occurring pairs** to exclude related topics
+4. **Identifies true alternatives** that mean the same thing
 
-This approach catches semantic equivalence that character similarity misses:
-- `music` and `audio` share few characters but appear in identical contexts
-- `python` and `py` are clearly related even without morphological analysis
+This approach correctly identifies synonyms that the old co-occurrence method missed:
+- `film` and `movies` have similar meanings (0.872 similarity)
+- `poem` and `poetry` are semantic equivalents (0.849 similarity)
+- `tech` and `technology` are alternative names (0.885 similarity)
+
+**What it correctly rejects:**
+- `parenting` and `sons` appear together but aren't synonyms (related topics)
+- `reddit` and `rodeo` coincidentally co-occur but are unrelated
 
 ---
 
 ## Plural Analyzer (`plural_normalizer.py`)
 
-**Function:** Detects singular/plural variants of the same tag using irregular plural dictionaries and pattern-based analysis.
+**Function:** Detects singular/plural variants of the same tag using irregular plural dictionaries and pattern-based analysis. Supports configurable preference modes.
 
 ### Why This Matters
 
@@ -1000,25 +1049,30 @@ Singular/plural splits are the most common and insidious form of tag fragmentati
 **Real impact:**
 - Consolidate "parent" (23) + "parents" (8) = 31 uses under consistent form
 - Merge "child" (12) + "children" (8) = 20 uses with proper irregular plural
-- Unite "family" (45) + "families" (3) = 48 uses in singular form
+- Unite "family" (45) + "families" (3) = 48 uses in most-used form
 - Eliminate 12-15 unnecessary variant tags in typical vaults
 
 **Why this matters more than it seems:** Plural splits affect 20-30% of tags in most vaults. They're created unconsciously as you type, making them perfect candidates for automated detection and cleanup.
 
-**Convention note:** This tool prefers plural forms (`books` not `book`) for collection-oriented tagging, but you can override on a case-by-case basis.
+**Preference modes (configurable):**
+- **usage** (default): Prefer the most commonly used form (smart default)
+- **plural**: Always prefer plural forms (`books`, `ideas`, `projects`)
+- **singular**: Always prefer singular forms (`book`, `idea`, `project`)
+
+Configure in `.tagex/config.yaml` or override per-command with `--prefer`.
 
 ### The Plural Problem
 
 Tags split between singular and plural forms dilute their organizational power:
 
 ```
-parent (23 uses) / parents (8 uses)
-child (12 uses) / children (8 uses)
-family (45 uses) / families (3 uses)
-tax-break (5 uses) / tax-breaks (2 uses)
+parent (23 uses) / parents (8 uses)  → Keep 'parent' (usage mode, more common)
+child (12 uses) / children (8 uses)  → Keep 'child' (usage mode, more common)
+family (45 uses) / families (3 uses) → Keep 'family' (usage mode, more common)
+tax-break (5 uses) / tax-breaks (2 uses) → Keep 'tax-break' (usage mode)
 ```
 
-**Convention:** This project **prefers plural forms** (`books` not `book`, `ideas` not `idea`) for consistency with common Obsidian usage patterns.
+**Default behavior:** The analyzer uses **usage-based preference** - it recommends keeping whichever form is used more often. This is the most practical default for real vaults.
 
 ### Detection Methods
 
@@ -1082,64 +1136,68 @@ IRREGULAR_PLURALS = {
 ### Sample Output
 
 ```bash
-$ tagex analyze plurals tags.json
+$ tagex analyze plurals /vault
 
 === PLURAL VARIANT ANALYSIS ===
+Using preference mode: usage (from .tagex/config.yaml)
 
-DETECTED VARIANTS (prefers plural forms):
+DETECTED VARIANTS (usage-based preference):
 
   Irregular Plurals:
     child (12 uses) / children (8 uses)
-      Recommendation: Merge into 'children' (plural form)
-      Command: tagex merge /vault child --into children
+      Recommendation: Merge into 'child' (more common, 60%)
+      Command: tagex merge /vault children --into child
 
     person (5 uses) / people (23 uses)
-      Recommendation: Merge into 'people' (plural form, more common)
+      Recommendation: Merge into 'people' (more common, 82%)
       Command: tagex merge /vault person --into people
 
   Pattern: -ies/-y
     family (45 uses) / families (3 uses)
-      Recommendation: Merge into 'families' (plural preferred)
-      Command: tagex merge /vault family --into families
+      Recommendation: Merge into 'family' (more common, 94%)
+      Command: tagex merge /vault families --into family
 
     category (12 uses) / categories (34 uses)
-      Recommendation: Merge into 'categories' (plural form, more common)
+      Recommendation: Merge into 'categories' (more common, 74%)
       Command: tagex merge /vault category --into categories
 
   Pattern: -ves/-f
     life (8 uses) / lives (3 uses)
-      Recommendation: Merge into 'lives' (plural preferred)
-      Command: tagex merge /vault life --into lives
+      Recommendation: Merge into 'life' (more common, 73%)
+      Command: tagex merge /vault lives --into life
 
   Pattern: -s (regular)
     parent (23 uses) / parents (8 uses)
-      Recommendation: Merge into 'parents' (plural preferred)
-      Command: tagex merge /vault parent --into parents
+      Recommendation: Merge into 'parent' (more common, 74%)
+      Command: tagex merge /vault parents --into parent
 
     book (67 uses) / books (12 uses)
-      Warning: Singular form is more common
-      Recommendation: Merge into 'books' (plural preferred) OR keep separate if intentional
-      Command: tagex merge /vault book --into books
+      Recommendation: Merge into 'book' (more common, 85%)
+      Command: tagex merge /vault books --into book
 
   Compound Words:
     tax-break (5 uses) / tax-breaks (2 uses)
-      Recommendation: Merge into 'tax-breaks' (plural preferred)
-      Command: tagex merge /vault tax-break --into tax-breaks
+      Recommendation: Merge into 'tax-break' (more common, 71%)
+      Command: tagex merge /vault tax-breaks --into tax-break
 
 
 SUMMARY:
   Total variant groups: 12
   Total tags affected: 24
   Potential consolidations: 12 merges
+  Preference mode: usage (configurable in .tagex/config.yaml)
 ```
 
 ### Usage Examples
 
 | Command | Description |
 |:--------|:------------|
-| `tagex analyze plurals tags.json` | Detect all plural variants |
-| `tagex analyze plurals tags.json --min-usage 5` | Only show variants with 5+ total uses |
-| `tagex analyze plurals tags.json --no-filter` | Include technical tags |
+| `tagex analyze plurals /vault` | Auto-extract and analyze with usage-based preference |
+| `tagex analyze plurals tags.json` | Analyze pre-extracted tags |
+| `tagex analyze plurals /vault --prefer plural` | Override to always prefer plurals |
+| `tagex analyze plurals /vault --prefer singular` | Override to always prefer singulars |
+| `tagex analyze plurals /vault --min-usage 5` | Only show variants with 5+ total uses |
+| `tagex analyze plurals /vault --no-filter` | Include technical tags |
 
 ### Compound Word Handling
 
@@ -1153,11 +1211,32 @@ The analyzer handles plurals in compound and nested tags:
 - `child/development` → `children/development`
 - `category/science` → `categories/science`
 
-### Why Prefer Plurals?
+### Preference Mode Configuration
 
-The plural preference convention aligns with common Obsidian usage:
-- Plural tags feel more "collection-oriented" (`books`, `ideas`, `projects`)
-- Matches natural language for categories ("my books", not "my book")
-- Consistency with most user-generated tags in the wild
+Configure plural preference in `.tagex/config.yaml`:
 
-However, this is **not enforced** - it's a recommendation. Users can make case-by-case decisions based on their vault's semantics.
+```yaml
+plural:
+  preference: usage          # usage, plural, or singular
+  usage_ratio_threshold: 2.0 # Minimum ratio to prefer most-used form
+```
+
+**Preference modes:**
+
+| Mode | Behavior | Best For |
+|:-----|:---------|:---------|
+| **usage** | Prefer the most-used form | Most practical (default) |
+| **plural** | Always prefer plurals (`books`, `ideas`) | Collection-oriented tagging |
+| **singular** | Always prefer singulars (`book`, `idea`) | Abstract concepts |
+
+**Why usage mode is the default:**
+- Respects existing tagging patterns in your vault
+- Minimal disruption to established workflows
+- Naturally consolidates under the familiar form
+- No need to decide philosophical plural vs singular debates
+
+**When to use other modes:**
+- **plural**: Starting fresh with collection-oriented system
+- **singular**: Vault focused on abstract concepts and theories
+
+You can always override per-command with `--prefer` flag.

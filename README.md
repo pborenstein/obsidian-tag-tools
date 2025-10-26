@@ -43,6 +43,10 @@ tagex "$HOME/Obsidian/MyVault" rename "work" "project"
 The tool provides comprehensive tag management through multiple commands:
 
 ```bash
+# Configuration management
+tagex init /path/to/vault                    # Initialize .tagex/ configuration
+tagex validate /path/to/vault                # Validate configuration files
+
 # Extract tags from vault
 tagex extract /path/to/vault [options]
 
@@ -58,12 +62,15 @@ tagex delete /path/to/vault tag-to-remove another-tag --dry-run
 # Get comprehensive vault statistics
 tagex stats /path/to/vault --top 15
 
-# Analyze tag relationships and quality
-tagex analyze pairs tags.json
-tagex analyze merge tags.json --min-usage 5
-tagex analyze quality tags.json
-tagex analyze synonyms tags.json --min-shared 3
-tagex analyze plurals tags.json
+# Get comprehensive health report (unified analysis)
+tagex health /path/to/vault
+
+# Analyze tag relationships and quality (accept vault or JSON input)
+tagex analyze pairs /path/to/vault           # Auto-extract and analyze
+tagex analyze merge tags.json --min-usage 5  # Or use pre-extracted JSON
+tagex analyze quality /path/to/vault
+tagex analyze synonyms /path/to/vault --min-similarity 0.7
+tagex analyze plurals /path/to/vault --prefer usage
 
 # Global --tag-types option examples (frontmatter is default)
 tagex extract /path/to/vault  # frontmatter only (default)
@@ -117,12 +124,26 @@ tagex stats /path/to/vault --top 10 --format json
 
 **Workflow:**
 ```bash
-# Extract, analyze, modify, verify
+# Initialize configuration (first time)
+tagex init /vault
+
+# Get vault health overview
+tagex health /vault
+
+# Analyze with auto-extraction (new simplified workflow)
+tagex analyze pairs /vault
+tagex analyze synonyms /vault
+tagex analyze plurals /vault
+
+# Or extract once and analyze multiple times (traditional workflow)
 tagex extract /vault -o tags.json
 tagex analyze pairs tags.json
 tagex analyze merge tags.json
-tagex rename /vault old-name new-name --dry-run && tagex rename /vault old-name new-name
-tagex extract /vault -o updated_tags.json
+
+# Apply changes and verify
+tagex rename /vault old-name new-name --dry-run
+tagex rename /vault old-name new-name
+tagex health /vault  # Check improvements
 ```
 
 ## Features
@@ -152,31 +173,35 @@ tagex extract /vault -o updated_tags.json
 
 ### Advanced Analysis
 
-The `analyze` command provides comprehensive insights into tag usage patterns, relationships, and quality issues:
+The `analyze` command provides comprehensive insights into tag usage patterns, relationships, and quality issues. All analyze commands now support **dual input modes** (vault path or JSON file):
 
 ```bash
 # Analyze tag pairs and co-occurrence
-tagex analyze pairs tags.json
+tagex analyze pairs /path/to/vault           # Auto-extract mode
+tagex analyze pairs tags.json                # Pre-extracted mode
 
 # Detect overbroad and generic tags
-tagex analyze quality tags.json
+tagex analyze quality /path/to/vault
 
-# Find plural/singular variants
-tagex analyze plurals tags.json
+# Find plural/singular variants (with configurable preferences)
+tagex analyze plurals /path/to/vault --prefer usage
 
-# Detect context-based synonyms
-tagex analyze synonyms tags.json --min-shared 3
+# Detect semantic synonyms (using sentence-transformers)
+tagex analyze synonyms /path/to/vault --min-similarity 0.7
+
+# Show related tags (co-occurrence patterns)
+tagex analyze synonyms /path/to/vault --show-related
 
 # Suggest tag merge opportunities
-tagex analyze merge tags.json --min-usage 3
+tagex analyze merge /path/to/vault --min-usage 3
 ```
 
 | Analysis Type | Description |
 |:--------------|:------------|
 | Pairs analysis | Tag co-occurrence and clustering patterns |
 | Quality analysis | Overbroad tag detection and specificity scoring |
-| Plural analysis | Singular/plural variant detection (34 irregular forms + patterns) |
-| Synonym analysis | Context-based synonym detection via Jaccard similarity |
+| Plural analysis | Singular/plural variant detection with configurable preference modes |
+| Synonym analysis | Semantic similarity detection using sentence-transformers (not co-occurrence) |
 | Merge suggestions | Semantic similarity and duplicate detection via TF-IDF embeddings |
 | Hub identification | Detect central tags and natural clusters |
 | Validation | Filter noise and validate tags |
