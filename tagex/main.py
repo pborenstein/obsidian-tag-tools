@@ -156,58 +156,52 @@ def delete(vault_path, tags_to_delete, tag_types, dry_run):
 
 @main.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
-@click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration files')
+@click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration directory')
 def init(vault_path, force):
-    """Initialize tagex configuration files in a vault.
+    """Initialize tagex configuration in a vault.
 
     VAULT_PATH: Path to the Obsidian vault directory
 
-    Creates template configuration files:
-    - .tagex-config.yaml: General configuration (plural preference, etc.)
-    - .tagex-synonyms.yaml: Tag synonym definitions
-    - .tagex-README.md: Documentation for the configuration files
+    Creates .tagex/ directory with:
+    - config.yaml: General configuration (plural preference, etc.)
+    - synonyms.yaml: Tag synonym definitions
+    - README.md: Documentation for the configuration files
     """
     from pathlib import Path
     import shutil
 
     vault = Path(vault_path)
+    tagex_dir = vault / '.tagex'
 
-    # Define file paths
-    config_file = vault / '.tagex-config.yaml'
-    synonyms_file = vault / '.tagex-synonyms.yaml'
-    readme_file = vault / '.tagex-README.md'
-
-    # Check for existing files
-    existing_files = []
-    if config_file.exists():
-        existing_files.append('.tagex-config.yaml')
-    if synonyms_file.exists():
-        existing_files.append('.tagex-synonyms.yaml')
-    if readme_file.exists():
-        existing_files.append('.tagex-README.md')
-
-    if existing_files and not force:
-        print("Configuration files already exist:")
-        for f in existing_files:
-            print(f"  - {f}")
-        print("\nUse --force to overwrite existing files")
+    # Check for existing directory
+    if tagex_dir.exists() and not force:
+        print(f"Configuration directory already exists: {tagex_dir}")
+        print("\nUse --force to overwrite existing configuration")
         sys.exit(1)
 
-    # Get the example files from the package
-    package_dir = Path(__file__).parent.parent
-    example_config = package_dir / '.tagex-config.example.yaml'
-    example_synonyms = package_dir / '.tagex-synonyms.example.yaml'
+    # Get the template files from the package
+    package_dir = Path(__file__).parent
+    template_dir = package_dir / 'templates' / '.tagex'
 
-    # Create configuration files
+    if not template_dir.exists():
+        print(f"Error: Template directory not found: {template_dir}")
+        sys.exit(1)
+
+    # Create .tagex directory
+    tagex_dir.mkdir(exist_ok=True)
+
+    # Copy template files
     files_created = []
 
-    if example_config.exists():
-        shutil.copy(example_config, config_file)
-        files_created.append('.tagex-config.yaml')
+    config_template = template_dir / 'config.yaml'
+    if config_template.exists():
+        shutil.copy(config_template, tagex_dir / 'config.yaml')
+        files_created.append('config.yaml')
 
-    if example_synonyms.exists():
-        shutil.copy(example_synonyms, synonyms_file)
-        files_created.append('.tagex-synonyms.yaml')
+    synonyms_template = template_dir / 'synonyms.yaml'
+    if synonyms_template.exists():
+        shutil.copy(synonyms_template, tagex_dir / 'synonyms.yaml')
+        files_created.append('synonyms.yaml')
 
     # Create README
     readme_content = """# Tagex Configuration
@@ -216,7 +210,7 @@ This directory contains configuration files for tagex, a tag management tool for
 
 ## Configuration Files
 
-### .tagex-config.yaml
+### config.yaml
 General configuration for tag processing behavior.
 
 Key settings:
@@ -226,7 +220,7 @@ Key settings:
   - `singular`: Always prefer singular forms
 - **plural.usage_ratio_threshold**: Minimum usage ratio for preference (default: 2.0)
 
-### .tagex-synonyms.yaml
+### synonyms.yaml
 Defines synonym relationships between tags.
 
 Format:
@@ -265,19 +259,21 @@ For more information, see:
 - [Configuration Guide](https://github.com/yourusername/tagex/docs/CONFIGURATION.md)
 """
 
+    readme_file = tagex_dir / 'README.md'
     with open(readme_file, 'w') as f:
         f.write(readme_content)
-    files_created.append('.tagex-README.md')
+    files_created.append('README.md')
 
     # Print success message
     print(f"\nInitialized tagex configuration in: {vault_path}")
+    print(f"\nCreated directory: .tagex/")
     print("\nCreated files:")
     for f in files_created:
-        print(f"  ✓ {f}")
+        print(f"  ✓ .tagex/{f}")
 
     print("\nNext steps:")
-    print("  1. Edit .tagex-config.yaml to set your preferences")
-    print("  2. Edit .tagex-synonyms.yaml to define tag synonyms")
+    print(f"  1. Edit .tagex/config.yaml to set your preferences")
+    print(f"  2. Edit .tagex/synonyms.yaml to define tag synonyms")
     print("  3. Run: tagex validate " + str(vault_path))
     print("  4. Run: tagex analyze plurals " + str(vault_path))
 
@@ -286,7 +282,7 @@ For more information, see:
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option('--strict', is_flag=True, help='Treat warnings as errors')
 def validate(vault_path, strict):
-    """Validate tagex configuration files in a vault.
+    """Validate tagex configuration in a vault.
 
     VAULT_PATH: Path to the Obsidian vault directory
 
@@ -300,25 +296,35 @@ def validate(vault_path, strict):
     import yaml
 
     vault = Path(vault_path)
-
-    # Define file paths
-    config_file = vault / '.tagex-config.yaml'
-    synonyms_file = vault / '.tagex-synonyms.yaml'
+    tagex_dir = vault / '.tagex'
 
     errors = []
     warnings = []
 
     print(f"Validating tagex configuration in: {vault_path}\n")
 
+    # Check if .tagex directory exists
+    if not tagex_dir.exists():
+        warnings.append(".tagex/ directory not found")
+        print("⚠ No configuration found")
+        print(f"\nRun: tagex init {vault_path}")
+        if strict:
+            sys.exit(1)
+        return
+
+    # Define file paths
+    config_file = tagex_dir / 'config.yaml'
+    synonyms_file = tagex_dir / 'synonyms.yaml'
+
     # Validate config file
     if config_file.exists():
-        print("Checking .tagex-config.yaml...")
+        print("Checking .tagex/config.yaml...")
         try:
             with open(config_file, 'r') as f:
                 config_data = yaml.safe_load(f)
 
             if config_data is None:
-                warnings.append(".tagex-config.yaml is empty")
+                warnings.append("config.yaml is empty")
             else:
                 # Validate plural configuration
                 if 'plural' in config_data:
@@ -341,23 +347,23 @@ def validate(vault_path, strict):
             print("  ✓ YAML syntax valid")
 
         except yaml.YAMLError as e:
-            errors.append(f"YAML syntax error in .tagex-config.yaml: {e}")
+            errors.append(f"YAML syntax error in config.yaml: {e}")
         except Exception as e:
-            errors.append(f"Error reading .tagex-config.yaml: {e}")
+            errors.append(f"Error reading config.yaml: {e}")
     else:
-        warnings.append(".tagex-config.yaml not found (using defaults)")
+        warnings.append("config.yaml not found (using defaults)")
 
     # Validate synonyms file
     if synonyms_file.exists():
-        print("Checking .tagex-synonyms.yaml...")
+        print("Checking .tagex/synonyms.yaml...")
         try:
             with open(synonyms_file, 'r') as f:
                 synonyms_data = yaml.safe_load(f)
 
             if synonyms_data is None:
-                warnings.append(".tagex-synonyms.yaml is empty")
+                warnings.append("synonyms.yaml is empty")
             elif not isinstance(synonyms_data, dict):
-                errors.append(".tagex-synonyms.yaml must contain a dictionary")
+                errors.append("synonyms.yaml must contain a dictionary")
             else:
                 # Validate structure
                 canonical_tags = set()
@@ -393,11 +399,11 @@ def validate(vault_path, strict):
                 print(f"  ✓ Found {len(synonym_tags)} synonym mappings")
 
         except yaml.YAMLError as e:
-            errors.append(f"YAML syntax error in .tagex-synonyms.yaml: {e}")
+            errors.append(f"YAML syntax error in synonyms.yaml: {e}")
         except Exception as e:
-            errors.append(f"Error reading .tagex-synonyms.yaml: {e}")
+            errors.append(f"Error reading synonyms.yaml: {e}")
     else:
-        warnings.append(".tagex-synonyms.yaml not found")
+        warnings.append("synonyms.yaml not found")
 
     # Print results
     print()

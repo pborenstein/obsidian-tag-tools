@@ -1,8 +1,8 @@
 """
 Synonym configuration management for tag quality improvements.
 
-This module manages user-defined synonym mappings stored in .tagex-synonyms.yaml
-in the vault root directory.
+This module manages user-defined synonym mappings stored in .tagex/synonyms.yaml
+in the vault directory.
 """
 
 import yaml
@@ -13,7 +13,7 @@ from typing import Dict, List, Set
 class SynonymConfig:
     """Manage user-defined synonym mappings.
 
-    Synonyms are stored in .tagex-synonyms.yaml in the vault root with format:
+    Synonyms are stored in .tagex/synonyms.yaml in the vault with format:
 
     synonyms:
       - [neuro, neurodivergent, neurodivergence, neurotype]
@@ -34,7 +34,7 @@ class SynonymConfig:
             vault_path: Path to the vault root directory
         """
         self.vault_path = vault_path
-        self.config_file = vault_path / '.tagex-synonyms.yaml'
+        self.config_file = vault_path / '.tagex' / 'synonyms.yaml'
         self.synonym_groups: List[List[str]] = []
         self.canonical_map: Dict[str, str] = {}  # tag → canonical form
 
