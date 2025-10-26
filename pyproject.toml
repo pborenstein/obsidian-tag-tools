@@ -10,6 +10,7 @@ dependencies = [
     "pyyaml>=6.0",
     "click>=8.0",
     "scikit-learn>=1.7.2",
+    "sentence-transformers>=2.2.0",
 ]
 
 [project.optional-dependencies]
@@ -66,6 +67,7 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = [
     "sklearn.*",
+    "sentence_transformers.*",
 ]
 ignore_missing_imports = true
 

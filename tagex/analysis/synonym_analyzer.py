@@ -1,22 +1,25 @@
 """
-Synonym detection for tag quality improvements.
+Tag relationship detection for tag quality improvements.
 
-This module provides co-occurrence based synonym detection to identify tags that
-appear in similar contexts and are likely conceptual equivalents.
+This module provides both:
+1. Co-occurrence based related tag detection (tags that appear together)
+2. Semantic similarity based synonym detection (tags with similar meanings)
 """
 
 from typing import Dict, List, Set, Any
 
 
-def detect_synonyms_by_context(
+def detect_related_tags(
     tag_stats: Dict[str, Dict[str, Any]],
     min_shared_files: int = 3,
     similarity_threshold: float = 0.7,
     min_context_tags: int = 5
 ) -> List[Dict[str, Any]]:
-    """Detect potential synonyms based on shared context.
+    """Detect related tags based on co-occurrence patterns.
 
-    Tags that appear with similar sets of other tags are likely synonyms.
+    Tags that appear with similar sets of other tags are RELATED, not synonyms.
+    For example, "parenting" and "sons" often co-occur because they're related topics.
+
     Uses Jaccard similarity on co-occurring tags.
 
     Args:
@@ -86,15 +89,16 @@ def detect_synonyms_by_context(
     return sorted(synonym_candidates, key=lambda x: x['context_similarity'], reverse=True)
 
 
-def suggest_synonym_groups(
+def suggest_related_groups(
     tag_stats: Dict[str, Dict[str, Any]],
     min_shared_files: int = 3,
     similarity_threshold: float = 0.7,
     min_context_tags: int = 5
 ) -> List[List[str]]:
-    """Suggest groups of tags that are likely synonyms.
+    """Suggest groups of related tags based on co-occurrence.
 
     Uses transitive closure to group tags that share high context similarity.
+    Note: These are RELATED tags (co-occur together), not synonyms.
 
     Args:
         tag_stats: Dictionary mapping tag names to their statistics
@@ -106,7 +110,7 @@ def suggest_synonym_groups(
         List of synonym groups (each group is a list of tags)
     """
     # Get all pairwise candidates
-    candidates = detect_synonyms_by_context(
+    candidates = detect_related_tags(
         tag_stats,
         min_shared_files=min_shared_files,
         similarity_threshold=similarity_threshold,
@@ -212,3 +216,99 @@ def find_acronym_expansions(
                         })
 
     return sorted(acronym_candidates, key=lambda x: x['overlap_ratio'], reverse=True)
+
+
+def detect_synonyms_by_semantics(
+    tag_stats: Dict[str, Dict[str, Any]],
+    similarity_threshold: float = 0.7,
+    model_name: str = 'all-MiniLM-L6-v2',
+    max_co_occurrence_ratio: float = 0.3
+) -> List[Dict[str, Any]]:
+    """Detect true synonyms using semantic embeddings.
+
+    True synonyms have similar MEANINGS but are used as ALTERNATIVES (not together).
+    Examples: "tech" vs "technology", "ml" vs "machine-learning"
+
+    Uses sentence-transformers to embed tag names and find semantic similarity.
+
+    Args:
+        tag_stats: Dictionary mapping tag names to their statistics
+        similarity_threshold: Minimum semantic similarity (0.0-1.0)
+        model_name: Sentence-transformers model to use (default: all-MiniLM-L6-v2)
+        max_co_occurrence_ratio: Maximum ratio of shared files (synonyms shouldn't co-occur much)
+
+    Returns:
+        List of synonym candidates with similarity scores
+
+    Raises:
+        ImportError: If sentence-transformers is not installed
+    """
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+    except ImportError:
+        raise ImportError(
+            "sentence-transformers is required for semantic synonym detection.\n"
+            "Install with: uv add sentence-transformers"
+        )
+
+    # Load the model
+    model = SentenceTransformer(model_name)
+
+    tags = list(tag_stats.keys())
+    if len(tags) < 2:
+        return []
+
+    # Embed all tag names
+    print(f"  Embedding {len(tags)} tag names with {model_name}...")
+    embeddings = model.encode(tags, show_progress_bar=False)
+
+    # Calculate pairwise cosine similarities
+    from sklearn.metrics.pairwise import cosine_similarity
+    similarity_matrix = cosine_similarity(embeddings)
+
+    synonym_candidates = []
+
+    # Find high-similarity pairs
+    for i, tag1 in enumerate(tags):
+        for j in range(i + 1, len(tags)):
+            tag2 = tags[j]
+            similarity = similarity_matrix[i][j]
+
+            if similarity < similarity_threshold:
+                continue
+
+            # Calculate co-occurrence ratio
+            shared_files = len(tag_stats[tag1]['files'] & tag_stats[tag2]['files'])
+            min_files = min(len(tag_stats[tag1]['files']), len(tag_stats[tag2]['files']))
+            co_occurrence_ratio = shared_files / min_files if min_files > 0 else 0
+
+            # True synonyms should NOT co-occur much (they're alternatives)
+            # But allow some co-occurrence for transitional periods
+            if co_occurrence_ratio > max_co_occurrence_ratio:
+                continue
+
+            # Suggest merging into the more commonly used tag
+            if tag_stats[tag1]['count'] > tag_stats[tag2]['count']:
+                suggestion = f"merge {tag2} → {tag1}"
+                target = tag1
+                source = tag2
+            else:
+                suggestion = f"merge {tag1} → {tag2}"
+                target = tag2
+                source = tag1
+
+            synonym_candidates.append({
+                'tag1': tag1,
+                'tag2': tag2,
+                'target': target,
+                'source': source,
+                'semantic_similarity': float(similarity),
+                'co_occurrence_ratio': co_occurrence_ratio,
+                'shared_files': shared_files,
+                'suggestion': suggestion,
+                'tag1_count': tag_stats[tag1]['count'],
+                'tag2_count': tag_stats[tag2]['count']
+            })
+
+    return sorted(synonym_candidates, key=lambda x: x['semantic_similarity'], reverse=True)

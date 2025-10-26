@@ -1012,22 +1012,30 @@ def quality(input_path, tag_types, no_filter, format, max_items):
 @click.argument('input_path', type=click.Path(exists=True))
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
-@click.option('--min-similarity', type=float, default=0.7, help='Minimum context similarity threshold (0.0-1.0)')
-@click.option('--min-shared', type=int, default=3, help='Minimum shared files for co-occurrence')
-@click.option('--min-context-tags', type=int, default=5, help='Minimum shared context tags for meaningful similarity')
-def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared, min_context_tags):
-    """Detect potential synonym tags.
+@click.option('--min-similarity', type=float, default=0.7, help='Minimum semantic similarity threshold (0.0-1.0)')
+@click.option('--show-related', is_flag=True, help='Also show related tags (co-occurrence based)')
+@click.option('--no-transformers', is_flag=True, help='Skip semantic analysis (faster, co-occurrence only)')
+def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_transformers):
+    """Detect synonym tags using semantic similarity.
 
     INPUT_PATH: Vault directory or JSON file containing tag data
 
-    Uses co-occurrence analysis to find tags that appear in similar contexts
-    and are likely conceptual equivalents.
+    Uses sentence-transformers to find tags with similar MEANINGS:
+    - "tech" vs "technology"
+    - "ml" vs "machine-learning"
+    - "python" vs "py"
 
-    Note: Tags with high similarity but few shared context tags are filtered out
-    as they produce false positives. Increase --min-context-tags to be more strict.
+    True synonyms are ALTERNATIVES (not used together), unlike related tags
+    which co-occur frequently.
+
+    Use --show-related to also see related tags based on co-occurrence patterns.
     """
     from .analysis.merge_analyzer import build_tag_stats
-    from .analysis.synonym_analyzer import detect_synonyms_by_context, find_acronym_expansions
+    from .analysis.synonym_analyzer import (
+        detect_synonyms_by_semantics,
+        detect_related_tags,
+        find_acronym_expansions
+    )
     from .utils.input_handler import load_or_extract_tags, get_input_type
 
     filter_noise = not no_filter
@@ -1043,36 +1051,69 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared, min_c
     tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
 
-    print(f"Analyzing {len(tag_stats)} tags for synonym relationships...")
-    print(f"Minimum context similarity: {min_similarity}")
-    print(f"Minimum shared files: {min_shared}")
-    print(f"Minimum shared context tags: {min_context_tags}\n")
+    print(f"Analyzing {len(tag_stats)} tags for synonyms...\n")
 
-    # Context-based synonyms
-    synonym_candidates = detect_synonyms_by_context(
-        tag_stats,
-        min_shared_files=min_shared,
-        similarity_threshold=min_similarity,
-        min_context_tags=min_context_tags
-    )
+    # Semantic synonym detection (the real thing)
+    if not no_transformers:
+        try:
+            print("=" * 70)
+            print("SEMANTIC SYNONYMS (tags with similar meanings)")
+            print("=" * 70)
+            print(f"Minimum similarity: {min_similarity}\n")
 
-    if synonym_candidates:
-        print("SYNONYM CANDIDATES (by context similarity):\n")
-        for candidate in synonym_candidates[:20]:
-            print(f"  {candidate['tag1']} ({candidate['tag1_count']} uses) ~ "
-                  f"{candidate['tag2']} ({candidate['tag2_count']} uses)")
-            print(f"    Context similarity: {candidate['context_similarity']:.2f}")
-            print(f"    Shared context tags: {candidate['shared_context']}")
-            print(f"    Suggestion: {candidate['suggestion']}")
-            print()
-    else:
-        print("No synonym candidates found with current thresholds.\n")
+            synonym_candidates = detect_synonyms_by_semantics(
+                tag_stats,
+                similarity_threshold=min_similarity
+            )
+
+            if synonym_candidates:
+                for candidate in synonym_candidates[:20]:
+                    print(f"  {candidate['tag1']} ({candidate['tag1_count']} uses) ≈ "
+                          f"{candidate['tag2']} ({candidate['tag2_count']} uses)")
+                    print(f"    Semantic similarity: {candidate['semantic_similarity']:.3f}")
+                    print(f"    Co-occurrence ratio: {candidate['co_occurrence_ratio']:.1%}")
+                    print(f"    Suggestion: {candidate['suggestion']}")
+                    print()
+            else:
+                print("No semantic synonyms found with current threshold.\n")
+
+        except ImportError as e:
+            print(f"⚠ {e}")
+            print("\nFalling back to co-occurrence analysis...\n")
+            no_transformers = True
+
+    # Related tags (co-occurrence based) - optional
+    if show_related or no_transformers:
+        print("\n" + "=" * 70)
+        print("RELATED TAGS (co-occurrence patterns)")
+        print("=" * 70)
+        print("Note: These tags appear TOGETHER (related topics), not synonyms\n")
+
+        related_candidates = detect_related_tags(
+            tag_stats,
+            min_shared_files=3,
+            similarity_threshold=0.7,
+            min_context_tags=5
+        )
+
+        if related_candidates:
+            for candidate in related_candidates[:20]:
+                print(f"  {candidate['tag1']} ({candidate['tag1_count']} uses) + "
+                      f"{candidate['tag2']} ({candidate['tag2_count']} uses)")
+                print(f"    Context similarity: {candidate['context_similarity']:.2f}")
+                print(f"    Shared context tags: {candidate['shared_context']}")
+                print()
+        else:
+            print("No related tag patterns found.\n")
 
     # Acronym expansions
     acronym_candidates = find_acronym_expansions(tag_stats)
 
     if acronym_candidates:
-        print("\nACRONYM/EXPANSION CANDIDATES:\n")
+        print("\n" + "=" * 70)
+        print("ACRONYM/EXPANSION CANDIDATES")
+        print("=" * 70)
+        print()
         for candidate in acronym_candidates[:10]:
             print(f"  {candidate['acronym']} ({candidate['acronym_count']} uses) → "
                   f"{candidate['expansion']} ({candidate['expansion_count']} uses)")
