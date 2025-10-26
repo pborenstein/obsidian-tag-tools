@@ -1,0 +1,106 @@
+# Example Synonym Configuration for Tagex
+#
+# This file defines synonym relationships between tags. When tagex processes
+# your vault, it will recognize these relationships and suggest merges.
+#
+# SETUP:
+# 1. Copy this file to your vault root as .tagex-synonyms.yaml
+# 2. Customize the synonyms for your vault's tag structure
+# 3. Run: tagex analyze synonyms /path/to/vault
+#
+# FORMAT:
+# Each entry maps a canonical tag to its synonyms:
+#
+#   canonical-tag:
+#     - synonym1
+#     - synonym2
+#     - synonym3
+#
+# The canonical tag is the preferred form that will be recommended
+# in merge suggestions.
+
+# Technology & Programming
+python:
+  - py
+  - python-lang
+
+javascript:
+  - js
+  - ecmascript
+
+typescript:
+  - ts
+
+machine-learning:
+  - ml
+  - machinelearning
+  - ai-ml
+
+artificial-intelligence:
+  - ai
+  - artificialintelligence
+
+database:
+  - db
+  - databases
+
+# Work & Productivity
+meeting:
+  - meetings
+  - call
+  - calls
+
+todo:
+  - task
+  - tasks
+  - action-item
+
+project:
+  - projects
+  - initiative
+
+# Personal Knowledge
+learning:
+  - study
+  - education
+  - self-improvement
+
+reference:
+  - resources
+  - documentation
+  - docs
+
+# Writing & Content
+article:
+  - articles
+  - post
+  - posts
+  - blog-post
+
+book:
+  - books
+  - reading
+
+video:
+  - videos
+  - youtube
+  - watch
+
+# Example: Domain-specific tags
+# Finance example
+finance:
+  - money
+  - financial
+  - economics
+
+# Health example
+health:
+  - wellness
+  - fitness
+  - wellbeing
+
+# Notes:
+# - Case matters: 'Python' and 'python' are different tags
+# - Hierarchical tags (like 'work/meeting') are separate from flat tags
+# - This file only defines explicit synonyms you've identified
+# - The analyze commands will also find similar tags automatically

@@ -134,39 +134,61 @@ def normalize_compound_plurals(tag: str) -> Set[str]:
     return normalized
 
 
-def get_preferred_form(forms: Set[str], usage_counts: dict = None) -> str:
+def get_preferred_form(forms: Set[str], usage_counts: dict = None,
+                      preference: str = 'usage', usage_ratio_threshold: float = 2.0) -> str:
     """Get the preferred canonical form from a set of variants.
-
-    Convention: Prefer plural forms unless singular is significantly more common.
 
     Args:
         forms: Set of tag variants
         usage_counts: Optional dict mapping tags to usage counts
+        preference: Preference mode ('plural', 'singular', or 'usage')
+        usage_ratio_threshold: Minimum ratio to prefer most-used form (default: 2.0)
 
     Returns:
-        The preferred canonical form (usually plural)
+        The preferred canonical form
+
+    Examples:
+        >>> get_preferred_form({'book', 'books'}, {'book': 10, 'books': 2}, 'usage')
+        'book'  # Most used
+        >>> get_preferred_form({'book', 'books'}, {'book': 5, 'books': 5}, 'plural')
+        'books'  # Plural preferred
+        >>> get_preferred_form({'book', 'books'}, {'book': 5, 'books': 5}, 'singular')
+        'book'  # Singular preferred
     """
     if not forms:
         return ''
 
     forms_list = list(forms)
 
-    # If usage counts provided, strongly prefer the most-used form
-    if usage_counts:
+    # Usage-based preference
+    if preference == 'usage' and usage_counts:
         counted_forms = [f for f in forms_list if f in usage_counts]
         if counted_forms:
             max_usage = max(usage_counts[f] for f in counted_forms)
             most_used = [f for f in counted_forms if usage_counts[f] == max_usage]
 
-            # If one form is significantly more common (5x), use it
+            # Check if one form is significantly more common
             other_forms = [f for f in counted_forms if usage_counts[f] != max_usage]
             if other_forms:
                 max_other = max(usage_counts[f] for f in other_forms)
-                if max_usage >= max_other * 5:
+                if max_usage >= max_other * usage_ratio_threshold:
                     return most_used[0]
 
-    # Otherwise prefer plural form
-    # Sort by: 1) plural preference, 2) length (longer usually plural), 3) alphabetical
+            # If tied or close, prefer the most-used form
+            if len(most_used) == 1:
+                return most_used[0]
+            # If multiple forms have same max usage, fall through to plural/singular logic
+            forms_list = most_used
+
+    # Singular preference
+    if preference == 'singular':
+        return min(forms_list, key=lambda t: (
+            t.lower().endswith('s') or t.lower() in IRREGULAR_PLURALS.values(),  # Prefer non-plurals
+            -len(t),  # Shorter forms (usually singular)
+            t.lower()  # Alphabetical for tiebreaker
+        ))
+
+    # Plural preference (default)
     return max(forms_list, key=lambda t: (
         t.lower().endswith('s') or t.lower() in IRREGULAR_PLURALS.values(),  # Prefer plurals
         len(t),  # Longer forms (often plurals)

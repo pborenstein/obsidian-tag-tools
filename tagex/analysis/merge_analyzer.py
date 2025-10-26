@@ -136,7 +136,7 @@ def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
     Returns:
         Dictionary mapping base forms to lists of variant tags
     """
-    from tagex.utils.plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
+    from tagex.analysis.plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
 
     variants: Dict[str, List[str]] = defaultdict(list)
 
@@ -240,7 +240,8 @@ def find_semantic_duplicates_embedding(
         return groups
         
     except Exception as e:
-        print(f"Warning: embedding analysis failed ({e}), falling back to pattern matching")
+        print(f"\nWarning: TF-IDF embedding analysis failed ({e})")
+        print("Falling back to pattern-based detection\n")
         return find_semantic_duplicates_pattern(tag_stats)
 
 
@@ -405,9 +406,17 @@ def suggest_merges(
     
     # Find semantic duplicates using embeddings or fallback
     if args and args.no_sklearn:
-        print("Using pattern-based fallback (--no-sklearn specified)")
+        print("\nSemantic analysis mode: Pattern-based (faster, less accurate)")
+        print("Tip: Remove --no-sklearn for TF-IDF embeddings (slower, more accurate)\n")
+        suggestions['semantic_duplicates'] = find_semantic_duplicates_pattern(filtered_tags)
+    elif not SKLEARN_AVAILABLE:
+        print("\nSemantic analysis mode: Pattern-based fallback (scikit-learn not available)")
+        print("Tip: Install scikit-learn for better results:")
+        print("     uv add scikit-learn\n")
         suggestions['semantic_duplicates'] = find_semantic_duplicates_pattern(filtered_tags)
     else:
+        print("\nSemantic analysis mode: TF-IDF embeddings (slower, more accurate)")
+        print("Tip: Use --no-sklearn for faster pattern-based mode\n")
         suggestions['semantic_duplicates'] = find_semantic_duplicates_embedding(filtered_tags)
     
     # Find overlapping tags
