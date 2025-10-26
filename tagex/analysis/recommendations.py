@@ -1,0 +1,361 @@
+"""
+Unified recommendations system for tag operations.
+
+This module consolidates recommendations from all analyzers into a single,
+actionable operations file that can be reviewed and applied.
+"""
+
+from typing import Dict, List, Any, Set
+from collections import defaultdict
+from datetime import datetime
+import yaml
+
+from .synonym_analyzer import detect_synonyms_by_semantics, find_acronym_expansions
+from .plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
+from .merge_analyzer import suggest_merges
+from ..config.plural_config import PluralConfig
+
+
+class Operation:
+    """Represents a single tag operation recommendation."""
+
+    def __init__(
+        self,
+        operation_type: str,
+        source_tags: List[str],
+        target_tag: str,
+        reason: str,
+        enabled: bool = True,
+        confidence: float = 0.0,
+        source_analyzer: str = "",
+        metadata: Dict[str, Any] = None
+    ):
+        self.operation_type = operation_type
+        self.source_tags = source_tags
+        self.target_tag = target_tag
+        self.reason = reason
+        self.enabled = enabled
+        self.confidence = confidence
+        self.source_analyzer = source_analyzer
+        self.metadata = metadata or {}
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert operation to dictionary for YAML export."""
+        return {
+            'type': self.operation_type,
+            'source': self.source_tags,
+            'target': self.target_tag,
+            'reason': self.reason,
+            'enabled': self.enabled,
+            'metadata': {
+                'confidence': round(self.confidence, 3),
+                'source_analyzer': self.source_analyzer,
+                **self.metadata
+            }
+        }
+
+
+class RecommendationsEngine:
+    """Runs all analyzers and consolidates recommendations."""
+
+    def __init__(
+        self,
+        tag_stats: Dict[str, Dict[str, Any]],
+        vault_path: str = None,
+        analyzers: List[str] = None
+    ):
+        self.tag_stats = tag_stats
+        self.vault_path = vault_path
+        self.analyzers = analyzers or ['synonyms', 'plurals', 'merge']
+        self.operations: List[Operation] = []
+        self.config = PluralConfig.from_vault(vault_path) if vault_path else PluralConfig()
+
+    def run_all_analyzers(self, min_similarity: float = 0.7, no_transformers: bool = False) -> List[Operation]:
+        """Run all enabled analyzers and collect operations."""
+        self.operations = []
+
+        # Run analyzers in priority order
+        if 'synonyms' in self.analyzers and not no_transformers:
+            self._run_synonyms_analyzer(min_similarity)
+
+        if 'plurals' in self.analyzers:
+            self._run_plurals_analyzer()
+
+        if 'merge' in self.analyzers:
+            self._run_merge_analyzer()
+
+        # Deduplicate operations
+        self.operations = self._deduplicate_operations(self.operations)
+
+        return self.operations
+
+    def _run_synonyms_analyzer(self, min_similarity: float = 0.7):
+        """Run semantic synonym detection."""
+        print(f"  Running synonym analyzer (min_similarity={min_similarity})...")
+
+        try:
+            # Semantic synonyms
+            synonym_candidates = detect_synonyms_by_semantics(
+                self.tag_stats,
+                similarity_threshold=min_similarity
+            )
+
+            for candidate in synonym_candidates:
+                # Only include the source tag (not both)
+                source = candidate['source']
+                target = candidate['target']
+
+                operation = Operation(
+                    operation_type='merge',
+                    source_tags=[source],
+                    target_tag=target,
+                    reason=f"Semantic synonyms (similarity: {candidate['semantic_similarity']:.3f})",
+                    enabled=True,
+                    confidence=candidate['semantic_similarity'],
+                    source_analyzer='synonyms',
+                    metadata={
+                        'co_occurrence_ratio': round(candidate['co_occurrence_ratio'], 3),
+                        'shared_files': candidate['shared_files']
+                    }
+                )
+                self.operations.append(operation)
+
+            # Acronym expansions
+            acronym_candidates = find_acronym_expansions(self.tag_stats)
+
+            for candidate in acronym_candidates[:10]:  # Limit to top 10
+                operation = Operation(
+                    operation_type='merge',
+                    source_tags=[candidate['acronym']],
+                    target_tag=candidate['expansion'],
+                    reason=f"Acronym expansion (overlap: {candidate['overlap_ratio']:.1%})",
+                    enabled=True,
+                    confidence=candidate['overlap_ratio'],
+                    source_analyzer='synonyms',
+                    metadata={
+                        'shared_files': candidate['shared_files'],
+                        'acronym_count': candidate['acronym_count'],
+                        'expansion_count': candidate['expansion_count']
+                    }
+                )
+                self.operations.append(operation)
+
+        except ImportError:
+            print("  ⚠ sentence-transformers not available, skipping synonym analysis")
+
+    def _run_plurals_analyzer(self):
+        """Run plural/singular detection."""
+        print("  Running plural analyzer...")
+
+        variant_groups = defaultdict(set)
+
+        for tag in self.tag_stats.keys():
+            # Get all normalized forms
+            forms = normalize_plural_forms(tag)
+            forms.update(normalize_compound_plurals(tag))
+
+            # Get preferred form based on configuration
+            usage_counts = {t: self.tag_stats.get(t, {}).get('count', 0) for t in forms}
+            canonical = get_preferred_form(
+                forms,
+                usage_counts,
+                self.config.preference.value,
+                self.config.usage_ratio_threshold
+            )
+
+            variant_groups[canonical].add(tag)
+
+        # Filter to only groups with multiple variants
+        variant_groups = {k: v for k, v in variant_groups.items() if len(v) > 1}
+
+        # Generate operations
+        for canonical, variants in variant_groups.items():
+            # Calculate total usage
+            total_usage = sum(self.tag_stats[t]['count'] for t in variants)
+            canonical_usage = self.tag_stats[canonical]['count']
+
+            # Remove canonical from sources
+            sources = [v for v in variants if v != canonical]
+
+            if sources:  # Only add if there are sources to merge
+                # Determine reason based on preference mode
+                if self.config.preference.value == 'usage':
+                    reason = f"Plural variant (most-used: {canonical_usage}/{total_usage} uses)"
+                elif self.config.preference.value == 'plural':
+                    reason = "Plural variant (plural preferred)"
+                else:
+                    reason = "Plural variant (singular preferred)"
+
+                operation = Operation(
+                    operation_type='merge',
+                    source_tags=sources,
+                    target_tag=canonical,
+                    reason=reason,
+                    enabled=True,
+                    confidence=canonical_usage / total_usage if total_usage > 0 else 0.5,
+                    source_analyzer='plurals',
+                    metadata={
+                        'total_usage': total_usage,
+                        'canonical_usage': canonical_usage,
+                        'preference_mode': self.config.preference.value
+                    }
+                )
+                self.operations.append(operation)
+
+    def _run_merge_analyzer(self):
+        """Run TF-IDF based merge suggestions."""
+        print("  Running merge analyzer...")
+
+        import argparse
+        args = argparse.Namespace(no_sklearn=False)
+
+        suggestions = suggest_merges(self.tag_stats, min_usage=2, args=args)
+
+        # Process each category of suggestions
+        categories = [
+            ('similar_names', 'Similar names'),
+            ('semantic_duplicates', 'Semantic duplicates (TF-IDF)'),
+            ('high_file_overlap', 'High file overlap'),
+            ('variant_patterns', 'Variant patterns')
+        ]
+
+        for category_key, category_name in categories:
+            for suggestion in suggestions.get(category_key, []):
+                # Extract tags and scores
+                tags = suggestion.get('tags', [])
+                score = suggestion.get('similarity', suggestion.get('overlap', 0))
+
+                if len(tags) >= 2:
+                    # Use most-used tag as target
+                    tags_with_counts = [(t, self.tag_stats[t]['count']) for t in tags]
+                    tags_with_counts.sort(key=lambda x: x[1], reverse=True)
+
+                    target = tags_with_counts[0][0]
+                    sources = [t for t, _ in tags_with_counts[1:]]
+
+                    operation = Operation(
+                        operation_type='merge',
+                        source_tags=sources,
+                        target_tag=target,
+                        reason=f"{category_name} (score: {score:.3f})",
+                        enabled=True,
+                        confidence=score,
+                        source_analyzer='merge',
+                        metadata={
+                            'category': category_key,
+                            'all_tags': tags
+                        }
+                    )
+                    self.operations.append(operation)
+
+    def _deduplicate_operations(self, operations: List[Operation]) -> List[Operation]:
+        """Remove duplicate operations, keeping highest confidence version."""
+        # Group by (source_tags, target_tag) key
+        groups: Dict[tuple, List[Operation]] = defaultdict(list)
+
+        for op in operations:
+            # Create a normalized key
+            source_key = tuple(sorted(op.source_tags))
+            key = (source_key, op.target_tag)
+            groups[key].append(op)
+
+        # Keep highest confidence operation from each group
+        deduplicated = []
+        for key, group_ops in groups.items():
+            # Sort by confidence descending
+            group_ops.sort(key=lambda x: x.confidence, reverse=True)
+            best_op = group_ops[0]
+
+            # If multiple analyzers suggested the same operation, note that
+            if len(group_ops) > 1:
+                analyzers = [op.source_analyzer for op in group_ops]
+                best_op.metadata['also_suggested_by'] = list(set(analyzers) - {best_op.source_analyzer})
+
+            deduplicated.append(best_op)
+
+        return deduplicated
+
+    def export_to_yaml(self, output_path: str = None) -> str:
+        """Export operations to YAML format."""
+        # Generate header comment
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        analyzers_run = ", ".join(self.analyzers)
+
+        header_lines = [
+            "# Tag Operations Plan",
+            f"# Generated: {timestamp}",
+            f"# Analyzers: {analyzers_run}",
+            "#",
+            "# Edit this file to customize operations:",
+            "# - Set enabled: false to skip an operation",
+            "# - Modify source/target tags as needed",
+            "# - Delete operations you don't want",
+            "# - Reorder operations (they execute top-to-bottom)",
+            "#",
+            "# Preview with: tagex apply <this-file>",
+            "# Apply with:   tagex apply <this-file> --execute",
+            ""
+        ]
+
+        # Build operations data
+        operations_data = {
+            'operations': [op.to_dict() for op in self.operations]
+        }
+
+        # Convert to YAML
+        yaml_content = yaml.dump(
+            operations_data,
+            default_flow_style=False,
+            sort_keys=False,
+            allow_unicode=True
+        )
+
+        # Combine header and YAML
+        full_content = "\n".join(header_lines) + yaml_content
+
+        # Write to file if path provided
+        if output_path:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(full_content)
+            print(f"\nOperations exported to: {output_path}")
+
+        return full_content
+
+    def print_summary(self):
+        """Print summary of recommendations."""
+        if not self.operations:
+            print("\nNo recommendations found.")
+            return
+
+        print(f"\n{'='*70}")
+        print(f"RECOMMENDATIONS SUMMARY")
+        print(f"{'='*70}")
+        print(f"\nTotal operations: {len(self.operations)}")
+
+        # Group by analyzer
+        by_analyzer = defaultdict(int)
+        for op in self.operations:
+            by_analyzer[op.source_analyzer] += 1
+
+        print("\nBy analyzer:")
+        for analyzer, count in sorted(by_analyzer.items()):
+            print(f"  {analyzer}: {count}")
+
+        # Group by type
+        by_type = defaultdict(int)
+        for op in self.operations:
+            by_type[op.operation_type] += 1
+
+        print("\nBy operation type:")
+        for op_type, count in sorted(by_type.items()):
+            print(f"  {op_type}: {count}")
+
+        # Show top recommendations
+        print(f"\nTop 10 recommendations (by confidence):")
+        sorted_ops = sorted(self.operations, key=lambda x: x.confidence, reverse=True)[:10]
+
+        for i, op in enumerate(sorted_ops, 1):
+            sources_str = ", ".join(op.source_tags)
+            print(f"\n  {i}. [{op.source_analyzer}] {sources_str} → {op.target_tag}")
+            print(f"     {op.reason}")
+            print(f"     Confidence: {op.confidence:.3f}")

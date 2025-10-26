@@ -5,13 +5,19 @@
 The `tagex analyze` command provides comprehensive analytical tools for understanding tag usage patterns, identifying consolidation opportunities, and improving tag quality across your Obsidian vault.
 
 ```
+# Unified recommendations workflow (RECOMMENDED)
+tagex analyze recommendations /vault --export ops.yaml  ← Consolidate all analyzer suggestions
+tagex apply ops.yaml                                    ← Preview changes (safe default)
+tagex apply ops.yaml --execute                          ← Apply changes (explicit flag required)
+
+# Individual analyzers
 tagex analyze pairs      ← Tag co-occurrence and clustering analysis
 tagex analyze merge      ← Tag merge suggestion engine with embeddings
 tagex analyze quality    ← Overbroad tag detection and specificity scoring
 tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers
 tagex analyze plurals    ← Singular/plural variant detection
 
-# New configuration and health commands
+# Configuration and health commands
 tagex init /vault        ← Initialize .tagex/ configuration directory
 tagex validate /vault    ← Validate configuration files
 tagex health /vault      ← Comprehensive vault health report
@@ -85,6 +91,7 @@ Legend:
 
 | Goal | Command |
 |:-----|:--------|
+| **Get unified recommendations and apply them** | **`tagex analyze recommendations /vault --export ops.yaml`** |
 | Get overall vault health metrics | `tagex stats /vault` |
 | Get comprehensive health report with all analyses | `tagex health /vault` |
 | Initialize tagex configuration | `tagex init /vault` |
@@ -95,7 +102,7 @@ Legend:
 | Find spelling/morphological variants (writing/writers) | `tagex analyze merge /vault` |
 | Find tags that are too generic (notes, misc) | `tagex analyze quality /vault` |
 | Understand which tags appear together | `tagex analyze pairs /vault` |
-| Clean up all duplicates systematically | Run all 4: plurals, synonyms, merge, quality |
+| Clean up all duplicates systematically | Use `recommendations` command or run all 4: plurals, synonyms, merge, quality |
 
 **Note:** All `analyze` commands now accept either a vault path (auto-extracts tags) or a JSON file (pre-extracted tags).
 
@@ -1240,3 +1247,195 @@ plural:
 - **singular**: Vault focused on abstract concepts and theories
 
 You can always override per-command with `--prefer` flag.
+
+---
+
+## Unified Recommendations System
+
+### Overview
+
+The `recommendations` command consolidates suggestions from all analyzers into a single editable YAML operations file, streamlining the tag cleanup workflow.
+
+**Why use this instead of individual analyzers?**
+- Run all analyzers in one command
+- Get deduplicated recommendations
+- Edit and enable/disable operations before applying
+- Preview changes safely (dry-run by default)
+- Apply multiple operations in sequence automatically
+
+### Usage
+
+```bash
+# Generate recommendations from all analyzers
+tagex analyze recommendations /vault --export operations.yaml
+
+# Run specific analyzers only
+tagex analyze recommendations /vault --export ops.yaml --analyzers plurals,synonyms
+
+# Skip semantic analysis (faster, no sentence-transformers required)
+tagex analyze recommendations /vault --export ops.yaml --no-transformers
+
+# Adjust similarity thresholds
+tagex analyze recommendations /vault --export ops.yaml --min-similarity 0.8
+```
+
+### Operations File Format
+
+The generated YAML file is fully editable:
+
+```yaml
+# Tag Operations Plan
+# Generated: 2025-10-26 09:35:52
+# Analyzers: synonyms, plurals, merge
+#
+# Edit this file to customize operations:
+# - Set enabled: false to skip an operation
+# - Modify source/target tags as needed
+# - Delete operations you don't want
+# - Reorder operations (they execute top-to-bottom)
+#
+# Preview with: tagex apply <this-file>
+# Apply with:   tagex apply <this-file> --execute
+
+operations:
+- type: merge
+  source:
+  - machine-learning
+  - ml
+  target: machine-learning
+  reason: 'Semantic synonyms (similarity: 0.891)'
+  enabled: true
+  metadata:
+    confidence: 0.891
+    source_analyzer: synonyms
+    co_occurrence_ratio: 0.15
+
+- type: merge
+  source:
+  - book
+  target: books
+  reason: 'Plural variant (most-used: 23/25 uses)'
+  enabled: true
+  metadata:
+    confidence: 0.92
+    source_analyzer: plurals
+    total_usage: 25
+```
+
+### Applying Operations
+
+```bash
+# Preview changes (default - safe, no modifications)
+tagex apply operations.yaml
+
+# Apply changes (requires explicit --execute flag)
+tagex apply operations.yaml --execute
+
+# Specify vault if different from working directory
+tagex apply operations.yaml --vault-path /path/to/vault --execute
+
+# Process specific tag types
+tagex apply operations.yaml --tag-types both --execute
+```
+
+### Safety Features
+
+1. **Preview mode by default**: No `--execute` flag = no file modifications
+2. **Explicit execution**: Must use `--execute` to actually apply changes
+3. **Editable recommendations**: Review, modify, enable/disable before applying
+4. **Deduplication**: Multiple analyzers suggesting the same merge = single operation
+5. **Confidence scores**: Make informed decisions about which operations to apply
+6. **Metadata tracking**: See which analyzer suggested each operation
+7. **Operation logs**: All modifications are logged for audit trail
+
+### Workflow Example
+
+```bash
+# 1. Initialize configuration (first time)
+tagex init /vault
+
+# 2. Generate recommendations
+tagex analyze recommendations /vault --export ops.yaml
+
+# Output:
+# Analyzing 450 tags for improvement opportunities...
+# Enabled analyzers: synonyms, plurals, merge
+#
+#   Running synonym analyzer...
+#   Running plural analyzer...
+#   Running merge analyzer...
+#
+# RECOMMENDATIONS SUMMARY
+# Total operations: 23
+# By analyzer:
+#   synonyms: 8
+#   plurals: 12
+#   merge: 3
+
+# 3. Review and edit ops.yaml
+# - Disable operations you don't want (enabled: false)
+# - Modify source/target tags
+# - Delete operations
+# - Reorder operations
+
+# 4. Preview changes
+tagex apply ops.yaml
+
+# 5. Apply changes
+tagex apply ops.yaml --execute
+
+# 6. Verify improvements
+tagex health /vault
+```
+
+### Command Options
+
+**`tagex analyze recommendations` options:**
+
+| Option | Description | Default |
+|:-------|:------------|:--------|
+| `--export PATH` | Export operations to YAML file | None (print to stdout) |
+| `--analyzers TEXT` | Comma-separated list of analyzers | `synonyms,plurals,merge` |
+| `--min-similarity FLOAT` | Minimum semantic similarity (0.0-1.0) | `0.7` |
+| `--no-transformers` | Skip semantic analysis (faster) | False |
+| `--tag-types` | Tag types to process | `frontmatter` |
+| `--no-filter` | Include all raw tags | False |
+
+**`tagex apply` options:**
+
+| Option | Description | Default |
+|:-------|:------------|:--------|
+| `--execute` | **REQUIRED** to actually apply changes | False (preview mode) |
+| `--vault-path PATH` | Vault path if different from working directory | Current directory |
+| `--tag-types` | Tag types to process | `frontmatter` |
+
+### Benefits
+
+1. **Efficiency**: Run all analyzers once, get consolidated recommendations
+2. **Reviewability**: See all changes before applying in a single editable file
+3. **Flexibility**: Enable/disable individual operations, reorder, modify
+4. **Safety**: Preview mode by default, explicit flag required to modify files
+5. **Traceability**: Operation logs track all modifications
+6. **Automation**: Apply multiple operations in sequence automatically
+
+### Comparison to Individual Analyzers
+
+**Traditional workflow:**
+```bash
+tagex analyze synonyms /vault     # Review output
+tagex analyze plurals /vault      # Review output
+tagex analyze merge /vault        # Review output
+# Manually run merge commands one by one
+tagex merge /vault tag1 tag2 --into target1
+tagex merge /vault tag3 tag4 --into target2
+# ...many more commands...
+```
+
+**Unified recommendations workflow:**
+```bash
+tagex analyze recommendations /vault --export ops.yaml  # All analyzers
+# Edit ops.yaml once
+tagex apply ops.yaml --execute                         # Apply all at once
+```
+
+The recommendations system is the **recommended approach** for systematic tag cleanup across your vault.

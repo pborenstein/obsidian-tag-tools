@@ -13,7 +13,8 @@ tagex is a command-line tool for managing tags across entire Obsidian vaults. It
 - Rename, merge, and delete tags across entire vaults
 - Generate vault health metrics and statistics
 - Detect semantic similarities for tag consolidation
-- Safe operations with preview and logging
+- Unified recommendations system for streamlined tag cleanup
+- Safe operations with preview mode by default and comprehensive logging
 
 ## Quick Start
 
@@ -71,6 +72,11 @@ tagex analyze merge tags.json --min-usage 5  # Or use pre-extracted JSON
 tagex analyze quality /path/to/vault
 tagex analyze synonyms /path/to/vault --min-similarity 0.7
 tagex analyze plurals /path/to/vault --prefer usage
+
+# Unified recommendations workflow (consolidates all analyzers)
+tagex analyze recommendations /path/to/vault --export operations.yaml
+tagex apply operations.yaml                  # Preview changes (safe default)
+tagex apply operations.yaml --execute        # Apply changes (requires explicit flag)
 
 # Global --tag-types option examples (frontmatter is default)
 tagex extract /path/to/vault  # frontmatter only (default)
@@ -130,20 +136,27 @@ tagex init /vault
 # Get vault health overview
 tagex health /vault
 
-# Analyze with auto-extraction (new simplified workflow)
+# Generate unified recommendations (recommended workflow)
+tagex analyze recommendations /vault --export operations.yaml
+
+# Review and edit operations.yaml, then preview
+tagex apply operations.yaml
+
+# Apply changes (requires explicit --execute flag)
+tagex apply operations.yaml --execute
+
+# Verify improvements
+tagex health /vault
+
+# Alternative: Run individual analyzers
 tagex analyze pairs /vault
 tagex analyze synonyms /vault
 tagex analyze plurals /vault
 
-# Or extract once and analyze multiple times (traditional workflow)
+# Traditional workflow: extract once and analyze multiple times
 tagex extract /vault -o tags.json
 tagex analyze pairs tags.json
 tagex analyze merge tags.json
-
-# Apply changes and verify
-tagex rename /vault old-name new-name --dry-run
-tagex rename /vault old-name new-name
-tagex health /vault  # Check improvements
 ```
 
 ## Features
@@ -176,6 +189,10 @@ tagex health /vault  # Check improvements
 The `analyze` command provides comprehensive insights into tag usage patterns, relationships, and quality issues. All analyze commands now support **dual input modes** (vault path or JSON file):
 
 ```bash
+# Unified recommendations (recommended - consolidates all analyzers)
+tagex analyze recommendations /path/to/vault --export operations.yaml
+tagex analyze recommendations /path/to/vault --analyzers plurals,synonyms
+
 # Analyze tag pairs and co-occurrence
 tagex analyze pairs /path/to/vault           # Auto-extract mode
 tagex analyze pairs tags.json                # Pre-extracted mode
@@ -198,6 +215,7 @@ tagex analyze merge /path/to/vault --min-usage 3
 
 | Analysis Type | Description |
 |:--------------|:------------|
+| **Recommendations** | **Unified analysis consolidating all analyzers into editable YAML operations file** |
 | Pairs analysis | Tag co-occurrence and clustering patterns |
 | Quality analysis | Overbroad tag detection and specificity scoring |
 | Plural analysis | Singular/plural variant detection with configurable preference modes |
@@ -205,6 +223,37 @@ tagex analyze merge /path/to/vault --min-usage 3
 | Merge suggestions | Semantic similarity and duplicate detection via TF-IDF embeddings |
 | Hub identification | Detect central tags and natural clusters |
 | Validation | Filter noise and validate tags |
+
+### Unified Recommendations System
+
+The `recommendations` command consolidates all analyzer suggestions into a single editable YAML file:
+
+```bash
+# Generate recommendations from all analyzers
+tagex analyze recommendations /vault --export ops.yaml
+
+# Select specific analyzers
+tagex analyze recommendations /vault --export ops.yaml --analyzers plurals,synonyms
+
+# Review and edit ops.yaml to:
+# - Enable/disable individual operations (enabled: true/false)
+# - Modify source/target tags
+# - Delete unwanted operations
+# - Reorder operations
+
+# Preview changes (default - safe, no modifications)
+tagex apply ops.yaml
+
+# Apply changes (requires explicit --execute flag)
+tagex apply ops.yaml --execute
+```
+
+**Safety features:**
+- Preview mode by default (no `--execute` = no modifications)
+- Explicit `--execute` flag required to apply changes
+- Deduplication of suggestions from multiple analyzers
+- Confidence scores and metadata for informed decisions
+- Operation logs for all modifications
 
 ## Installation
 

@@ -34,6 +34,11 @@ tagex analyze quality /path/to/vault [--format text|json]
 tagex analyze synonyms /path/to/vault [--min-similarity 0.7] [--show-related] [--no-transformers]
 tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
 
+# Unified recommendations and apply workflow (safe by default)
+tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals,merge]
+tagex apply operations.yaml [--vault-path /path/to/vault]  # Preview mode (default)
+tagex apply operations.yaml [--vault-path /path/to/vault] --execute  # Actually apply changes
+
 # Or using uv run during development
 uv run python -m tagex.main init /path/to/vault
 uv run python -m tagex.main validate /path/to/vault
@@ -90,6 +95,8 @@ uv run pytest tests/
 - **Configurable plural preferences** - usage-based (default), plural, or singular modes
 - **TF-IDF merge suggestions** - Embedding-based similarity detection with morphological fallback
 - **Smart processing** - Only modifies files containing target tags
+- **Unified recommendations system** - Consolidates all analyzer suggestions into editable YAML operations file
+- **Apply workflow** - Execute operations from YAML file with enable/disable flags for selective application
 
 ### Configuration Structure
 
