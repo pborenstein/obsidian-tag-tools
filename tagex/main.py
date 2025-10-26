@@ -477,5 +477,173 @@ def interpret_vault_health(health, distribution, total_tags):
             print("   - Low diversity - heavily concentrated on few tags")
 
 
+@analyze.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+@click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
+@click.option('--max-items', type=int, default=10, help='Maximum items to show per section')
+def quality(input_file, no_filter, format, max_items):
+    """Analyze tag quality (overbroad tags, specificity).
+
+    INPUT_FILE: JSON file containing tag data (from extract command)
+
+    Identifies:
+    - Overbroad tags (used too generally)
+    - Tag specificity scores
+    - Refinement suggestions
+    """
+    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
+    from .analysis.breadth_analyzer import analyze_tag_quality, format_quality_report
+    import json
+
+    filter_noise = not no_filter
+
+    tag_data = load_tag_data(input_file)
+    tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    # Get total files
+    total_files = len(set(f for stats in tag_stats.values() for f in stats['files']))
+
+    print(f"Analyzing tag quality for {len(tag_stats)} tags across {total_files} files...")
+
+    analysis = analyze_tag_quality(tag_stats, total_files)
+
+    if format == 'text':
+        report = format_quality_report(analysis, tag_stats, max_items=max_items)
+        print(report)
+    elif format == 'json':
+        # Convert sets to lists for JSON serialization
+        json_analysis = {
+            'overbroad_tags': analysis['overbroad_tags'],
+            'summary': analysis['summary']
+        }
+        print(json.dumps(json_analysis, indent=2))
+
+
+@analyze.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+@click.option('--min-similarity', type=float, default=0.7, help='Minimum context similarity threshold')
+@click.option('--min-shared', type=int, default=3, help='Minimum shared files for co-occurrence')
+def synonyms(input_file, no_filter, min_similarity, min_shared):
+    """Detect potential synonym tags.
+
+    INPUT_FILE: JSON file containing tag data (from extract command)
+
+    Uses co-occurrence analysis to find tags that appear in similar contexts
+    and are likely conceptual equivalents.
+    """
+    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
+    from .analysis.synonym_analyzer import detect_synonyms_by_context, find_acronym_expansions
+
+    filter_noise = not no_filter
+
+    tag_data = load_tag_data(input_file)
+    tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    print(f"Analyzing {len(tag_stats)} tags for synonym relationships...")
+    print(f"Minimum context similarity: {min_similarity}")
+    print(f"Minimum shared files: {min_shared}\n")
+
+    # Context-based synonyms
+    synonym_candidates = detect_synonyms_by_context(
+        tag_stats,
+        min_shared_files=min_shared,
+        similarity_threshold=min_similarity
+    )
+
+    if synonym_candidates:
+        print("SYNONYM CANDIDATES (by context similarity):\n")
+        for candidate in synonym_candidates[:20]:
+            print(f"  {candidate['tag1']} ({candidate['tag1_count']} uses) ~ "
+                  f"{candidate['tag2']} ({candidate['tag2_count']} uses)")
+            print(f"    Context similarity: {candidate['context_similarity']:.2f}")
+            print(f"    Shared context tags: {candidate['shared_context']}")
+            print(f"    Suggestion: {candidate['suggestion']}")
+            print()
+    else:
+        print("No synonym candidates found with current thresholds.\n")
+
+    # Acronym expansions
+    acronym_candidates = find_acronym_expansions(tag_stats)
+
+    if acronym_candidates:
+        print("\nACRONYM/EXPANSION CANDIDATES:\n")
+        for candidate in acronym_candidates[:10]:
+            print(f"  {candidate['acronym']} ({candidate['acronym_count']} uses) → "
+                  f"{candidate['expansion']} ({candidate['expansion_count']} uses)")
+            print(f"    File overlap: {candidate['overlap_ratio']:.1%}")
+            print(f"    Suggestion: {candidate['suggestion']}")
+            print()
+
+
+@analyze.command()
+@click.argument('input_file', type=click.Path(exists=True))
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+def plurals(input_file, no_filter):
+    """Detect singular/plural variants.
+
+    INPUT_FILE: JSON file containing tag data (from extract command)
+
+    Uses enhanced plural detection including irregular plurals
+    (child/children) and complex patterns (-ies/-y, -ves/-f).
+    Convention: Prefers plural forms as canonical.
+    """
+    from .analysis.merge_analyzer import load_tag_data, build_tag_stats
+    from tagex.utils.plural_normalizer import (
+        normalize_plural_forms,
+        normalize_compound_plurals,
+        get_preferred_form
+    )
+    from collections import defaultdict
+
+    filter_noise = not no_filter
+
+    tag_data = load_tag_data(input_file)
+    tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    print(f"Analyzing {len(tag_stats)} tags for plural variants...")
+    print("Convention: Prefers plural forms as canonical\n")
+
+    # Group tags by their plural forms
+    variant_groups = defaultdict(set)
+
+    for tag in tag_stats.keys():
+        # Get all normalized forms
+        forms = normalize_plural_forms(tag)
+        forms.update(normalize_compound_plurals(tag))
+
+        # Get preferred form (usually plural)
+        # Pass usage counts to help with decision
+        usage_counts = {t: tag_stats.get(t, {}).get('count', 0) for t in forms}
+        canonical = get_preferred_form(forms, usage_counts)
+
+        variant_groups[canonical].add(tag)
+
+    # Filter to only groups with multiple variants
+    variant_groups = {k: v for k, v in variant_groups.items() if len(v) > 1}
+
+    if variant_groups:
+        print(f"Found {len(variant_groups)} plural variant groups:\n")
+
+        # Sort by total usage
+        sorted_groups = sorted(
+            variant_groups.items(),
+            key=lambda x: sum(tag_stats[t]['count'] for t in x[1]),
+            reverse=True
+        )
+
+        for canonical, variants in sorted_groups[:20]:
+            print(f"  Group (canonical: {canonical}):")
+            for tag in sorted(variants, key=lambda t: tag_stats[t]['count'], reverse=True):
+                count = tag_stats[tag]['count']
+                is_canonical = ' [preferred]' if tag == canonical else ''
+                print(f"    - {tag} ({count} uses){is_canonical}")
+            print(f"    → Suggestion: merge all into '{canonical}' (plural preferred)")
+            print()
+    else:
+        print("No plural variant groups found.\n")
+
+
 if __name__ == "__main__":
     main()

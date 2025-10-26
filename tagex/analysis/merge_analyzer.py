@@ -127,12 +127,17 @@ def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
     form to prefer. Downstream code should prefer PLURAL forms when suggesting
     merges (e.g., books not book, ideas not idea).
 
+    Uses enhanced plural detection from plural_normalizer module to handle
+    irregular plurals and complex patterns.
+
     Args:
         tags: Iterable of tag strings
 
     Returns:
         Dictionary mapping base forms to lists of variant tags
     """
+    from tagex.utils.plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
+
     variants: Dict[str, List[str]] = defaultdict(list)
 
     # Group by base patterns
@@ -140,10 +145,15 @@ def find_variant_patterns(tags: Iterable[str]) -> Dict[str, List[str]]:
         # Remove common suffixes/prefixes that might indicate variants
         base = tag.lower()
 
-        # Remove plural 's' (but prefer plural in suggestions)
-        if base.endswith('s') and len(base) > 3:
-            singular = base[:-1]
-            variants[singular].append(tag)
+        # Use enhanced plural normalization
+        plural_forms = normalize_plural_forms(tag)
+        compound_forms = normalize_compound_plurals(tag)
+        all_forms = plural_forms | compound_forms
+
+        # Get preferred form (usually plural)
+        canonical = get_preferred_form(all_forms).lower()
+        for form in all_forms:
+            variants[canonical].append(tag)
 
         # Remove -ing suffix
         if base.endswith('ing'):
