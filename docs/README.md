@@ -16,21 +16,23 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 ### For New Users
 
 1. **[Main README](../README.md)** - Installation, commands, and basic usage
-2. **[Configuration Guide](CONFIGURATION.md)** - Vault setup and best practices
-3. **[Architecture Overview](ARCHITECTURE.md)** - Understanding how tagex works
-4. **[Analytics Guide](ANALYTICS.md)** - Tag analysis, statistics, and relationship detection
+2. **[Quick Reference](QUICK_REFERENCE.md)** - Command cheat sheet (keep this handy!)
+3. **[Analytics Guide](ANALYTICS.md)** - Complete analysis guide with decision tree
+4. **[Configuration Guide](CONFIGURATION.md)** - Vault setup and best practices
 5. **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### For Contributors
 
 1. **[Architecture Overview](ARCHITECTURE.md)** - System design and component organization
-2. **[Testing Narrative](TESTING_NARRATIVE.md)** - Development approach and testing philosophy
-3. **[Archive](archive/)** - Historical decisions and completed plans
+2. **[Algorithms Reference](ALGORITHMS.md)** - Algorithm implementations and complexity analysis
+3. **[Testing Narrative](TESTING_NARRATIVE.md)** - Development approach and testing philosophy
+4. **[Archive](archive/)** - Historical decisions and completed plans
 
 ### For Algorithm Deep Dives
 
-1. **[Semantic Analysis](SEMANTIC_ANALYSIS.md)** - TF-IDF, cosine similarity, and morphological fallback
-2. **[Analytics Guide](ANALYTICS.md)** - Pair analysis, hub detection, and merge recommendations
+1. **[Algorithms Reference](ALGORITHMS.md)** - Complete technical reference for all algorithms
+2. **[Analytics Guide](ANALYTICS.md)** - User-focused guide with practical examples
+3. **[Semantic Analysis](SEMANTIC_ANALYSIS.md)** - Original TF-IDF documentation (now superseded by ALGORITHMS.md)
 
 ## Documentation Files
 
@@ -38,18 +40,20 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
-| [ANALYTICS.md](ANALYTICS.md) | Tag analysis tools, statistics, relationship detection | Users & Developers |
-| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity algorithms and implementation | Developers |
-| [TESTING_NARRATIVE.md](TESTING_NARRATIVE.md) | Test development story and approach | Developers |
-| [CONFIGURATION.md](CONFIGURATION.md) | Vault setup, git integration, naming conventions, best practices | Users & Developers |
+| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | **Single-page command reference and cheat sheet** | **Users** |
+| [ANALYTICS.md](ANALYTICS.md) | Complete analysis guide with decision tree and workflows | Users & Developers |
+| [SYNONYM_CONFIGURATION.md](SYNONYM_CONFIGURATION.md) | .tagex-synonyms.yaml format, examples, and best practices | Users & Developers |
+| [CONFIGURATION.md](CONFIGURATION.md) | Vault setup, git integration, naming conventions | Users & Developers |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
 
-### Future Plans
+### Technical Documentation
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| [TAG_QUALITY_IMPROVEMENTS.md](TAG_QUALITY_IMPROVEMENTS.md) | Planned enhancements for tag quality analysis (plurals, synonyms, overbroad detection) | Developers |
+| [ALGORITHMS.md](ALGORITHMS.md) | Algorithm details: TF-IDF, Jaccard, specificity scoring, etc. | Developers |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
+| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity algorithms (deprecated - see ALGORITHMS.md) | Developers |
+| [TESTING_NARRATIVE.md](TESTING_NARRATIVE.md) | Test development story and approach | Developers |
 
 ### Archive
 
@@ -57,6 +61,7 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 |:---------|:------------|:---------|
 | [archive/FRONTMATTER_PARSER_DECISION.md](archive/FRONTMATTER_PARSER_DECISION.md) | PyYAML vs python-frontmatter analysis (Sep 2024) | Developers |
 | [archive/TAG_TYPE_FILTERING_PLAN.md](archive/TAG_TYPE_FILTERING_PLAN.md) | Historical implementation plan (completed) | Developers |
+| [archive/TAG_QUALITY_IMPROVEMENTS.md](archive/TAG_QUALITY_IMPROVEMENTS.md) | Tag quality analysis implementation plan (completed Oct 2025) | Developers |
 | [archive/EVALUATION_2025_09_30.md](archive/EVALUATION_2025_09_30.md) | Documentation quality assessment and recommendations | Developers |
 
 ## Additional Resources
