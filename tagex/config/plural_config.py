@@ -39,7 +39,7 @@ class PluralConfig:
 
     @classmethod
     def from_vault(cls, vault_path: str) -> 'PluralConfig':
-        """Load configuration from vault's .tagex-config.yaml file.
+        """Load configuration from vault's .tagex/config.yaml file.
 
         Args:
             vault_path: Path to vault directory
@@ -47,7 +47,7 @@ class PluralConfig:
         Returns:
             PluralConfig instance with loaded or default settings
         """
-        config_file = Path(vault_path) / '.tagex-config.yaml'
+        config_file = Path(vault_path) / '.tagex' / 'config.yaml'
 
         if not config_file.exists():
             return cls()  # Return defaults
