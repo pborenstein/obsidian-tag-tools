@@ -41,7 +41,7 @@ The tagex project features **high-quality, comprehensive documentation** that ac
 | **docs/testing-narrative.md** | 495 | Test development approach | Good |
 | **docs/README.md** | 295 | Documentation navigation | Good |
 | **tests/README.md** | ~800 | Test suite documentation | Good |
-| **log/README.md** | ~500 | Operation logging structure | Good |
+| **logs/README.md** | ~500 | Operation logging structure | Good |
 | **CLAUDE.md** | ~300 | AI assistant guidance | Good |
 | **docs/decisions/frontmatter-parser.md** | ~700 | Technical decision record | Good |
 
@@ -229,7 +229,7 @@ README.md (entry point)
 │   └── archive/ (historical)
 │       └── TAG_TYPE_FILTERING_PLAN.md
 ├── tests/README.md (test suite)
-└── log/README.md (operation logs)
+└── logs/README.md (operation logs)
 ```
 
 **Weaknesses:**

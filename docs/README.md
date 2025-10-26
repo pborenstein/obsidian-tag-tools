@@ -56,7 +56,7 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 ## Additional Resources
 
 - **[Test Suite Documentation](../tests/README.md)** - Test organization and usage
-- **[Operation Logs](../log/README.md)** - Log file structure and format
+- **[Operation Logs](../logs/README.md)** - Log file structure and format
 
 ## Contributing to Documentation
 
