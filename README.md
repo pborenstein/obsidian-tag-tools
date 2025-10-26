@@ -58,9 +58,12 @@ tagex delete /path/to/vault tag-to-remove another-tag --dry-run
 # Get comprehensive vault statistics
 tagex stats /path/to/vault --top 15
 
-# Analyze tag relationships
+# Analyze tag relationships and quality
 tagex analyze pairs tags.json
 tagex analyze merge tags.json --min-usage 5
+tagex analyze quality tags.json
+tagex analyze synonyms tags.json --min-shared 3
+tagex analyze plurals tags.json
 
 # Global --tag-types option examples (frontmatter is default)
 tagex extract /path/to/vault  # frontmatter only (default)
@@ -149,11 +152,20 @@ tagex extract /vault -o updated_tags.json
 
 ### Advanced Analysis
 
-The `analyze` command provides insights into tag relationships and merge opportunities:
+The `analyze` command provides comprehensive insights into tag usage patterns, relationships, and quality issues:
 
 ```bash
 # Analyze tag pairs and co-occurrence
 tagex analyze pairs tags.json
+
+# Detect overbroad and generic tags
+tagex analyze quality tags.json
+
+# Find plural/singular variants
+tagex analyze plurals tags.json
+
+# Detect context-based synonyms
+tagex analyze synonyms tags.json --min-shared 3
 
 # Suggest tag merge opportunities
 tagex analyze merge tags.json --min-usage 3
@@ -161,9 +173,12 @@ tagex analyze merge tags.json --min-usage 3
 
 | Analysis Type | Description |
 |:--------------|:------------|
-| Pairs analysis | Tag co-occurrence and clustering |
-| Merge suggestions | Semantic similarity and duplicate detection |
-| Hub identification | Detect central tags and clusters |
+| Pairs analysis | Tag co-occurrence and clustering patterns |
+| Quality analysis | Overbroad tag detection and specificity scoring |
+| Plural analysis | Singular/plural variant detection (34 irregular forms + patterns) |
+| Synonym analysis | Context-based synonym detection via Jaccard similarity |
+| Merge suggestions | Semantic similarity and duplicate detection via TF-IDF embeddings |
+| Hub identification | Detect central tags and natural clusters |
 | Validation | Filter noise and validate tags |
 
 ## Installation

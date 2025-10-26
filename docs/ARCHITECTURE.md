@@ -26,33 +26,30 @@ Markdown Files → Tag Extraction → Analysis → Operations
         │                       │                       │
         ▼                       ▼                       ▼
 ┌──────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│ tagex/core/      │      │output_formatter │      │ tag-analysis/   │
+│ tagex/core/      │      │output_formatter │      │tagex/analysis/  │
 │                  │      │                 │      │                 │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │TagOperation  │ │      │ │ JSON Format │ │      │ │pair analysis│ │
-│ │   Engine     │ │      │ │             │ │      │ │  analyzer   │ │
-│ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
-│                  │      │                 │      │                 │
+│ │TagOperation  │ │      │ │ JSON Format │ │      │ │pair_analyzer│ │
+│ │   Engine     │ │      │ │             │ │      │ │merge_       │ │
+│ └──────────────┘ │      │ └─────────────┘ │      │ │ analyzer    │ │
+│                  │      │                 │      │ └─────────────┘ │
 │ ┌──────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │
-│ │Rename/Merge/ │ │      │ │ CSV & Text  │ │      │ │ merge       │ │
-│ │Delete Ops    │ │      │ │  Formats    │ │      │ │  analyzer   │ │
-│ └──────────────┘ │      │ └─────────────┘ │      │ └─────────────┘ │
+│ │Rename/Merge/ │ │      │ │ CSV & Text  │ │      │ │breadth_     │ │
+│ │Delete Ops    │ │      │ │  Formats    │ │      │ │ analyzer    │ │
+│ └──────────────┘ │      │ └─────────────┘ │      │ │synonym_     │ │
+│                  │      │                 │      │ │ analyzer    │ │
 └──────────────────┘      └─────────────────┘      └─────────────────┘
-        │
-        ▼
-┌──────────────────┐
-│   tagex/utils/   │
-│                  │
-│ ┌──────────────┐ │
-│ │file_discovery│ │
-│ │              │ │
-│ └──────────────┘ │
-│                  │
-│ ┌──────────────┐ │
-│ │tag_normalizer│ │
-│ │& validation  │ │
-│ └──────────────┘ │
-└──────────────────┘
+       │                        │                        │
+       ▼                        ▼                        ▼
+┌──────────────────┐      ┌─────────────────┐
+│  tagex/config/   │      │ tagex/utils/    │
+│                  │      │                 │
+│ ┌──────────────┐ │      │ ┌─────────────┐ │
+│ │  synonym     │ │      │ │file_discovery│ │
+│ │  config      │ │      │ │tag_normalizer│ │
+│ └──────────────┘ │      │ │plural_       │ │
+│                  │      │ │ normalizer   │ │
+└──────────────────┘      └─────────────────┘
 ```
 
 ## Data Flow Pipeline
@@ -444,10 +441,16 @@ The architecture supports extension through:
 1. **Additional Operations**: Extend `TagOperationEngine` for new tag operations
 2. **Additional Parsers**: New tag sources can be added by implementing the parser interface
 3. **Output Formats**: New formatters can be added to `output_formatter.py`
-4. **Analysis Modules**: The `tag-analysis/` directory provides semantic similarity detection
-5. **File Filters**: Pattern-based exclusion system can be extended
-6. **Statistics**: The statistics tracking system can be enhanced for additional metrics
-7. **Tag Validation**: Validation rules can be customized in `tagex/utils/tag_normalizer.py`
-8. **Console Integration**: Script entry points defined in `pyproject.toml`
-9. **Operation Logging**: Structured logging system supports custom reporting
-10. **Semantic Analysis**: TF-IDF embedding-based tag merge suggestions with morphological fallback
+4. **Analysis Modules**: The `tagex/analysis/` directory provides five analysis types:
+   - Pair analysis (co-occurrence patterns)
+   - Merge analysis (semantic similarity via TF-IDF embeddings)
+   - Quality analysis (overbroad tag detection and specificity scoring)
+   - Synonym analysis (context-based synonym detection via Jaccard similarity)
+   - Plural analysis (singular/plural variant detection)
+5. **Configuration Systems**: `tagex/config/` for user-defined mappings (.tagex-synonyms.yaml)
+6. **File Filters**: Pattern-based exclusion system can be extended
+7. **Statistics**: The statistics tracking system can be enhanced for additional metrics
+8. **Tag Validation**: Validation rules can be customized in `tagex/utils/tag_normalizer.py`
+9. **Plural Normalization**: Irregular plural dictionary in `tagex/utils/plural_normalizer.py`
+10. **Console Integration**: Script entry points defined in `pyproject.toml`
+11. **Operation Logging**: Structured logging system supports custom reporting
