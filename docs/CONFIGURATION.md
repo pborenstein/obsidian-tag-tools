@@ -155,21 +155,31 @@ git merge tag-cleanup
    tags: [Project, WORK, Notes]  # Inconsistent
    ```
 
-2. **Use hyphens** for multi-word tags:
+2. **Prefer plural forms** over singular:
+
+   ```yaml
+   tags: [books, ideas, projects]     # Good - plural forms
+   tags: [book, idea, project]        # Avoid - singular forms
+   tags: [books, idea, projects]      # Inconsistent - mixed
+   ```
+
+   **Rationale:** Plural tags are more natural when categorizing collections of notes. They read better in queries and lists. Exception: Use singular for abstract concepts (e.g., `mindfulness`, `productivity`) or proper nouns.
+
+3. **Use hyphens** for multi-word tags:
 
    ```yaml
    tags: [machine-learning, data-science]  # Good
    tags: [machine_learning, datascience]   # Less standard
    ```
 
-3. **Avoid special characters**:
+4. **Avoid special characters**:
 
    ```yaml
    tags: [books, reading]           # Good
    tags: [books!, reading?, test&]  # Problematic
    ```
 
-4. **Keep tags concise**:
+5. **Keep tags concise**:
 
    ```yaml
    tags: [python, ml, web]                        # Good
@@ -178,14 +188,19 @@ git merge tag-cleanup
 
 ### Tag Hierarchies
 
-Obsidian supports nested tags with forward slashes:
+Obsidian supports nested tags with forward slashes. **Use plural forms consistently** throughout hierarchies:
 
 ```yaml
 tags:
-  - projects/work
-  - projects/personal
-  - areas/health
-  - areas/finance
+  - projects/work          # Good - plural category
+  - projects/personal      # Good
+  - areas/health          # Good
+  - areas/finance         # Good
+
+# Avoid mixing singular/plural
+tags:
+  - project/work          # Inconsistent - singular category
+  - projects/idea         # Inconsistent - singular subcategory
 ```
 
 **Benefits:**
@@ -290,11 +305,11 @@ We discussed #quarterly-goals and #budget-planning.
 
 ### Recommended Usage Pattern
 
-**Hybrid approach** (use both strategically):
+**Hybrid approach** (use both strategically, prefer plurals):
 
 ```markdown
 ---
-tags: [work, meetings, 2024-q1]  # High-level categories
+tags: [meetings, projects, goals]  # High-level categories (plural forms)
 ---
 
 # Weekly Team Meeting
@@ -306,8 +321,8 @@ Action items:
 - Review #team-sync process
 ```
 
-**Frontmatter:** Primary categories and metadata
-**Inline:** Specific topics and contextual references
+**Frontmatter:** Primary categories and metadata (use plurals: `books`, `ideas`, `projects`)
+**Inline:** Specific topics and contextual references (can be singular for specific instances: `#project-alpha`)
 
 ### Tag Type Filtering in tagex
 
