@@ -1,0 +1,109 @@
+Extracting tags from vault: /Users/philip/Obsidian/amoxtli
+Tag types: frontmatter
+
+Analyzing 801 tags for synonym relationships...
+Minimum context similarity: 0.7
+Minimum shared files: 3
+
+SYNONYM CANDIDATES (by context similarity):
+
+  poem (31 uses) ~ weddings (12 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge weddings → poem
+
+  poem (31 uses) ~ jew-hatred (7 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge jew-hatred → poem
+
+  poem (31 uses) ~ bible (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge bible → poem
+
+  poem (31 uses) ~ talmud (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge talmud → poem
+
+  reddit (13 uses) ~ rodeo (11 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge rodeo → reddit
+
+  sexuality (12 uses) ~ tech (7 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge tech → sexuality
+
+  sexuality (12 uses) ~ anthropology (5 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge anthropology → sexuality
+
+  sexuality (12 uses) ~ enshittification (5 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge enshittification → sexuality
+
+  sexuality (12 uses) ~ society (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge society → sexuality
+
+  weddings (12 uses) ~ jew-hatred (7 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge jew-hatred → weddings
+
+  weddings (12 uses) ~ bible (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge bible → weddings
+
+  weddings (12 uses) ~ talmud (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge talmud → weddings
+
+  divorce (10 uses) ~ marriage (6 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge marriage → divorce
+
+  divorce (10 uses) ~ friendship (5 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge friendship → divorce
+
+  divorce (10 uses) ~ writering (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge writering → divorce
+
+  race (8 uses) ~ pretendians (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge pretendians → race
+
+  race (8 uses) ~ self-image (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge self-image → race
+
+  jew-hatred (7 uses) ~ bible (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge bible → jew-hatred
+
+  jew-hatred (7 uses) ~ talmud (3 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge talmud → jew-hatred
+
+  tech (7 uses) ~ anthropology (5 uses)
+    Context similarity: 1.00
+    Shared context tags: 1
+    Suggestion: merge anthropology → tech
+
