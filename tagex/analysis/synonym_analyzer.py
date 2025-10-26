@@ -11,7 +11,8 @@ from typing import Dict, List, Set, Any
 def detect_synonyms_by_context(
     tag_stats: Dict[str, Dict[str, Any]],
     min_shared_files: int = 3,
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.7,
+    min_context_tags: int = 5
 ) -> List[Dict[str, Any]]:
     """Detect potential synonyms based on shared context.
 
@@ -23,6 +24,7 @@ def detect_synonyms_by_context(
                   Expected format: {'tag': {'count': int, 'files': set}}
         min_shared_files: Minimum number of shared files to consider co-occurrence
         similarity_threshold: Minimum Jaccard similarity to suggest synonymy
+        min_context_tags: Minimum number of shared context tags for meaningful similarity
 
     Returns:
         List of synonym candidates with similarity scores and suggestions
@@ -51,6 +53,11 @@ def detect_synonyms_by_context(
             intersection = len(cooccurrence[tag1] & cooccurrence[tag2])
             union = len(cooccurrence[tag1] | cooccurrence[tag2])
             similarity = intersection / union if union > 0 else 0
+
+            # Filter out matches with too few shared context tags
+            # A high similarity with only 1-2 shared tags is meaningless
+            if intersection < min_context_tags:
+                continue
 
             # High context similarity suggests synonymy
             if similarity >= similarity_threshold:
@@ -82,7 +89,8 @@ def detect_synonyms_by_context(
 def suggest_synonym_groups(
     tag_stats: Dict[str, Dict[str, Any]],
     min_shared_files: int = 3,
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.7,
+    min_context_tags: int = 5
 ) -> List[List[str]]:
     """Suggest groups of tags that are likely synonyms.
 
@@ -92,6 +100,7 @@ def suggest_synonym_groups(
         tag_stats: Dictionary mapping tag names to their statistics
         min_shared_files: Minimum number of shared files to consider co-occurrence
         similarity_threshold: Minimum Jaccard similarity to suggest synonymy
+        min_context_tags: Minimum number of shared context tags for meaningful similarity
 
     Returns:
         List of synonym groups (each group is a list of tags)
@@ -100,7 +109,8 @@ def suggest_synonym_groups(
     candidates = detect_synonyms_by_context(
         tag_stats,
         min_shared_files=min_shared_files,
-        similarity_threshold=similarity_threshold
+        similarity_threshold=similarity_threshold,
+        min_context_tags=min_context_tags
     )
 
     # Build adjacency graph

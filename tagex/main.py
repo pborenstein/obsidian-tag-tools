@@ -1012,15 +1012,19 @@ def quality(input_path, tag_types, no_filter, format, max_items):
 @click.argument('input_path', type=click.Path(exists=True))
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
-@click.option('--min-similarity', type=float, default=0.7, help='Minimum context similarity threshold')
+@click.option('--min-similarity', type=float, default=0.7, help='Minimum context similarity threshold (0.0-1.0)')
 @click.option('--min-shared', type=int, default=3, help='Minimum shared files for co-occurrence')
-def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared):
+@click.option('--min-context-tags', type=int, default=5, help='Minimum shared context tags for meaningful similarity')
+def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared, min_context_tags):
     """Detect potential synonym tags.
 
     INPUT_PATH: Vault directory or JSON file containing tag data
 
     Uses co-occurrence analysis to find tags that appear in similar contexts
     and are likely conceptual equivalents.
+
+    Note: Tags with high similarity but few shared context tags are filtered out
+    as they produce false positives. Increase --min-context-tags to be more strict.
     """
     from .analysis.merge_analyzer import build_tag_stats
     from .analysis.synonym_analyzer import detect_synonyms_by_context, find_acronym_expansions
@@ -1041,13 +1045,15 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, min_shared):
 
     print(f"Analyzing {len(tag_stats)} tags for synonym relationships...")
     print(f"Minimum context similarity: {min_similarity}")
-    print(f"Minimum shared files: {min_shared}\n")
+    print(f"Minimum shared files: {min_shared}")
+    print(f"Minimum shared context tags: {min_context_tags}\n")
 
     # Context-based synonyms
     synonym_candidates = detect_synonyms_by_context(
         tag_stats,
         min_shared_files=min_shared,
-        similarity_threshold=min_similarity
+        similarity_threshold=min_similarity,
+        min_context_tags=min_context_tags
     )
 
     if synonym_candidates:
