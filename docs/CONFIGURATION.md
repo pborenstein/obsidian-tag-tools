@@ -80,8 +80,8 @@ tags.csv
 *_tags.json
 
 # tagex logs (usually want to ignore)
-log/*.json
-!log/README.md
+logs/*.json
+!logs/README.md
 
 # Python artifacts
 __pycache__/

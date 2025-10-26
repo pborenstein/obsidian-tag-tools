@@ -435,7 +435,7 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Review what was modified
-   cat log/tag-delete-op_*.json
+   cat logs/tag-delete-op_*.json
    ```
 
 **Related Issues:**
@@ -456,8 +456,8 @@ Solutions to common issues when using tagex.
 
    ```bash
    # View most recent operation
-   ls -lt log/*.json | head -1
-   cat log/tag-rename-op_TIMESTAMP.json
+   ls -lt logs/*.json | head -1
+   cat logs/tag-rename-op_TIMESTAMP.json
    ```
 
 2. Re-extract tags and compare:
@@ -642,7 +642,7 @@ If you encounter issues not covered here:
 
 1. Check [docs/README.md](README.md) for documentation index
 2. Review [ARCHITECTURE.md](ARCHITECTURE.md) for system design
-3. Check operation logs in `log/` directory
+3. Check operation logs in `logs/` directory
 4. Run with `--verbose` flag for detailed output
 5. Report issues at project repository
 
@@ -665,7 +665,7 @@ tagex rename /vault old-tag new-tag --dry-run
 # Review output, then execute
 tagex rename /vault old-tag new-tag
 # Verify changes
-cat log/tag-rename-op_*.json | tail -1
+cat logs/tag-rename-op_*.json | tail -1
 ```
 
 ### Comprehensive Tag Analysis
