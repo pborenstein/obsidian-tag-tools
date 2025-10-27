@@ -188,20 +188,29 @@ def apply(operations_file, vault_path, execute, tag_types):
     # Dry-run is the default - execute flag turns it off
     dry_run = not execute
 
+    # Big obvious header
+    print("\n" + "="*70)
     if dry_run:
-        print("\n" + "="*70)
-        print("PREVIEW MODE (DRY-RUN) - No files will be modified")
-        print("="*70)
-        print("To apply changes, run with --execute flag")
-        print("="*70)
+        print("╔══════════════════════════════════════════════════════════════════════╗")
+        print("║                    PREVIEW MODE (DRY-RUN)                            ║")
+        print("║                  No files will be modified                           ║")
+        print("╚══════════════════════════════════════════════════════════════════════╝")
     else:
-        print("\n" + "="*70)
-        print("EXECUTION MODE - Files WILL be modified")
-        print("="*70)
-
-    print(f"\nVault: {vault_path}")
-    print(f"Tag types: {tag_types}")
+        print("╔══════════════════════════════════════════════════════════════════════╗")
+        print("║                      EXECUTION MODE                                  ║")
+        print("║                  Files WILL be modified                              ║")
+        print("╚══════════════════════════════════════════════════════════════════════╝")
     print("="*70)
+
+    print(f"Vault: {vault_path}")
+    print(f"Tag types: {tag_types}")
+    print(f"Operations: {len(enabled_ops)}")
+    print("="*70 + "\n")
+
+    # Track results for summary
+    total_files_modified = 0
+    total_tags_modified = 0
+    errors = []
 
     # Execute each enabled operation
     for i, op in enumerate(enabled_ops, 1):
@@ -210,29 +219,26 @@ def apply(operations_file, vault_path, execute, tag_types):
         target_tag = op.get('target')
         reason = op.get('reason', '')
 
-        print(f"\n[{i}/{len(enabled_ops)}] {op_type.upper()}: {', '.join(source_tags)} → {target_tag}")
-        print(f"  Reason: {reason}")
+        # Compact single-line progress indicator
+        sources_str = ', '.join(source_tags) if len(source_tags) <= 2 else f"{source_tags[0]}, ... ({len(source_tags)} tags)"
+        print(f"[{i:3}/{len(enabled_ops)}] {op_type.upper():6} {sources_str:30} → {target_tag:20}", end=' ', flush=True)
 
         try:
             if op_type == 'merge':
-                # Execute merge operation
                 operation = MergeOperation(
                     vault_path=vault_path,
                     source_tags=source_tags,
                     target_tag=target_tag,
                     dry_run=dry_run,
-                    tag_types=tag_types
+                    tag_types=tag_types,
+                    quiet=True
                 )
                 result = operation.run_operation()
 
-                # Show brief results
-                stats = result['stats']
-                print(f"  ✓ Files modified: {stats['files_modified']}, Tags modified: {stats['tags_modified']}")
-
             elif op_type == 'rename':
-                # For rename, source should have exactly one tag
                 if len(source_tags) != 1:
-                    print(f"  ✗ Error: Rename requires exactly 1 source tag, got {len(source_tags)}")
+                    print(f"✗ Error: Rename requires exactly 1 source tag")
+                    errors.append(f"Operation {i}: Rename requires exactly 1 source tag")
                     continue
 
                 operation = RenameOperation(
@@ -240,33 +246,51 @@ def apply(operations_file, vault_path, execute, tag_types):
                     old_tag=source_tags[0],
                     new_tag=target_tag,
                     dry_run=dry_run,
-                    tag_types=tag_types
+                    tag_types=tag_types,
+                    quiet=True
                 )
                 result = operation.run_operation()
-
-                stats = result['stats']
-                print(f"  ✓ Files modified: {stats['files_modified']}, Tags modified: {stats['tags_modified']}")
 
             elif op_type == 'delete':
                 operation = DeleteOperation(
                     vault_path=vault_path,
                     tags_to_delete=source_tags,
                     dry_run=dry_run,
-                    tag_types=tag_types
+                    tag_types=tag_types,
+                    quiet=True
                 )
                 result = operation.run_operation()
 
-                stats = result['stats']
-                print(f"  ✓ Files modified: {stats['files_modified']}, Tags modified: {stats['tags_modified']}")
-
             else:
-                print(f"  ✗ Unknown operation type: {op_type}")
+                print(f"✗ Unknown operation type")
+                errors.append(f"Operation {i}: Unknown operation type: {op_type}")
+                continue
+
+            # Show brief results on same line
+            stats = result['stats']
+            total_files_modified += stats['files_modified']
+            total_tags_modified += stats['tags_modified']
+
+            if stats['errors'] > 0:
+                print(f"⚠ {stats['files_modified']}f {stats['tags_modified']}t {stats['errors']}err")
+                errors.append(f"Operation {i}: {stats['errors']} errors occurred")
+            else:
+                print(f"✓ {stats['files_modified']}f {stats['tags_modified']}t")
 
         except Exception as e:
-            print(f"  ✗ Error executing operation: {e}")
+            print(f"✗ Error: {e}")
+            errors.append(f"Operation {i}: {e}")
 
     print("\n" + "="*70)
-    print(f"Completed {len(enabled_ops)} operations")
+    print(f"SUMMARY: {len(enabled_ops)} operations processed")
+    print(f"  Files modified: {total_files_modified}")
+    print(f"  Tags modified:  {total_tags_modified}")
+    if errors:
+        print(f"  Errors:         {len(errors)}")
+        print("\nErrors encountered:")
+        for err in errors:
+            print(f"  - {err}")
+    print("="*70)
 
     if dry_run:
         print("\n" + "="*70)
