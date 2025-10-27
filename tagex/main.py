@@ -373,6 +373,11 @@ def init(vault_path, force):
         shutil.copy(synonyms_template, tagex_dir / 'synonyms.yaml')
         files_created.append('synonyms.yaml')
 
+    # Create exclusions.yaml using template
+    from tagex.config.exclusions_config import ExclusionsConfig
+    ExclusionsConfig.create_template(vault)
+    files_created.append('exclusions.yaml')
+
     # Create README
     readme_content = """# Tagex Configuration
 
@@ -401,6 +406,20 @@ canonical-tag:
 ```
 
 When tagex analyzes your vault, it will recognize these relationships and suggest merges.
+
+### exclusions.yaml
+Lists tags that should be excluded from merge/synonym suggestions.
+
+Format:
+```yaml
+exclude_tags:
+  - spain
+  - france
+  - proper-noun-tag
+```
+
+Tags in this list will never be suggested for merging, even if they have high semantic similarity.
+Useful for proper nouns, country names, author names, etc.
 
 ## Using the Configuration
 
@@ -444,8 +463,9 @@ For more information, see:
     print("\nNext steps:")
     print(f"  1. Edit .tagex/config.yaml to set your preferences")
     print(f"  2. Edit .tagex/synonyms.yaml to define tag synonyms")
-    print("  3. Run: tagex validate " + str(vault_path))
-    print("  4. Run: tagex analyze plurals " + str(vault_path))
+    print(f"  3. Edit .tagex/exclusions.yaml to exclude tags (optional)")
+    print("  4. Run: tagex validate " + str(vault_path))
+    print("  5. Run: tagex analyze recommendations " + str(vault_path))
 
 
 @main.command()
@@ -1297,7 +1317,7 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--export', type=click.Path(), help='Export operations to YAML file')
-@click.option('--analyzers', type=str, default='synonyms,plurals,merge', help='Comma-separated list of analyzers to run (default: synonyms,plurals,merge)')
+@click.option('--analyzers', type=str, default='synonyms,plurals', help='Comma-separated list of analyzers to run (default: synonyms,plurals)')
 @click.option('--min-similarity', type=float, default=0.7, help='Minimum semantic similarity threshold (0.0-1.0)')
 @click.option('--no-transformers', is_flag=True, help='Skip semantic analysis (faster, no synonym detection)')
 def recommendations(input_path, tag_types, no_filter, export, analyzers, min_similarity, no_transformers):
