@@ -21,10 +21,11 @@ from ..parsers.inline_parser import extract_inline_tags
 class TagOperationEngine(ABC):
     """Base class for all tag operations with backup, logging, and reversibility."""
     
-    def __init__(self, vault_path: str, dry_run: bool = False, tag_types: str = 'both'):
+    def __init__(self, vault_path: str, dry_run: bool = False, tag_types: str = 'both', quiet: bool = False):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
         self.tag_types = tag_types
+        self.quiet = quiet
         self.operation_log: Dict[str, Any] = {
             "operation": self.__class__.__name__.lower(),
             "timestamp": datetime.now().isoformat(),
@@ -86,7 +87,8 @@ class TagOperationEngine(ABC):
                 "file": relative_path,
                 "error": str(e)
             })
-            print(f"Error processing {file_path}: {e}")
+            if not self.quiet:
+                print(f"Error processing {file_path}: {e}")
             return False
         finally:
             self.operation_log["stats"]["files_processed"] += 1
@@ -323,23 +325,27 @@ class TagOperationEngine(ABC):
     
     def run_operation(self):
         """Execute the complete operation."""
-        print(f"Starting {self.operation_log['operation']} operation on vault: {self.vault_path}")
-        print(f"Dry run: {self.dry_run}")
-        
-        
+        if not self.quiet:
+            print(f"Starting {self.operation_log['operation']} operation on vault: {self.vault_path}")
+            print(f"Dry run: {self.dry_run}")
+
+
         # Find and process files
         markdown_files = self.find_markdown_files()
-        print(f"Found {len(markdown_files)} markdown files")
-        
+        if not self.quiet:
+            print(f"Found {len(markdown_files)} markdown files")
+
         for file_path in markdown_files:
             self.process_file_tags(file_path)
-        
-        # Save operation log
-        self.save_operation_log()
-        
+
+        # Save operation log (only if not quiet, to avoid creating tons of logs)
+        if not self.quiet:
+            self.save_operation_log()
+
         # Generate report
-        self.generate_report()
-        
+        if not self.quiet:
+            self.generate_report()
+
         # Return operation results for testing/inspection
         return self.operation_log
     
@@ -381,9 +387,9 @@ class TagOperationEngine(ABC):
 
 class RenameOperation(TagOperationEngine):
     """Operation to rename a single tag across all files."""
-    
-    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = False, tag_types: str = 'both'):
-        super().__init__(vault_path, dry_run, tag_types)
+
+    def __init__(self, vault_path: str, old_tag: str, new_tag: str, dry_run: bool = False, tag_types: str = 'both', quiet: bool = False):
+        super().__init__(vault_path, dry_run, tag_types, quiet)
         self.old_tag = old_tag.lower().strip()
         self.new_tag = new_tag.strip()
         self.operation_log.update({
@@ -422,9 +428,9 @@ class RenameOperation(TagOperationEngine):
 
 class MergeOperation(TagOperationEngine):
     """Operation to merge multiple tags into a single tag."""
-    
-    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = False, tag_types: str = 'both'):
-        super().__init__(vault_path, dry_run, tag_types)
+
+    def __init__(self, vault_path: str, source_tags: List[str], target_tag: str, dry_run: bool = False, tag_types: str = 'both', quiet: bool = False):
+        super().__init__(vault_path, dry_run, tag_types, quiet)
         self.source_tags = [tag.lower().strip() for tag in source_tags]
         self.target_tag = target_tag.strip()
         self.operation_log.update({
@@ -484,8 +490,8 @@ class MergeOperation(TagOperationEngine):
 class DeleteOperation(TagOperationEngine):
     """Operation to delete tags entirely from all files."""
 
-    def __init__(self, vault_path: str, tags_to_delete: List[str], dry_run: bool = False, tag_types: str = 'both'):
-        super().__init__(vault_path, dry_run, tag_types)
+    def __init__(self, vault_path: str, tags_to_delete: List[str], dry_run: bool = False, tag_types: str = 'both', quiet: bool = False):
+        super().__init__(vault_path, dry_run, tag_types, quiet)
         self.tags_to_delete = [tag.lower().strip() for tag in tags_to_delete]
         self.inline_deletions = 0
         self.frontmatter_deletions = 0
@@ -524,7 +530,8 @@ class DeleteOperation(TagOperationEngine):
                 f"WARNING: Deleting inline tags from '{file_path}'. "
                 f"This removes tags from content text, which may affect readability."
             )
-            print(f"WARNING: {warning_msg}")
+            if not self.quiet:
+                print(f"WARNING: {warning_msg}")
             self.operation_log["warnings"].append({
                 "file": file_path,
                 "type": "inline_deletion",
