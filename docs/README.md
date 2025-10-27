@@ -52,7 +52,7 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 |:---------|:------------|:---------|
 | [ALGORITHMS.md](ALGORITHMS.md) | Algorithm details: TF-IDF, Jaccard, specificity scoring, etc. | Developers |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
-| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity algorithms (deprecated - see ALGORITHMS.md) | Developers |
+| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity detection using sentence-transformers | Developers |
 | [TESTING_NARRATIVE.md](TESTING_NARRATIVE.md) | Test development story and approach | Developers |
 
 ### Archive
