@@ -7,7 +7,15 @@ in the vault directory.
 
 import yaml
 from pathlib import Path
-from typing import Set
+from typing import Set, Optional
+
+
+# Header for exclusions YAML file
+_EXCLUSIONS_HEADER = """# Tags to exclude from merge/synonym suggestions
+# These tags will never be suggested for merging
+# Useful for proper nouns, country names, etc.
+
+"""
 
 
 class ExclusionsConfig:
@@ -31,7 +39,7 @@ class ExclusionsConfig:
     have high semantic similarity.
     """
 
-    def __init__(self, vault_path: Path = None):
+    def __init__(self, vault_path: Optional[Path] = None):
         """Initialize exclusions configuration.
 
         Args:
@@ -45,6 +53,17 @@ class ExclusionsConfig:
             if self.config_file.exists():
                 self.load()
 
+    def _normalize_tag(self, tag: str) -> str:
+        """Normalize tag for comparison.
+
+        Args:
+            tag: Tag to normalize
+
+        Returns:
+            Normalized tag (lowercase, stripped)
+        """
+        return tag.lower().strip()
+
     def load(self) -> None:
         """Load exclusions from YAML file.
 
@@ -57,9 +76,9 @@ class ExclusionsConfig:
         if not config:
             return
 
-        # Process excluded tags (normalize to lowercase)
+        # Process excluded tags (normalize)
         if 'exclude_tags' in config:
-            self.excluded_tags = {tag.lower().strip() for tag in config['exclude_tags'] if tag}
+            self.excluded_tags = {self._normalize_tag(tag) for tag in config['exclude_tags'] if tag}
 
     def is_excluded(self, tag: str) -> bool:
         """Check if a tag is excluded.
@@ -70,7 +89,7 @@ class ExclusionsConfig:
         Returns:
             True if the tag is excluded
         """
-        return tag.lower().strip() in self.excluded_tags
+        return self._normalize_tag(tag) in self.excluded_tags
 
     def is_operation_excluded(self, source_tags: list, target_tag: str) -> bool:
         """Check if an operation involves any excluded tags.
@@ -82,16 +101,7 @@ class ExclusionsConfig:
         Returns:
             True if any tag in the operation is excluded
         """
-        # Check target
-        if self.is_excluded(target_tag):
-            return True
-
-        # Check sources
-        for tag in source_tags:
-            if self.is_excluded(tag):
-                return True
-
-        return False
+        return any(self.is_excluded(tag) for tag in [target_tag] + source_tags)
 
     def add_exclusion(self, tag: str) -> None:
         """Add a tag to the exclusion list and save.
@@ -99,7 +109,7 @@ class ExclusionsConfig:
         Args:
             tag: Tag to exclude
         """
-        self.excluded_tags.add(tag.lower().strip())
+        self.excluded_tags.add(self._normalize_tag(tag))
         self.save()
 
     def remove_exclusion(self, tag: str) -> bool:
@@ -111,17 +121,21 @@ class ExclusionsConfig:
         Returns:
             True if the tag was removed, False if it wasn't in the list
         """
-        tag_lower = tag.lower().strip()
-        if tag_lower in self.excluded_tags:
-            self.excluded_tags.remove(tag_lower)
+        normalized_tag = self._normalize_tag(tag)
+        if normalized_tag in self.excluded_tags:
+            self.excluded_tags.remove(normalized_tag)
             self.save()
             return True
         return False
 
     def save(self) -> None:
-        """Save exclusions to YAML file."""
+        """Save exclusions to YAML file.
+
+        Raises:
+            ValueError: If vault_path is not set
+        """
         if not self.vault_path:
-            return
+            raise ValueError("Cannot save exclusions: vault_path is not set")
 
         config = {
             'exclude_tags': sorted(list(self.excluded_tags))
@@ -130,9 +144,7 @@ class ExclusionsConfig:
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
 
         with open(self.config_file, 'w') as f:
-            f.write("# Tags to exclude from merge/synonym suggestions\n")
-            f.write("# These tags will never be suggested for merging\n")
-            f.write("# Useful for proper nouns, country names, etc.\n\n")
+            f.write(_EXCLUSIONS_HEADER)
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
     def get_all_exclusions(self) -> Set[str]:
@@ -156,11 +168,7 @@ class ExclusionsConfig:
         config_file = vault_path / '.tagex' / 'exclusions.yaml'
         config_file.parent.mkdir(parents=True, exist_ok=True)
 
-        template = """# Tags to exclude from merge/synonym suggestions
-# These tags will never be suggested for merging
-# Useful for proper nouns, country names, etc.
-
-exclude_tags:
+        template = _EXCLUSIONS_HEADER + """exclude_tags:
   # Add tags to exclude below (one per line)
   # Example:
   # - spain
