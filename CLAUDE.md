@@ -29,13 +29,12 @@ tagex health /path/to/vault
 
 # Analysis commands (accept vault path or JSON file)
 tagex analyze pairs /path/to/vault [--no-filter] [--min-pairs N]
-tagex analyze merge /path/to/vault [--no-sklearn] [--min-usage N]
 tagex analyze quality /path/to/vault [--format text|json]
 tagex analyze synonyms /path/to/vault [--min-similarity 0.7] [--show-related] [--no-transformers]
 tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
 
 # Unified recommendations and apply workflow (safe by default)
-tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals,merge]
+tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals]
 tagex apply operations.yaml [--vault-path /path/to/vault]  # Preview mode (default)
 tagex apply operations.yaml [--vault-path /path/to/vault] --execute  # Actually apply changes
 
@@ -104,6 +103,7 @@ Configuration files are stored in `.tagex/` directory within each vault:
 
 - **`.tagex/config.yaml`** - General settings (plural preferences, thresholds)
 - **`.tagex/synonyms.yaml`** - User-defined synonym mappings
+- **`.tagex/exclusions.yaml`** - Tags to exclude from merge suggestions
 - **`.tagex/README.md`** - Documentation about configuration
 
 Use `tagex init /vault` to create configuration directory with templates.

@@ -8,12 +8,14 @@ actionable operations file that can be reviewed and applied.
 from typing import Dict, List, Any, Set
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 import yaml
 
 from .synonym_analyzer import detect_synonyms_by_semantics, find_acronym_expansions
 from .plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
-from .merge_analyzer import suggest_merges
 from ..config.plural_config import PluralConfig
+from ..config.exclusions_config import ExclusionsConfig
+from ..config.synonym_config import SynonymConfig
 
 
 class Operation:
@@ -66,13 +68,18 @@ class RecommendationsEngine:
     ):
         self.tag_stats = tag_stats
         self.vault_path = vault_path
-        self.analyzers = analyzers or ['synonyms', 'plurals', 'merge']
+        self.analyzers = analyzers or ['synonyms', 'plurals']
         self.operations: List[Operation] = []
         self.config = PluralConfig.from_vault(vault_path) if vault_path else PluralConfig()
+        self.exclusions = ExclusionsConfig(vault_path) if vault_path else ExclusionsConfig()
+        self.synonym_config = SynonymConfig(Path(vault_path)) if vault_path else None
 
     def run_all_analyzers(self, min_similarity: float = 0.7, no_transformers: bool = False) -> List[Operation]:
         """Run all enabled analyzers and collect operations."""
         self.operations = []
+
+        # Run user-defined synonyms FIRST (highest priority)
+        self._run_user_synonyms()
 
         # Run analyzers in priority order
         if 'synonyms' in self.analyzers and not no_transformers:
@@ -81,13 +88,94 @@ class RecommendationsEngine:
         if 'plurals' in self.analyzers:
             self._run_plurals_analyzer()
 
-        if 'merge' in self.analyzers:
-            self._run_merge_analyzer()
-
         # Deduplicate operations
         self.operations = self._deduplicate_operations(self.operations)
 
+        # Filter out operations that conflict with user-defined synonyms
+        self.operations = self._filter_synonym_conflicts(self.operations)
+
+        # Filter out excluded tags
+        self.operations = self._filter_exclusions(self.operations)
+
         return self.operations
+
+    def _run_user_synonyms(self):
+        """Process user-defined synonyms from synonyms.yaml."""
+        if not self.synonym_config or not self.synonym_config.has_synonyms():
+            return
+
+        print("  Processing user-defined synonyms...")
+
+        # Get all synonym groups
+        for group in self.synonym_config.get_all_groups():
+            if len(group) < 2:
+                continue
+
+            canonical = group[0]
+            variants = group[1:]
+
+            # Only suggest operations for tags that exist in the vault
+            existing_variants = [v for v in variants if v in self.tag_stats]
+            if not existing_variants:
+                continue
+
+            # Note: We DON'T require canonical to exist - merging variants will create it
+
+            # Create operation for each variant → canonical
+            for variant in existing_variants:
+                operation = Operation(
+                    operation_type='merge',
+                    source_tags=[variant],
+                    target_tag=canonical,
+                    reason=f"User-defined synonym",
+                    enabled=True,
+                    confidence=1.0,  # Highest confidence - user defined
+                    source_analyzer='user-synonyms',
+                    metadata={}
+                )
+                self.operations.append(operation)
+
+    def _filter_synonym_conflicts(self, operations: List[Operation]) -> List[Operation]:
+        """Filter out operations that conflict with user-defined synonyms."""
+        if not self.synonym_config or not self.synonym_config.has_synonyms():
+            return operations
+
+        filtered = []
+        conflicted_count = 0
+
+        for op in operations:
+            # Skip user-defined synonym operations (already correct)
+            if op.source_analyzer == 'user-synonyms':
+                filtered.append(op)
+                continue
+
+            # Check if any tag in this operation is in a user-defined synonym group
+            conflict = False
+            for source_tag in op.source_tags:
+                canonical = self.synonym_config.get_canonical(source_tag)
+                if canonical != source_tag:
+                    # This tag is in a synonym group
+                    # Check if the operation's target matches the user-defined canonical
+                    if op.target_tag != canonical:
+                        # Conflict! This operation would merge to something other than the user-defined canonical
+                        conflict = True
+                        break
+
+            # Also check if target is in a synonym group
+            target_canonical = self.synonym_config.get_canonical(op.target_tag)
+            if target_canonical != op.target_tag:
+                # Target is a variant, not a canonical - this is wrong
+                conflict = True
+
+            if conflict:
+                conflicted_count += 1
+            else:
+                filtered.append(op)
+
+        if conflicted_count > 0:
+            print(f"  Filtered out {conflicted_count} operations conflicting with user-defined synonyms")
+
+        return filtered
 
     def _run_synonyms_analyzer(self, min_similarity: float = 0.7):
         """Run semantic synonym detection."""
@@ -202,52 +290,6 @@ class RecommendationsEngine:
                 )
                 self.operations.append(operation)
 
-    def _run_merge_analyzer(self):
-        """Run TF-IDF based merge suggestions."""
-        print("  Running merge analyzer...")
-
-        import argparse
-        args = argparse.Namespace(no_sklearn=False)
-
-        suggestions = suggest_merges(self.tag_stats, min_usage=2, args=args)
-
-        # Process each category of suggestions
-        categories = [
-            ('similar_names', 'Similar names'),
-            ('semantic_duplicates', 'Semantic duplicates (TF-IDF)'),
-            ('high_file_overlap', 'High file overlap'),
-            ('variant_patterns', 'Variant patterns')
-        ]
-
-        for category_key, category_name in categories:
-            for suggestion in suggestions.get(category_key, []):
-                # Extract tags and scores
-                tags = suggestion.get('tags', [])
-                score = suggestion.get('similarity', suggestion.get('overlap', 0))
-
-                if len(tags) >= 2:
-                    # Use most-used tag as target
-                    tags_with_counts = [(t, self.tag_stats[t]['count']) for t in tags]
-                    tags_with_counts.sort(key=lambda x: x[1], reverse=True)
-
-                    target = tags_with_counts[0][0]
-                    sources = [t for t, _ in tags_with_counts[1:]]
-
-                    operation = Operation(
-                        operation_type='merge',
-                        source_tags=sources,
-                        target_tag=target,
-                        reason=f"{category_name} (score: {score:.3f})",
-                        enabled=True,
-                        confidence=score,
-                        source_analyzer='merge',
-                        metadata={
-                            'category': category_key,
-                            'all_tags': tags
-                        }
-                    )
-                    self.operations.append(operation)
-
     def _deduplicate_operations(self, operations: List[Operation]) -> List[Operation]:
         """Remove duplicate operations, keeping highest confidence version."""
         # Group by (source_tags, target_tag) key
@@ -274,6 +316,25 @@ class RecommendationsEngine:
             deduplicated.append(best_op)
 
         return deduplicated
+
+    def _filter_exclusions(self, operations: List[Operation]) -> List[Operation]:
+        """Filter out operations involving excluded tags."""
+        if not self.exclusions.get_all_exclusions():
+            return operations  # No exclusions configured
+
+        filtered = []
+        excluded_count = 0
+
+        for op in operations:
+            if self.exclusions.is_operation_excluded(op.source_tags, op.target_tag):
+                excluded_count += 1
+            else:
+                filtered.append(op)
+
+        if excluded_count > 0:
+            print(f"  Filtered out {excluded_count} operations involving excluded tags")
+
+        return filtered
 
     def export_to_yaml(self, output_path: str = None) -> str:
         """Export operations to YAML format."""

@@ -70,6 +70,19 @@ class SynonymConfig:
                 for tag in group:
                     self.canonical_map[tag] = canonical
 
+        # Process top-level canonical: [variants] format
+        # (for backward compatibility and simpler format)
+        for key, value in config.items():
+            if key in ('synonyms', 'prefer'):
+                continue  # Already processed above
+            if isinstance(value, list) and len(value) > 0:
+                canonical = key
+                variants = value
+                group = [canonical] + variants
+                self.synonym_groups.append(group)
+                for tag in group:
+                    self.canonical_map[tag] = canonical
+
     def get_canonical(self, tag: str) -> str:
         """Get canonical form of a tag.
 
