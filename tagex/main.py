@@ -1317,7 +1317,7 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--export', type=click.Path(), help='Export operations to YAML file')
-@click.option('--analyzers', type=str, default='synonyms,plurals', help='Comma-separated list of analyzers to run (default: synonyms,plurals)')
+@click.option('--analyzers', type=str, default='synonyms,plurals', help='Comma-separated list of analyzers to run (available: synonyms,plurals,singletons)')
 @click.option('--min-similarity', type=float, default=0.7, help='Minimum semantic similarity threshold (0.0-1.0)')
 @click.option('--no-transformers', is_flag=True, help='Skip semantic analysis (faster, no synonym detection)')
 def recommendations(input_path, tag_types, no_filter, export, analyzers, min_similarity, no_transformers):
@@ -1332,7 +1332,7 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
     Analyzers:
     - synonyms: Semantic similarity detection (requires sentence-transformers)
     - plurals: Singular/plural variant detection
-    - merge: TF-IDF based similarity detection
+    - singletons: Merge singleton tags into frequent tags
 
     The exported YAML file can be edited to enable/disable specific operations,
     then applied using: tagex apply <file.yaml>
