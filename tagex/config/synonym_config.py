@@ -27,25 +27,55 @@ class SynonymConfig:
     The first tag in each group becomes the canonical form.
     """
 
-    def __init__(self, vault_path: Path):
+    def __init__(self, vault_path: Path = None):
         """Initialize synonym configuration.
 
         Args:
-            vault_path: Path to the vault root directory
+            vault_path: Path to the vault root directory (optional)
         """
         self.vault_path = vault_path
-        self.config_file = vault_path / '.tagex' / 'synonyms.yaml'
         self.synonym_groups: List[List[str]] = []
         self.canonical_map: Dict[str, str] = {}  # tag → canonical form
 
-        if self.config_file.exists():
-            self.load()
+        if vault_path:
+            self.config_file = vault_path / '.tagex' / 'synonyms.yaml'
+            if self.config_file.exists():
+                self.load()
+
+    def _add_synonym_group(self, group: List[str]) -> None:
+        """Add a synonym group to internal structures.
+
+        Args:
+            group: List of tags where first is canonical
+
+        Raises:
+            ValueError: If a tag already exists in another group
+        """
+        if len(group) < 2:
+            return
+
+        canonical = group[0]
+
+        # Validate: check for tags that already have a different canonical
+        for tag in group:
+            existing_canonical = self.canonical_map.get(tag)
+            if existing_canonical and existing_canonical != canonical:
+                raise ValueError(
+                    f"Conflicting synonym definition: '{tag}' is already defined "
+                    f"with canonical '{existing_canonical}', cannot also use '{canonical}'"
+                )
+
+        # Add the group
+        self.synonym_groups.append(group)
+        for tag in group:
+            self.canonical_map[tag] = canonical
 
     def load(self) -> None:
         """Load synonym configuration from YAML file.
 
         Raises:
             yaml.YAMLError: If the YAML file is malformed
+            ValueError: If conflicting synonym definitions are found
         """
         with open(self.config_file) as f:
             config = yaml.safe_load(f)
@@ -56,32 +86,18 @@ class SynonymConfig:
         # Process synonym groups
         if 'synonyms' in config:
             for group in config['synonyms']:
-                if len(group) > 1:
-                    canonical = group[0]
-                    self.synonym_groups.append(group)
-                    for tag in group:
-                        self.canonical_map[tag] = canonical
+                self._add_synonym_group(group)
 
         # Process prefer mappings
         if 'prefer' in config:
             for canonical, variants in config['prefer'].items():
-                group = [canonical] + variants
-                self.synonym_groups.append(group)
-                for tag in group:
-                    self.canonical_map[tag] = canonical
+                self._add_synonym_group([canonical] + variants)
 
         # Process top-level canonical: [variants] format
         # (for backward compatibility and simpler format)
         for key, value in config.items():
-            if key in ('synonyms', 'prefer'):
-                continue  # Already processed above
-            if isinstance(value, list) and len(value) > 0:
-                canonical = key
-                variants = value
-                group = [canonical] + variants
-                self.synonym_groups.append(group)
-                for tag in group:
-                    self.canonical_map[tag] = canonical
+            if key not in ('synonyms', 'prefer') and isinstance(value, list):
+                self._add_synonym_group([key] + value)
 
     def get_canonical(self, tag: str) -> str:
         """Get canonical form of a tag.

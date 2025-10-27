@@ -71,8 +71,8 @@ class RecommendationsEngine:
         self.analyzers = analyzers or ['synonyms', 'plurals']
         self.operations: List[Operation] = []
         self.config = PluralConfig.from_vault(vault_path) if vault_path else PluralConfig()
-        self.exclusions = ExclusionsConfig(vault_path) if vault_path else ExclusionsConfig()
-        self.synonym_config = SynonymConfig(Path(vault_path)) if vault_path else None
+        self.exclusions = ExclusionsConfig(Path(vault_path) if vault_path else None)
+        self.synonym_config = SynonymConfig(Path(vault_path) if vault_path else None)
 
     def run_all_analyzers(self, min_similarity: float = 0.7, no_transformers: bool = False) -> List[Operation]:
         """Run all enabled analyzers and collect operations."""
@@ -101,7 +101,7 @@ class RecommendationsEngine:
 
     def _run_user_synonyms(self):
         """Process user-defined synonyms from synonyms.yaml."""
-        if not self.synonym_config or not self.synonym_config.has_synonyms():
+        if not self.synonym_config.has_synonyms():
             return
 
         print("  Processing user-defined synonyms...")
@@ -121,23 +121,48 @@ class RecommendationsEngine:
 
             # Note: We DON'T require canonical to exist - merging variants will create it
 
-            # Create operation for each variant → canonical
-            for variant in existing_variants:
-                operation = Operation(
-                    operation_type='merge',
-                    source_tags=[variant],
-                    target_tag=canonical,
-                    reason=f"User-defined synonym",
-                    enabled=True,
-                    confidence=1.0,  # Highest confidence - user defined
-                    source_analyzer='user-synonyms',
-                    metadata={}
-                )
-                self.operations.append(operation)
+            # Create single operation with all variants → canonical
+            operation = Operation(
+                operation_type='merge',
+                source_tags=existing_variants,
+                target_tag=canonical,
+                reason=f"User-defined synonym",
+                enabled=True,
+                confidence=1.0,  # Highest confidence - user defined
+                source_analyzer='user-synonyms',
+                metadata={}
+            )
+            self.operations.append(operation)
+
+    def _operation_conflicts_with_synonyms(self, op: Operation) -> bool:
+        """Check if an operation conflicts with user-defined synonyms.
+
+        Args:
+            op: Operation to check
+
+        Returns:
+            True if the operation conflicts with user-defined synonyms
+        """
+        # Check each source tag
+        for source_tag in op.source_tags:
+            user_defined_canonical = self.synonym_config.get_canonical(source_tag)
+            is_variant_tag = (user_defined_canonical != source_tag)
+
+            if is_variant_tag and op.target_tag != user_defined_canonical:
+                # Operation would merge to wrong canonical form
+                return True
+
+        # Check if target is a variant (should only target canonical forms)
+        target_canonical = self.synonym_config.get_canonical(op.target_tag)
+        if target_canonical != op.target_tag:
+            # Target is a variant, not a canonical - conflict
+            return True
+
+        return False
 
     def _filter_synonym_conflicts(self, operations: List[Operation]) -> List[Operation]:
         """Filter out operations that conflict with user-defined synonyms."""
-        if not self.synonym_config or not self.synonym_config.has_synonyms():
+        if not self.synonym_config.has_synonyms():
             return operations
 
         filtered = []
@@ -149,25 +174,7 @@ class RecommendationsEngine:
                 filtered.append(op)
                 continue
 
-            # Check if any tag in this operation is in a user-defined synonym group
-            conflict = False
-            for source_tag in op.source_tags:
-                canonical = self.synonym_config.get_canonical(source_tag)
-                if canonical != source_tag:
-                    # This tag is in a synonym group
-                    # Check if the operation's target matches the user-defined canonical
-                    if op.target_tag != canonical:
-                        # Conflict! This operation would merge to something other than the user-defined canonical
-                        conflict = True
-                        break
-
-            # Also check if target is in a synonym group
-            target_canonical = self.synonym_config.get_canonical(op.target_tag)
-            if target_canonical != op.target_tag:
-                # Target is a variant, not a canonical - this is wrong
-                conflict = True
-
-            if conflict:
+            if self._operation_conflicts_with_synonyms(op):
                 conflicted_count += 1
             else:
                 filtered.append(op)
