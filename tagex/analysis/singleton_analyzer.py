@@ -167,15 +167,17 @@ class SingletonAnalyzer:
             for i, sim_score in enumerate(similarities):
                 if sim_score >= self.semantic_similarity_threshold:
                     frequent_tag = frequent_tag_list[i]
+                    # Convert numpy scalar to Python float for YAML serialization
+                    confidence = float(sim_score)
                     matches.append({
                         'singleton': singleton_tag,
                         'target': frequent_tag,
                         'method': 'semantic',
-                        'confidence': sim_score,
-                        'reason': f"Semantic similarity: {sim_score:.3f}",
+                        'confidence': confidence,
+                        'reason': f"Semantic similarity: {confidence:.3f}",
                         'target_usage': self.frequent_tags[frequent_tag]['count'],
                         'metadata': {
-                            'semantic_similarity': round(sim_score, 3)
+                            'semantic_similarity': round(confidence, 3)
                         }
                     })
 
