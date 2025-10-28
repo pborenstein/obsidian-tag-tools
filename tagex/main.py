@@ -29,8 +29,14 @@ def main():
     pass
 
 
-@main.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@main.group()
+def tags():
+    """Tag operations - extract, rename, merge, delete, and apply tag modifications."""
+    pass
+
+
+@tags.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--output', '-o', type=click.Path(), help='Output file path (default: stdout)')
 @click.option('--format', '-f', type=click.Choice(['json', 'csv', 'txt']), default='json', help='Output format')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
@@ -41,7 +47,7 @@ def main():
 def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_filter):
     """Extract tags from the vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
     """
     # Set up logging
     log_level = logging.DEBUG if verbose else logging.INFO
@@ -100,7 +106,7 @@ def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_f
         sys.exit(1)
 
 
-@main.command()
+@tags.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('old_tag')
 @click.argument('new_tag')
@@ -121,7 +127,7 @@ def rename(vault_path, old_tag, new_tag, tag_types, execute):
     operation.run_operation()
 
 
-@main.command()
+@tags.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
@@ -140,9 +146,9 @@ def merge(vault_path, source_tags, target_tag, tag_types, execute):
     operation.run_operation()
 
 
-@main.command()
+@tags.command()
 @click.argument('operations_file', type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option('--vault-path', type=click.Path(exists=True, file_okay=False, dir_okay=True), help='Vault path (if different from working directory)')
+@click.option('--vault-path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', help='Vault path (defaults to current directory)')
 @click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode (dry-run)')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 def apply(operations_file, vault_path, execute, tag_types):
@@ -328,7 +334,7 @@ def apply(operations_file, vault_path, execute, tag_types):
         print("="*70)
 
 
-@main.command()
+@tags.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
@@ -349,12 +355,12 @@ def delete(vault_path, tags_to_delete, tag_types, execute):
 
 
 @main.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration directory')
 def init(vault_path, force):
     """Initialize tagex configuration in a vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     Creates .tagex/ directory with:
     - config.yaml: General configuration (plural preference, etc.)
@@ -493,12 +499,12 @@ For more information, see:
 
 
 @main.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--strict', is_flag=True, help='Treat warnings as errors')
 def validate(vault_path, strict):
     """Validate tagex configuration in a vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     Checks:
     - Configuration file syntax (YAML validity)
@@ -642,7 +648,7 @@ def validate(vault_path, strict):
 
 
 @main.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--top', '-t', type=int, default=20, help='Number of top tags to show (default: 20)')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
@@ -650,7 +656,7 @@ def validate(vault_path, strict):
 def stats(vault_path, tag_types, top, format, no_filter):
     """Display comprehensive tag statistics for the vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     Shows tag counts, distribution patterns, and vault health metrics.
     """
@@ -682,13 +688,13 @@ def stats(vault_path, tag_types, top, format, no_filter):
 
 
 @main.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
 def health(vault_path, tag_types, no_filter):
     """Generate comprehensive vault health report.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     Runs all analyses and generates a unified report with:
     - Critical issues requiring immediate attention
@@ -876,14 +882,14 @@ def analyze():
 
 
 @analyze.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.', required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--min-pairs', type=int, default=2, help='Minimum pair threshold')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 def pairs(input_path, tag_types, min_pairs, no_filter):
     """Analyze tag pair patterns and co-occurrence.
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
     """
     from .analysis.pair_analyzer import analyze_tag_relationships, find_tag_clusters
     from .utils.input_handler import load_or_extract_tags, get_input_type
@@ -927,7 +933,7 @@ def pairs(input_path, tag_types, min_pairs, no_filter):
 
 
 @analyze.command('merge')
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
@@ -935,7 +941,7 @@ def pairs(input_path, tag_types, min_pairs, no_filter):
 def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
     """Suggest tag merge opportunities.
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
 
     Identifies potential tag merges using multiple approaches:
     - Similar names (string similarity)
@@ -1170,7 +1176,7 @@ def interpret_vault_health(health, distribution, total_tags):
 
 
 @analyze.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--format', '-f', type=click.Choice(['text', 'json']), default='text', help='Output format')
@@ -1178,7 +1184,7 @@ def interpret_vault_health(health, distribution, total_tags):
 def quality(input_path, tag_types, no_filter, format, max_items):
     """Analyze tag quality (overbroad tags, specificity).
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
 
     Identifies:
     - Overbroad tags (used too generally)
@@ -1223,7 +1229,7 @@ def quality(input_path, tag_types, no_filter, format, max_items):
 
 
 @analyze.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--min-similarity', type=float, default=0.7, help='Minimum semantic similarity threshold (0.0-1.0)')
@@ -1232,7 +1238,7 @@ def quality(input_path, tag_types, no_filter, format, max_items):
 def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_transformers):
     """Detect synonym tags using semantic similarity.
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
 
     Uses sentence-transformers to find tags with similar MEANINGS:
     - "tech" vs "technology"
@@ -1337,7 +1343,7 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
 
 
 @analyze.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--export', type=click.Path(), help='Export operations to YAML file')
@@ -1347,7 +1353,7 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
 def recommendations(input_path, tag_types, no_filter, export, analyzers, min_similarity, no_transformers):
     """Generate consolidated tag operation recommendations.
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
 
     Runs multiple analyzers and consolidates their recommendations into
     a single actionable operations file. Recommendations can be exported
@@ -1415,14 +1421,14 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
 
 
 @analyze.command()
-@click.argument('input_path', type=click.Path(exists=True))
+@click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--prefer', type=click.Choice(['usage', 'plural', 'singular']), help='Override preference mode (default: usage-based or from config)')
 def plurals(input_path, tag_types, no_filter, prefer):
     """Detect singular/plural variants.
 
-    INPUT_PATH: Vault directory or JSON file containing tag data
+    INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
 
     Uses enhanced plural detection including irregular plurals
     (child/children) and complex patterns (-ies/-y, -ves/-f).
