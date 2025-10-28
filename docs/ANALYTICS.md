@@ -16,6 +16,7 @@ tagex analyze merge      ← Tag merge suggestion engine with embeddings
 tagex analyze quality    ← Overbroad tag detection and specificity scoring
 tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers
 tagex analyze plurals    ← Singular/plural variant detection
+tagex analyze suggest    ← Content-based tag suggestions for untagged/lightly-tagged notes
 
 # Singleton reduction (via recommendations)
 tagex analyze recommendations /vault --analyzers singletons --export ops.yaml
@@ -106,6 +107,7 @@ Legend:
 | Find tags that are too generic (notes, misc) | `tagex analyze quality /vault` |
 | Understand which tags appear together | `tagex analyze pairs /vault` |
 | Reduce singleton tags (used only once) | `tagex analyze recommendations /vault --analyzers singletons --export ops.yaml` |
+| Suggest tags for untagged/lightly-tagged notes | `tagex analyze suggest --vault-path /vault --min-tags 2` |
 | Clean up all duplicates systematically | Use `recommendations` command or run all: plurals, synonyms, singletons |
 
 **Note:** All `analyze` commands now accept either a vault path (auto-extracts tags) or a JSON file (pre-extracted tags).
@@ -301,7 +303,7 @@ Health Assessment:
 | 5. Find synonyms | `tagex analyze synonyms tags.json` | Context-based duplicate detection |
 | 6. Merge analysis | `tagex analyze merge tags.json` | Semantic/morphological duplicates |
 | 7. Pair analysis | `tagex analyze pairs tags.json` | Understand tag relationships |
-| 8. Apply changes | `tagex merge /vault tag1 tag2 --into new-tag --dry-run` | Preview before committing |
+| 8. Apply changes | `tagex merge /vault tag1 tag2 --into new-tag` | Preview (safe by default) |
 | 9. Verify | `tagex stats /vault` | Confirm improvements |
 
 **Recommended Workflow for Tag Cleanup:**
@@ -322,9 +324,9 @@ tagex analyze pairs tags.json --min-pairs 3 > pairs-report.txt
 
 # Step 4: Review reports and plan consolidations
 
-# Step 5: Apply merges (dry-run first!)
-tagex merge /vault tag1 tag2 --into target --dry-run
-tagex merge /vault tag1 tag2 --into target
+# Step 5: Apply merges (safe by default)
+tagex merge /vault tag1 tag2 --into target              # Preview changes
+tagex merge /vault tag1 tag2 --into target --execute    # Apply changes
 
 # Step 6: Verify improvements
 tagex extract /vault -o tags-after.json
@@ -645,7 +647,7 @@ See [semantic-analysis.md](semantic-analysis.md) for detailed technical implemen
 | `tagex analyze merge tags.json --min-usage 10` | Higher usage threshold |
 | `tagex analyze merge tags.json --no-filter` | Include all tags |
 | `tagex analyze merge tags.json --no-sklearn` | Pattern-based fallback |
-| `tagex merge /vault writers writering --into writing --dry-run` | Execute suggestions |
+| `tagex merge /vault writers writering --into writing` | Preview suggestions |
 
 ### Dependencies and Fallback Strategy
 
@@ -1404,6 +1406,195 @@ tagex stats /vault
 | **singletons** | Single-use tags → frequent tags | Singleton (1 use) → Frequent (5+ uses) |
 
 The singleton analyzer is the **only analyzer** that specifically targets tags used exactly once, filling a critical gap in tag consolidation workflows.
+
+---
+
+## Content Analyzer (`content_analyzer.py`)
+
+### Purpose
+
+The content analyzer suggests relevant tags for notes based on their text content. It helps you discover appropriate existing tags for untagged or lightly-tagged notes by analyzing semantic similarity between note content and tag usage patterns.
+
+**Why suggest tags from content?**
+- **Improve discoverability**: Untagged notes are invisible to tag-based navigation
+- **Maintain consistency**: Suggests existing tags rather than creating new ones
+- **Save time**: Automated suggestions for bulk tagging workflows
+- **Surface connections**: Reveals thematic relationships in content
+
+### How It Works
+
+The analyzer uses semantic similarity to match note content against the usage patterns of existing tags:
+
+1. **Content Extraction**
+   - Extracts text from note body (excluding frontmatter)
+   - Cleans and processes markdown formatting
+
+2. **Tag Context Building**
+   - For each existing tag, builds a "context" from all notes using that tag
+   - Aggregates content from tagged notes to represent tag meaning
+
+3. **Semantic Matching** (when transformers available)
+   - Embeds note content using sentence-transformers (all-MiniLM-L6-v2)
+   - Embeds tag contexts using the same model
+   - Calculates cosine similarity between note and each tag context
+   - Suggests tags with highest similarity scores
+
+4. **Keyword Fallback** (when transformers unavailable)
+   - Uses TF-IDF to extract key terms from note content
+   - Matches against tag names and usage patterns
+   - Scores based on keyword overlap
+
+**Key constraint**: Only suggests existing tags (doesn't create new ones), ensuring consistency with your established taxonomy.
+
+### Usage
+
+```bash
+# Suggest tags for notes with < 2 tags
+tagex analyze suggest --vault-path /vault --min-tags 2
+
+# Suggest for specific files or directories
+tagex analyze suggest /vault/projects/ --vault-path /vault --min-tags 1
+
+# Export suggestions to YAML for review
+tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
+
+# Higher confidence threshold
+tagex analyze suggest --vault-path /vault --min-confidence 0.5
+
+# More suggestions per note
+tagex analyze suggest --vault-path /vault --top-n 5
+
+# Skip semantic analysis (faster, keyword-based only)
+tagex analyze suggest --vault-path /vault --no-transformers
+```
+
+### Output Format
+
+**Console output:**
+```
+TAG SUGGESTIONS (15 notes)
+======================================================================
+
+1. /vault/projects/machine-learning-notes.md
+   Current tags: (none)
+   Suggested tags:
+     - machine-learning (confidence: 0.78)
+     - python (confidence: 0.65)
+     - data-science (confidence: 0.52)
+
+2. /vault/ideas/web-scraping.md
+   Current tags: coding
+   Suggested tags:
+     - web-development (confidence: 0.71)
+     - python (confidence: 0.68)
+     - automation (confidence: 0.45)
+```
+
+**YAML export (for apply workflow):**
+```yaml
+metadata:
+  generated_by: tagex analyze suggest
+  timestamp: 2025-10-28T00:19:34
+  vault_path: /vault
+  total_suggestions: 15
+
+operations:
+- type: add_tags
+  target: /vault/projects/machine-learning-notes.md
+  source:
+  - machine-learning
+  - python
+  - data-science
+  reason: 'Content-based suggestion (avg confidence: 0.65)'
+  enabled: true
+  metadata:
+    confidence: 0.65
+    source_analyzer: content
+    current_tags: []
+    confidences: [0.78, 0.65, 0.52]
+    methods: [semantic, semantic, semantic]
+```
+
+### Configuration
+
+| Parameter | Default | Purpose |
+|:----------|:--------|:--------|
+| `--min-tags` | 2 | Only process notes with fewer than N tags |
+| `--max-tags` | None | Also require notes have at most N tags |
+| `--top-n` | 3 | Number of tags to suggest per note |
+| `--min-confidence` | 0.3 | Minimum confidence threshold (0.0-1.0) |
+| `--no-transformers` | False | Use keyword matching instead of semantic |
+
+### Integration with Apply Workflow
+
+The content analyzer generates operations compatible with `tagex apply`:
+
+```bash
+# 1. Generate suggestions
+tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
+
+# 2. Review and edit suggestions.yaml
+# - Set enabled: false for suggestions you disagree with
+# - Remove specific tags from source lists
+# - Delete operations entirely
+
+# 3. Preview changes
+tagex apply suggestions.yaml --vault-path /vault
+
+# 4. Apply tags
+tagex apply suggestions.yaml --vault-path /vault --execute
+```
+
+### When to Use
+
+**Good for:**
+- Vaults with many untagged or minimally tagged notes
+- Bulk tagging workflows after importing content
+- Ensuring consistent tag application across vault
+- Discovering thematic connections in content
+
+**Not ideal for:**
+- Notes with specialized jargon not represented in existing tags
+- Very short notes (<100 words) with limited content
+- Notes that genuinely don't fit existing tag categories
+- When you want to create new tags rather than reuse existing ones
+
+### Example Workflow
+
+```bash
+# 1. Check how many notes lack tags
+tagex stats /vault
+# Output: Files without tags: 234
+
+# 2. Generate suggestions for untagged notes
+tagex analyze suggest --vault-path /vault --min-tags 1 --export tag-suggestions.yaml
+
+# 3. Review suggestions
+# - Open tag-suggestions.yaml
+# - Disable suggestions you don't want
+# - Modify tag lists
+
+# 4. Preview
+tagex apply tag-suggestions.yaml --vault-path /vault
+
+# 5. Apply
+tagex apply tag-suggestions.yaml --vault-path /vault --execute
+
+# 6. Verify improvement
+tagex stats /vault
+# Output: Files without tags: 87  ← Much better!
+```
+
+### Comparison to Other Analyzers
+
+| Analyzer | Input | Output | Purpose |
+|:---------|:------|:-------|:--------|
+| **synonyms** | Existing tags | Merge operations | Consolidate duplicate tags |
+| **plurals** | Existing tags | Merge operations | Fix singular/plural splits |
+| **singletons** | Existing tags | Merge operations | Reduce rarely-used tags |
+| **content** | Note content | Add operations | Suggest tags for untagged notes |
+
+The content analyzer is the **only analyzer** that adds tags to notes rather than consolidating existing tags, making it complementary to the cleanup-focused analyzers.
 
 ---
 
