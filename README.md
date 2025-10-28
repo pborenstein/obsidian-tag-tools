@@ -50,19 +50,19 @@ tagex init /path/to/vault                    # Initialize .tagex/ configuration
 tagex validate /path/to/vault                # Validate configuration files
 
 # Extract tags from vault
-tagex extract /path/to/vault [options]
+tagex tags extract /path/to/vault [options]
 
 # Rename a tag across all files (safe by default - preview mode)
-tagex rename /path/to/vault old-tag new-tag             # Preview only
-tagex rename /path/to/vault old-tag new-tag --execute   # Actually rename
+tagex tags rename /path/to/vault old-tag new-tag             # Preview only
+tagex tags rename /path/to/vault old-tag new-tag --execute   # Actually rename
 
 # Merge multiple tags into one (safe by default - preview mode)
-tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag             # Preview only
-tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag --execute   # Actually merge
+tagex tags merge /path/to/vault tag1 tag2 tag3 --into target-tag             # Preview only
+tagex tags merge /path/to/vault tag1 tag2 tag3 --into target-tag --execute   # Actually merge
 
 # Delete tags from all files (safe by default - preview mode)
-tagex delete /path/to/vault tag-to-remove another-tag             # Preview only
-tagex delete /path/to/vault tag-to-remove another-tag --execute   # Actually delete
+tagex tags delete /path/to/vault tag-to-remove another-tag             # Preview only
+tagex tags delete /path/to/vault tag-to-remove another-tag --execute   # Actually delete
 
 # Get comprehensive vault statistics
 tagex stats /path/to/vault --top 15
@@ -80,14 +80,14 @@ tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
 
 # Unified recommendations workflow (consolidates all analyzers)
 tagex analyze recommendations /path/to/vault --export operations.yaml
-tagex apply operations.yaml                  # Preview changes (safe default)
-tagex apply operations.yaml --execute        # Apply changes (requires explicit flag)
+tagex tags apply operations.yaml                  # Preview changes (safe default)
+tagex tags apply operations.yaml --execute        # Apply changes (requires explicit flag)
 
 # Global --tag-types option examples (frontmatter is default)
-tagex extract /path/to/vault  # frontmatter only (default)
-tagex rename /path/to/vault --tag-types inline old-tag new-tag             # Preview only
-tagex rename /path/to/vault --tag-types inline old-tag new-tag --execute   # Execute
-tagex merge /path/to/vault --tag-types both tag1 tag2 --into new-tag       # Preview only
+tagex tags extract /path/to/vault  # frontmatter only (default)
+tagex tags rename /path/to/vault --tag-types inline old-tag new-tag             # Preview only
+tagex tags rename /path/to/vault --tag-types inline old-tag new-tag --execute   # Execute
+tagex tags merge /path/to/vault --tag-types both tag1 tag2 --into new-tag       # Preview only
 tagex stats /path/to/vault --tag-types both --format json
 ```
 
@@ -121,15 +121,15 @@ uv run python -m tagex.main stats /path/to/vault --top 20
 
 ```bash
 # Extract tags (JSON output, frontmatter only by default)
-tagex extract /path/to/vault
-tagex extract /path/to/vault -f csv -o tags.csv
-tagex extract /path/to/vault --tag-types both --no-filter
+tagex tags extract /path/to/vault
+tagex tags extract /path/to/vault -f csv -o tags.csv
+tagex tags extract /path/to/vault --tag-types both --no-filter
 
 # Tag operations (preview by default, --execute to apply)
-tagex rename /path/to/vault work project                            # Preview only
-tagex rename /path/to/vault work project --execute                  # Actually rename
-tagex merge /path/to/vault personal diary journal --into writing    # Preview only
-tagex delete /path/to/vault --tag-types inline obsolete-tag         # Preview only
+tagex tags rename /path/to/vault work project                            # Preview only
+tagex tags rename /path/to/vault work project --execute                  # Actually rename
+tagex tags merge /path/to/vault personal diary journal --into writing    # Preview only
+tagex tags delete /path/to/vault --tag-types inline obsolete-tag         # Preview only
 
 # Vault statistics
 tagex stats /path/to/vault --top 10 --format json
@@ -147,10 +147,10 @@ tagex health /vault
 tagex analyze recommendations /vault --export operations.yaml
 
 # Review and edit operations.yaml, then preview
-tagex apply operations.yaml
+tagex tags apply operations.yaml
 
 # Apply changes (requires explicit --execute flag)
-tagex apply operations.yaml --execute
+tagex tags apply operations.yaml --execute
 
 # Verify improvements
 tagex health /vault
@@ -161,7 +161,7 @@ tagex analyze synonyms /vault
 tagex analyze plurals /vault
 
 # Traditional workflow: extract once and analyze multiple times
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 tagex analyze pairs tags.json
 tagex analyze merge tags.json
 ```
@@ -254,10 +254,10 @@ tagex analyze recommendations /vault --export ops.yaml --analyzers plurals,synon
 # - Reorder operations
 
 # Preview changes (default - safe, no modifications)
-tagex apply ops.yaml
+tagex tags apply ops.yaml
 
 # Apply changes (requires explicit --execute flag)
-tagex apply ops.yaml --execute
+tagex tags apply ops.yaml --execute
 ```
 
 **Safety features:**
