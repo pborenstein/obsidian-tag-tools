@@ -637,7 +637,7 @@ The embedding method uses character-level n-grams instead of word-level features
 - **Language independence**: Works across different languages and naming conventions
 - **Semantic detection**: Identifies conceptual relationships that morphological patterns cannot capture
 
-See [semantic-analysis.md](semantic-analysis.md) for detailed technical implementation.
+See [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) for detailed technical implementation.
 
 ### Usage Examples
 
