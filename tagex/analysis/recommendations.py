@@ -13,6 +13,7 @@ import yaml
 
 from .synonym_analyzer import detect_synonyms_by_semantics, find_acronym_expansions
 from .plural_normalizer import normalize_plural_forms, normalize_compound_plurals, get_preferred_form
+from .singleton_analyzer import SingletonAnalyzer
 from ..config.plural_config import PluralConfig
 from ..config.exclusions_config import ExclusionsConfig
 from ..config.synonym_config import SynonymConfig
@@ -87,6 +88,9 @@ class RecommendationsEngine:
 
         if 'plurals' in self.analyzers:
             self._run_plurals_analyzer()
+
+        if 'singletons' in self.analyzers:
+            self._run_singletons_analyzer(no_transformers)
 
         # Deduplicate operations
         self.operations = self._deduplicate_operations(self.operations)
@@ -296,6 +300,45 @@ class RecommendationsEngine:
                     }
                 )
                 self.operations.append(operation)
+
+    def _run_singletons_analyzer(self, no_transformers: bool = False):
+        """Run singleton tag analysis."""
+        print("  Running singleton analyzer...")
+
+        # Use semantic analysis unless disabled
+        use_semantic = not no_transformers
+
+        # Create analyzer and run
+        analyzer = SingletonAnalyzer(
+            self.tag_stats,
+            frequent_threshold=5,  # Consider tags with 5+ uses as "frequent"
+            string_similarity_threshold=0.85,
+            semantic_similarity_threshold=0.70,
+            tfidf_similarity_threshold=0.60,
+            co_occurrence_threshold=0.70
+        )
+
+        suggestions = analyzer.analyze(use_semantic=use_semantic)
+
+        # Convert suggestions to operations
+        for suggestion in suggestions:
+            operation = Operation(
+                operation_type='merge',
+                source_tags=[suggestion['singleton']],
+                target_tag=suggestion['target'],
+                reason=f"Singleton → frequent tag ({suggestion['reason']})",
+                enabled=True,
+                confidence=suggestion['confidence'],
+                source_analyzer='singletons',
+                metadata={
+                    'method': suggestion['method'],
+                    'target_usage': suggestion['target_usage'],
+                    **suggestion['metadata']
+                }
+            )
+            self.operations.append(operation)
+
+        print(f"  Found {len(suggestions)} singleton merge suggestions")
 
     def _deduplicate_operations(self, operations: List[Operation]) -> List[Operation]:
         """Remove duplicate operations, keeping highest confidence version."""

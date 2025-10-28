@@ -17,6 +17,9 @@ tagex analyze quality    ← Overbroad tag detection and specificity scoring
 tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers
 tagex analyze plurals    ← Singular/plural variant detection
 
+# Singleton reduction (via recommendations)
+tagex analyze recommendations /vault --analyzers singletons --export ops.yaml
+
 # Configuration and health commands
 tagex init /vault        ← Initialize .tagex/ configuration directory
 tagex validate /vault    ← Validate configuration files
@@ -102,7 +105,8 @@ Legend:
 | Find spelling/morphological variants (writing/writers) | `tagex analyze merge /vault` |
 | Find tags that are too generic (notes, misc) | `tagex analyze quality /vault` |
 | Understand which tags appear together | `tagex analyze pairs /vault` |
-| Clean up all duplicates systematically | Use `recommendations` command or run all 4: plurals, synonyms, merge, quality |
+| Reduce singleton tags (used only once) | `tagex analyze recommendations /vault --analyzers singletons --export ops.yaml` |
+| Clean up all duplicates systematically | Use `recommendations` command or run all: plurals, synonyms, singletons |
 
 **Note:** All `analyze` commands now accept either a vault path (auto-extracts tags) or a JSON file (pre-extracted tags).
 
@@ -1250,6 +1254,159 @@ You can always override per-command with `--prefer` flag.
 
 ---
 
+## Singleton Analyzer (`singleton_analyzer.py`)
+
+### Purpose
+
+The singleton analyzer identifies tags that appear only once (singletons) and suggests merging them into established frequent tags. This is particularly effective for reducing tag proliferation from typos, abbreviations, and one-off experimental tags.
+
+**Why target singletons specifically?**
+- **High noise-to-signal ratio**: Tags used once often don't serve a useful organizational purpose
+- **Easy wins**: Clear merge targets when similar frequent tags exist
+- **Vault health**: High singleton ratios (>50%) indicate poor tag reuse
+- **Previous gap**: Other analyzers (synonyms, plurals, merge) filter out low-usage tags, missing singletons
+
+### How It Works
+
+The analyzer uses multiple similarity detection methods to match each singleton tag to potential frequent tag targets:
+
+1. **String Similarity** (threshold: 0.85)
+   - Catches typos: `machne-learning` → `machine-learning`
+   - Detects abbreviations: `prog` → `programming`
+
+2. **Character N-gram Similarity** (TF-IDF, threshold: 0.60)
+   - Morphological relationships: `writer` → `writing`
+   - Variations: `tech` → `technology`
+
+3. **Semantic Similarity** (sentence-transformers, threshold: 0.70)
+   - True synonyms: `ai` → `artificial-intelligence`
+   - Related concepts: `audio` → `music`
+
+4. **Co-occurrence** (threshold: 0.70)
+   - If singleton appears in file that also has a frequent tag
+   - Suggests contextual relationship
+
+**Key constraint**: Only suggests merging singletons into tags with 5+ uses, ensuring we consolidate into established taxonomy, not the reverse.
+
+### Usage
+
+The singleton analyzer is **only available via the recommendations command**:
+
+```bash
+# Run singleton analyzer only
+tagex analyze recommendations /vault --analyzers singletons --export cleanup.yaml
+
+# Combine with other analyzers
+tagex analyze recommendations /vault --analyzers synonyms,plurals,singletons --export ops.yaml
+
+# Skip semantic analysis (faster, but less accurate)
+tagex analyze recommendations /vault --analyzers singletons --no-transformers --export ops.yaml
+
+# Review and apply
+tagex apply cleanup.yaml          # Preview
+tagex apply cleanup.yaml --execute  # Apply
+```
+
+### Output Format
+
+Example operations in the generated YAML file:
+
+```yaml
+operations:
+- type: merge
+  source:
+  - machne-learning  # singleton (1 use)
+  target: machine-learning  # frequent (50 uses)
+  reason: 'Singleton → frequent tag (String similarity: 0.952)'
+  enabled: true
+  metadata:
+    confidence: 0.952
+    source_analyzer: singletons
+    method: string_similarity
+    target_usage: 50
+
+- type: merge
+  source:
+  - ai  # singleton (1 use)
+  target: artificial-intelligence  # frequent (25 uses)
+  reason: 'Singleton → frequent tag (Semantic similarity: 0.823)'
+  enabled: true
+  metadata:
+    confidence: 0.823
+    source_analyzer: singletons
+    method: semantic
+    target_usage: 25
+```
+
+### Configuration
+
+The analyzer respects standard configuration:
+- **Exclusions** (`.tagex/exclusions.yaml`): Excluded tags won't be suggested for merging
+- **User synonyms** (`.tagex/synonyms.yaml`): User-defined mappings take priority
+
+### Thresholds
+
+| Method | Default Threshold | Purpose |
+|:-------|:-----------------|:--------|
+| String similarity | 0.85 | High precision for typo detection |
+| TF-IDF similarity | 0.60 | Catch morphological variants |
+| Semantic similarity | 0.70 | True synonym detection |
+| Co-occurrence | 0.70 | Contextual relationship |
+| Frequent threshold | 5 uses | Minimum to be considered "established" |
+
+### When to Use
+
+**Good for:**
+- High singleton ratios (>50% from `tagex stats`)
+- Post-initial-tagging cleanup
+- Consolidating experimental tags
+- Finding typos and abbreviations
+
+**Not ideal for:**
+- New vaults with few tags
+- When you want to keep unique categorical tags
+- Tags that are legitimately one-off references
+
+### Example Workflow
+
+```bash
+# 1. Check singleton ratio
+tagex stats /vault
+# Output: Singletons (used once): 563 (67.7%)
+
+# 2. Generate singleton reduction recommendations
+tagex analyze recommendations /vault --analyzers singletons --export singleton-cleanup.yaml
+
+# 3. Review the generated file
+# Edit singleton-cleanup.yaml:
+# - Set enabled: false for suggestions you disagree with
+# - Modify target tags if needed
+# - Delete operations you don't want
+
+# 4. Preview changes
+tagex apply singleton-cleanup.yaml
+
+# 5. Apply changes
+tagex apply singleton-cleanup.yaml --execute
+
+# 6. Verify improvement
+tagex stats /vault
+# Output: Singletons (used once): 127 (23.4%)  ← Much better!
+```
+
+### Comparison to Other Analyzers
+
+| Analyzer | Focus | Minimum Usage |
+|:---------|:------|:--------------|
+| **synonyms** | Semantic similarity between any tags | 3+ uses |
+| **plurals** | Singular/plural variants | 2+ uses |
+| **merge** | String/TF-IDF similarity | 3+ uses |
+| **singletons** | Single-use tags → frequent tags | Singleton (1 use) → Frequent (5+ uses) |
+
+The singleton analyzer is the **only analyzer** that specifically targets tags used exactly once, filling a critical gap in tag consolidation workflows.
+
+---
+
 ## Unified Recommendations System
 
 ### Overview
@@ -1395,7 +1552,7 @@ tagex health /vault
 | Option | Description | Default |
 |:-------|:------------|:--------|
 | `--export PATH` | Export operations to YAML file | None (print to stdout) |
-| `--analyzers TEXT` | Comma-separated list of analyzers | `synonyms,plurals,merge` |
+| `--analyzers TEXT` | Comma-separated list of analyzers (synonyms,plurals,singletons) | `synonyms,plurals` |
 | `--min-similarity FLOAT` | Minimum semantic similarity (0.0-1.0) | `0.7` |
 | `--no-transformers` | Skip semantic analysis (faster) | False |
 | `--tag-types` | Tag types to process | `frontmatter` |

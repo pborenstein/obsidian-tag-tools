@@ -34,7 +34,7 @@ tagex analyze synonyms /path/to/vault [--min-similarity 0.7] [--show-related] [-
 tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
 
 # Unified recommendations and apply workflow (safe by default)
-tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals]
+tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals,singletons]
 tagex apply operations.yaml [--vault-path /path/to/vault]  # Preview mode (default)
 tagex apply operations.yaml [--vault-path /path/to/vault] --execute  # Actually apply changes
 
@@ -93,6 +93,7 @@ uv run pytest tests/
 - **Semantic synonym detection** - sentence-transformers for true synonym detection (not co-occurrence)
 - **Configurable plural preferences** - usage-based (default), plural, or singular modes
 - **TF-IDF merge suggestions** - Embedding-based similarity detection with morphological fallback
+- **Singleton tag reduction** - Intelligent merging of single-use tags into established frequent tags
 - **Smart processing** - Only modifies files containing target tags
 - **Unified recommendations system** - Consolidates all analyzer suggestions into editable YAML operations file
 - **Apply workflow** - Execute operations from YAML file with enable/disable flags for selective application
