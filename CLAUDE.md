@@ -15,17 +15,21 @@ uv sync
 # Install as system-wide tool (creates 'tagex' command)
 uv tool install --editable .
 
-# Configuration management
-tagex init /path/to/vault [--force]
-tagex validate /path/to/vault [--strict]
+# Configuration management (defaults to cwd)
+tagex init [vault_path] [--force]
+tagex validate [vault_path] [--strict]
 
-# Tag operations (console script - safe by default, require --execute to apply)
-tagex extract /path/to/vault [options]
-tagex rename /path/to/vault old-tag new-tag [--execute]
-tagex merge /path/to/vault tag1 tag2 --into target-tag [--execute]
-tagex delete /path/to/vault unwanted-tag another-tag [--execute]
-tagex stats /path/to/vault [--top N] [--format text|json] [--no-filter]
-tagex health /path/to/vault
+# Tag operations (safe by default, require --execute to apply changes)
+# Tag operations grouped under 'tags' command
+tagex tags extract [vault_path] [options]                          # Defaults to cwd
+tagex tags rename /path/to/vault old-tag new-tag [--execute]
+tagex tags merge /path/to/vault tag1 tag2 --into target [--execute]
+tagex tags delete /path/to/vault unwanted-tag another-tag [--execute]
+tagex tags apply operations.yaml [--vault-path /vault] [--execute]
+
+# Quick info commands (top level for convenience, default to cwd)
+tagex stats [vault_path] [--top N] [--format text|json]
+tagex health [vault_path]
 
 # Analysis commands (accept vault path or JSON file)
 tagex analyze pairs /path/to/vault [--no-filter] [--min-pairs N]
@@ -35,26 +39,26 @@ tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
 tagex analyze suggest --vault-path /vault [paths...] [--min-tags 2] [--export suggestions.yaml]
 
 # Unified recommendations and apply workflow (safe by default)
-tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals,singletons]
-tagex apply operations.yaml [--vault-path /path/to/vault]  # Preview mode (default)
-tagex apply operations.yaml [--vault-path /path/to/vault] --execute  # Actually apply changes
+tagex analyze recommendations [vault_path] [--export operations.yaml] [--analyzers synonyms,plurals,singletons]  # Defaults to cwd
+tagex tags apply operations.yaml [--vault-path /vault]              # Preview mode (default)
+tagex tags apply operations.yaml [--vault-path /vault] --execute    # Actually apply changes
 
-# Or using uv run during development (preview mode by default)
-uv run python -m tagex.main init /path/to/vault
-uv run python -m tagex.main validate /path/to/vault
-uv run python -m tagex.main extract /path/to/vault [options]
-uv run python -m tagex.main rename /path/to/vault old-tag new-tag  # Preview only
-uv run python -m tagex.main rename /path/to/vault old-tag new-tag --execute  # Actually rename
-uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag  # Preview only
-uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag --execute  # Actually merge
-uv run python -m tagex.main delete /path/to/vault unwanted-tag  # Preview only
-uv run python -m tagex.main delete /path/to/vault unwanted-tag --execute  # Actually delete
-uv run python -m tagex.main stats /path/to/vault [--top 10] [--format json]
-uv run python -m tagex.main health /path/to/vault
+# Or using uv run during development (preview mode by default, commands default to cwd)
+uv run python -m tagex.main init [vault_path]                                 # Defaults to cwd
+uv run python -m tagex.main validate [vault_path]                             # Defaults to cwd
+uv run python -m tagex.main tags extract [vault_path] [options]               # Defaults to cwd
+uv run python -m tagex.main tags rename /vault old-tag new-tag                # Preview only
+uv run python -m tagex.main tags rename /vault old-tag new-tag --execute      # Actually rename
+uv run python -m tagex.main tags merge /vault tag1 tag2 --into target         # Preview only
+uv run python -m tagex.main tags merge /vault tag1 tag2 --into target --execute  # Actually merge
+uv run python -m tagex.main tags delete /vault unwanted-tag                   # Preview only
+uv run python -m tagex.main tags delete /vault unwanted-tag --execute         # Actually delete
+uv run python -m tagex.main stats [vault_path] [--top 10] [--format json]    # Defaults to cwd
+uv run python -m tagex.main health [vault_path]                               # Defaults to cwd
 
 # Global --tag-types option (applies to all commands, default: frontmatter)
-uv run python -m tagex.main extract /path/to/vault  # frontmatter only (default)
-uv run python -m tagex.main extract /path/to/vault --tag-types both  # both types
+uv run python -m tagex.main tags extract  # frontmatter only (default), uses cwd
+uv run python -m tagex.main tags extract --tag-types both  # both types, uses cwd
 
 # Run tests
 uv run pytest tests/
