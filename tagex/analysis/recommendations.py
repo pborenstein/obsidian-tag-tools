@@ -311,11 +311,9 @@ class RecommendationsEngine:
         # Create analyzer and run
         analyzer = SingletonAnalyzer(
             self.tag_stats,
-            frequent_threshold=5,  # Consider tags with 5+ uses as "frequent"
-            string_similarity_threshold=0.85,
-            semantic_similarity_threshold=0.70,
-            tfidf_similarity_threshold=0.60,
-            co_occurrence_threshold=0.70
+            frequent_threshold=2,  # Consider tags with 2+ uses as "frequent"
+            string_similarity_threshold=0.90,  # High threshold for typos
+            semantic_similarity_threshold=0.70  # Moderate threshold for synonyms
         )
 
         suggestions = analyzer.analyze(use_semantic=use_semantic)
