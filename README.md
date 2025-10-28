@@ -4,7 +4,7 @@ Extract, analyze, and modify tags in Obsidian vault markdown files using the `ta
 
 ## Project Overview
 
-tagex is a command-line tool for managing tags across entire Obsidian vaults. It provides comprehensive tag extraction, analysis, and modification operations with safety features like dry-run mode and operation logging.
+tagex is a command-line tool for managing tags across entire Obsidian vaults. It provides comprehensive tag extraction, analysis, and modification operations with safety features like preview-by-default mode (requires --execute flag) and operation logging.
 
 **Key capabilities:**
 
@@ -35,9 +35,9 @@ tagex "$HOME/Obsidian/MyVault" extract -f json -o tags.json
 # Top 20 tags (requires jq (https://jqlang.org/))
 jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 
-# Dry-run a rename, then apply
-tagex "$HOME/Obsidian/MyVault" rename "work" "project" --dry-run
-tagex "$HOME/Obsidian/MyVault" rename "work" "project"
+# Preview a rename, then apply (safe by default)
+tagex "$HOME/Obsidian/MyVault" rename "work" "project"  # Preview only
+tagex "$HOME/Obsidian/MyVault" rename "work" "project" --execute  # Actually apply
 ```
 
 ## Commands
@@ -52,14 +52,17 @@ tagex validate /path/to/vault                # Validate configuration files
 # Extract tags from vault
 tagex extract /path/to/vault [options]
 
-# Rename a tag across all files
-tagex rename /path/to/vault old-tag new-tag [--dry-run]
+# Rename a tag across all files (safe by default - preview mode)
+tagex rename /path/to/vault old-tag new-tag             # Preview only
+tagex rename /path/to/vault old-tag new-tag --execute   # Actually rename
 
-# Merge multiple tags into one
-tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag [--dry-run]
+# Merge multiple tags into one (safe by default - preview mode)
+tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag             # Preview only
+tagex merge /path/to/vault tag1 tag2 tag3 --into target-tag --execute   # Actually merge
 
-# Delete tags from all files
-tagex delete /path/to/vault tag-to-remove another-tag --dry-run
+# Delete tags from all files (safe by default - preview mode)
+tagex delete /path/to/vault tag-to-remove another-tag             # Preview only
+tagex delete /path/to/vault tag-to-remove another-tag --execute   # Actually delete
 
 # Get comprehensive vault statistics
 tagex stats /path/to/vault --top 15
@@ -82,8 +85,9 @@ tagex apply operations.yaml --execute        # Apply changes (requires explicit 
 
 # Global --tag-types option examples (frontmatter is default)
 tagex extract /path/to/vault  # frontmatter only (default)
-tagex rename /path/to/vault --tag-types inline old-tag new-tag --dry-run
-tagex merge /path/to/vault --tag-types both tag1 tag2 --into new-tag
+tagex rename /path/to/vault --tag-types inline old-tag new-tag             # Preview only
+tagex rename /path/to/vault --tag-types inline old-tag new-tag --execute   # Execute
+tagex merge /path/to/vault --tag-types both tag1 tag2 --into new-tag       # Preview only
 tagex stats /path/to/vault --tag-types both --format json
 ```
 
@@ -110,7 +114,7 @@ uv run python -m tagex.main stats /path/to/vault --top 20
 | `--verbose`, `-v` | extract | Enable verbose logging | disabled |
 | `--quiet`, `-q` | extract | Suppress summary output | disabled |
 | `--no-filter` | extract, stats | Include all raw tags without filtering | disabled |
-| `--dry-run` | rename, merge, delete | Preview changes without modifying files | disabled |
+| `--execute` | rename, merge, delete, apply | Actually apply changes (default is preview mode) | disabled |
 | `--top`, `-t` | stats | Number of top tags to display | 20 |
 
 ### Examples
@@ -121,10 +125,11 @@ tagex extract /path/to/vault
 tagex extract /path/to/vault -f csv -o tags.csv
 tagex extract /path/to/vault --tag-types both --no-filter
 
-# Tag operations with dry-run preview
-tagex rename /path/to/vault work project --dry-run
-tagex merge /path/to/vault personal diary journal --into writing --dry-run
-tagex delete /path/to/vault --tag-types inline obsolete-tag --dry-run
+# Tag operations (preview by default, --execute to apply)
+tagex rename /path/to/vault work project                            # Preview only
+tagex rename /path/to/vault work project --execute                  # Actually rename
+tagex merge /path/to/vault personal diary journal --into writing    # Preview only
+tagex delete /path/to/vault --tag-types inline obsolete-tag         # Preview only
 
 # Vault statistics
 tagex stats /path/to/vault --top 10 --format json
@@ -179,9 +184,9 @@ tagex analyze merge tags.json
 
 | Operation | Description | Safety Features |
 |:----------|:------------|:---------------|
-| Rename | Single tag renaming across vault | Preview mode, dry-run |
-| Merge | Consolidate multiple tags | Multi-tag input validation |
-| Delete | Remove tags from all files | Inline tag warnings |
+| Rename | Single tag renaming across vault | Preview by default, requires --execute |
+| Merge | Consolidate multiple tags | Preview by default, requires --execute |
+| Delete | Remove tags from all files | Preview by default, requires --execute, inline tag warnings |
 | Selective processing | Target frontmatter, inline, or both | Type-specific operations |
 | Logging | Track all modifications | Integrity checks |
 | Structure preservation | Maintain file formatting | No YAML corruption |

@@ -21,9 +21,9 @@ tagex extract /vault -o tags.json
 # 3. Analyze
 tagex analyze [command] tags.json
 
-# 4. Apply changes
-tagex [operation] /vault --dry-run
-tagex [operation] /vault
+# 4. Apply changes (safe by default)
+tagex [operation] /vault             # Preview changes
+tagex [operation] /vault --execute   # Apply changes
 
 # 5. Verify
 tagex stats /vault
@@ -52,16 +52,16 @@ tagex stats /vault
 
 | Command | Action | Example |
 |:--------|:-------|:--------|
-| `rename` | Change one tag | `tagex rename /vault old new --dry-run` |
-| `merge` | Combine multiple tags | `tagex merge /vault tag1 tag2 --into new --dry-run` |
-| `delete` | Remove tags | `tagex delete /vault unwanted --dry-run` |
+| `rename` | Change one tag | `tagex rename /vault old new` (preview) |
+| `merge` | Combine multiple tags | `tagex merge /vault tag1 tag2 --into new` (preview) |
+| `delete` | Remove tags | `tagex delete /vault unwanted` (preview) |
 
 ## Common Options
 
 | Option | Available On | Effect | Default |
 |:-------|:-------------|:-------|:--------|
 | `--tag-types` | All commands | frontmatter/inline/both | frontmatter |
-| `--dry-run` | Operations | Preview only | disabled |
+| `--execute` | Operations | Apply changes (preview is default) | disabled |
 | `--no-filter` | Extract, analysis | Include technical noise | disabled |
 | `-o, --output` | extract | Output file path | stdout |
 | `-f, --format` | extract, stats | json/csv/txt or text/json | json, text |
@@ -79,7 +79,7 @@ Need to... → Use this command
 │  ├─ Typos/morphology (write/writing) → analyze merge
 │  └─ Too generic (notes, misc) → analyze quality
 ├─ See relationships → analyze pairs
-└─ Make changes → rename/merge/delete --dry-run
+└─ Make changes → rename/merge/delete (preview), then --execute
 ```
 
 ## Analysis Command Details
@@ -156,9 +156,9 @@ tagex analyze merge tags.json --no-sklearn  # Pattern-based fallback
 **Safety:** Dry-run by default
 
 ```bash
-tagex rename /vault old-name new-name --dry-run
-tagex rename /vault old-name new-name
-tagex rename /vault --tag-types inline old new --dry-run
+tagex rename /vault old-name new-name              # Preview changes
+tagex rename /vault old-name new-name --execute    # Apply changes
+tagex rename /vault --tag-types inline old new     # Preview inline only
 ```
 
 ### merge
@@ -167,8 +167,8 @@ tagex rename /vault --tag-types inline old new --dry-run
 **Safety:** Dry-run by default
 
 ```bash
-tagex merge /vault tag1 tag2 tag3 --into target --dry-run
-tagex merge /vault tag1 tag2 --into target
+tagex merge /vault tag1 tag2 tag3 --into target              # Preview
+tagex merge /vault tag1 tag2 --into target --execute         # Apply
 tagex merge /vault --tag-types both tag1 tag2 --into new
 ```
 
@@ -179,9 +179,9 @@ tagex merge /vault --tag-types both tag1 tag2 --into new
 **Warning:** Permanently removes tags
 
 ```bash
-tagex delete /vault unwanted-tag --dry-run
-tagex delete /vault tag1 tag2 tag3 --dry-run
-tagex delete /vault --tag-types inline temp-tag
+tagex delete /vault unwanted-tag                  # Preview
+tagex delete /vault tag1 tag2 tag3                # Preview multiple
+tagex delete /vault --tag-types inline temp-tag   # Preview inline only
 ```
 
 ## Extract Command Details
@@ -269,8 +269,8 @@ tagex analyze synonyms tags.json > synonyms.txt
 tagex analyze merge tags.json > merge.txt
 
 # Apply recommended merges (from reports)
-tagex merge /vault family families --into families --dry-run
-tagex merge /vault family families --into families
+tagex merge /vault family families --into families              # Preview
+tagex merge /vault family families --into families --execute    # Apply
 
 # Verify
 tagex stats /vault --top 20 > after.txt
@@ -295,12 +295,12 @@ tagex analyze synonyms tags.json | grep -i python
 ### Batch operations
 
 ```bash
-# Rename multiple tags
-tagex rename /vault old1 new1 --dry-run && \
-tagex rename /vault old2 new2 --dry-run && \
-tagex rename /vault old3 new3 --dry-run
+# Preview multiple tag renames
+tagex rename /vault old1 new1 && \
+tagex rename /vault old2 new2 && \
+tagex rename /vault old3 new3
 
-# After dry-run verification, remove --dry-run flags
+# After verification, add --execute to each command
 ```
 
 ## Configuration Files
@@ -411,7 +411,7 @@ Check:
 
 ### Operation didn't work
 
-- Always use `--dry-run` first
+- Preview mode is default (safe by default)
 - Check operation logs in current directory
 - Verify tag exists: `grep -r "tag-name" /vault`
 

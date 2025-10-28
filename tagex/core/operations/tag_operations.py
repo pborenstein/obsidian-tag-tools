@@ -19,8 +19,13 @@ from ..parsers.inline_parser import extract_inline_tags
 
 
 class TagOperationEngine(ABC):
-    """Base class for all tag operations with backup, logging, and reversibility."""
-    
+    """Base class for all tag operations with backup, logging, and reversibility.
+
+    Note: When used through the CLI, all write operations default to preview mode
+    (dry_run=True) and require --execute flag to apply changes. This provides
+    safe-by-default behavior for all tag modification operations.
+    """
+
     def __init__(self, vault_path: str, dry_run: bool = False, tag_types: str = 'both', quiet: bool = False):
         self.vault_path = Path(vault_path)
         self.dry_run = dry_run
@@ -381,8 +386,8 @@ class TagOperationEngine(ABC):
         print(f"Errors: {stats['errors']}")
         
         if self.dry_run:
-            print("\nThis was a dry run - no files were actually modified")
-            print("Run without --dry-run to apply changes")
+            print("\n[PREVIEW MODE] No files were modified")
+            print("To apply these changes, add --execute flag to your command")
 
 
 class RenameOperation(TagOperationEngine):

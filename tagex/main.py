@@ -105,8 +105,8 @@ def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_f
 @click.argument('old_tag')
 @click.argument('new_tag')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
-@click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def rename(vault_path, old_tag, new_tag, tag_types, dry_run):
+@click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
+def rename(vault_path, old_tag, new_tag, tag_types, execute):
     """Rename a tag across all files in the vault.
 
     VAULT_PATH: Path to the Obsidian vault directory
@@ -114,8 +114,10 @@ def rename(vault_path, old_tag, new_tag, tag_types, dry_run):
     OLD_TAG: Tag to rename
 
     NEW_TAG: New tag name
+
+    By default, runs in preview mode (dry-run). Use --execute to apply changes.
     """
-    operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=dry_run, tag_types=tag_types)
+    operation = RenameOperation(vault_path, old_tag, new_tag, dry_run=not execute, tag_types=tag_types)
     operation.run_operation()
 
 
@@ -124,15 +126,17 @@ def rename(vault_path, old_tag, new_tag, tag_types, dry_run):
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
-@click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def merge(vault_path, source_tags, target_tag, tag_types, dry_run):
+@click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
+def merge(vault_path, source_tags, target_tag, tag_types, execute):
     """Merge multiple tags into a single tag.
 
     VAULT_PATH: Path to the Obsidian vault directory
 
     SOURCE_TAGS: Tags to merge (space-separated)
+
+    By default, runs in preview mode (dry-run). Use --execute to apply changes.
     """
-    operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=dry_run, tag_types=tag_types)
+    operation = MergeOperation(vault_path, list(source_tags), target_tag, dry_run=not execute, tag_types=tag_types)
     operation.run_operation()
 
 
@@ -328,8 +332,8 @@ def apply(operations_file, vault_path, execute, tag_types):
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
-@click.option('--dry-run', is_flag=True, help='Preview changes without modifying files')
-def delete(vault_path, tags_to_delete, tag_types, dry_run):
+@click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
+def delete(vault_path, tags_to_delete, tag_types, execute):
     """Delete tags entirely from all files in the vault.
 
     VAULT_PATH: Path to the Obsidian vault directory
@@ -337,9 +341,10 @@ def delete(vault_path, tags_to_delete, tag_types, dry_run):
     TAGS_TO_DELETE: Tags to delete (space-separated)
 
     WARNING: This operation removes tags from both frontmatter and inline content.
-    Use --dry-run first to preview changes. Inline tag deletion may affect readability.
+    By default, runs in preview mode (dry-run). Use --execute to apply changes.
+    Inline tag deletion may affect readability.
     """
-    operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=dry_run, tag_types=tag_types)
+    operation = DeleteOperation(vault_path, list(tags_to_delete), dry_run=not execute, tag_types=tag_types)
     operation.run_operation()
 
 

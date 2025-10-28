@@ -270,11 +270,11 @@ git status
 # 2. Create branch for tag changes
 git checkout -b tag-cleanup
 
-# 3. Preview changes with dry-run
-tagex rename /vault old-tag new-tag --dry-run
+# 3. Preview changes (safe by default)
+tagex rename /vault old-tag new-tag
 
 # 4. Execute operation
-tagex rename /vault old-tag new-tag
+tagex rename /vault old-tag new-tag --execute
 
 # 5. Review changes
 git diff

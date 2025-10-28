@@ -346,11 +346,11 @@ The tool includes tag validation to filter out noise and technical artifacts:
 | Command | Description |
 |:--------|:------------|
 | `uv tool install --editable .` | Install as editable tool |
-| `tagex /vault rename old-tag new-tag --dry-run` | Tag rename operation (preview mode) |
-| `tagex /vault merge tag1 tag2 --into combined-tag --dry-run` | Tag merge operation (preview mode) |
-| `tagex /vault delete unwanted-tag another-tag --dry-run` | Tag delete operation (preview mode) |
-| `tagex --tag-types frontmatter /vault rename work project --dry-run` | Rename frontmatter tags only |
-| `tagex --tag-types inline /vault delete temp-tag --dry-run` | Delete inline tags only |
+| `tagex /vault rename old-tag new-tag` | Tag rename (preview by default) |
+| `tagex /vault merge tag1 tag2 --into combined-tag --execute` | Tag merge (actually apply) |
+| `tagex /vault delete unwanted-tag another-tag` | Tag delete (preview by default) |
+| `tagex --tag-types frontmatter /vault rename work project` | Rename frontmatter tags only (preview) |
+| `tagex --tag-types inline /vault delete temp-tag --execute` | Delete inline tags (actually apply) |
 
 ## Tag Operations Architecture
 

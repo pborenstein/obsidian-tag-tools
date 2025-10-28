@@ -19,11 +19,11 @@ uv tool install --editable .
 tagex init /path/to/vault [--force]
 tagex validate /path/to/vault [--strict]
 
-# Tag operations (console script)
+# Tag operations (console script - safe by default, require --execute to apply)
 tagex extract /path/to/vault [options]
-tagex rename /path/to/vault old-tag new-tag [--dry-run]
-tagex merge /path/to/vault tag1 tag2 --into target-tag [--dry-run]
-tagex delete /path/to/vault unwanted-tag another-tag [--dry-run]
+tagex rename /path/to/vault old-tag new-tag [--execute]
+tagex merge /path/to/vault tag1 tag2 --into target-tag [--execute]
+tagex delete /path/to/vault unwanted-tag another-tag [--execute]
 tagex stats /path/to/vault [--top N] [--format text|json] [--no-filter]
 tagex health /path/to/vault
 
@@ -39,13 +39,16 @@ tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analy
 tagex apply operations.yaml [--vault-path /path/to/vault]  # Preview mode (default)
 tagex apply operations.yaml [--vault-path /path/to/vault] --execute  # Actually apply changes
 
-# Or using uv run during development
+# Or using uv run during development (preview mode by default)
 uv run python -m tagex.main init /path/to/vault
 uv run python -m tagex.main validate /path/to/vault
 uv run python -m tagex.main extract /path/to/vault [options]
-uv run python -m tagex.main rename /path/to/vault old-tag new-tag
-uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag
-uv run python -m tagex.main delete /path/to/vault unwanted-tag --dry-run
+uv run python -m tagex.main rename /path/to/vault old-tag new-tag  # Preview only
+uv run python -m tagex.main rename /path/to/vault old-tag new-tag --execute  # Actually rename
+uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag  # Preview only
+uv run python -m tagex.main merge /path/to/vault tag1 tag2 --into target-tag --execute  # Actually merge
+uv run python -m tagex.main delete /path/to/vault unwanted-tag  # Preview only
+uv run python -m tagex.main delete /path/to/vault unwanted-tag --execute  # Actually delete
 uv run python -m tagex.main stats /path/to/vault [--top 10] [--format json]
 uv run python -m tagex.main health /path/to/vault
 
@@ -89,7 +92,7 @@ uv run pytest tests/
 - **Configuration commands** - init, validate for managing .tagex/ configuration
 - **Health reporting** - Unified health command with comprehensive analysis
 - **Comprehensive statistics** - Tag distribution, vault health metrics, singleton analysis
-- **Safe by default** - Dry-run mode and comprehensive logging
+- **Safe by default** - All write operations require --execute flag; preview mode is default
 - **Tag validation** - Filters noise, preserves meaningful tags
 - **Semantic synonym detection** - sentence-transformers for true synonym detection (not co-occurrence)
 - **Configurable plural preferences** - usage-based (default), plural, or singular modes
