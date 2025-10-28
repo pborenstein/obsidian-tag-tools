@@ -32,6 +32,7 @@ tagex analyze pairs /path/to/vault [--no-filter] [--min-pairs N]
 tagex analyze quality /path/to/vault [--format text|json]
 tagex analyze synonyms /path/to/vault [--min-similarity 0.7] [--show-related] [--no-transformers]
 tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
+tagex analyze suggest --vault-path /vault [paths...] [--min-tags 2] [--export suggestions.yaml]
 
 # Unified recommendations and apply workflow (safe by default)
 tagex analyze recommendations /path/to/vault [--export operations.yaml] [--analyzers synonyms,plurals,singletons]
@@ -73,7 +74,7 @@ uv run pytest tests/
 
 - **`tagex/core/extractor/`** - Tag extraction with filtering and validation
 - **`tagex/core/parsers/`** - Frontmatter and inline tag parsing
-- **`tagex/core/operations/`** - Tag modification (rename, merge, delete) with dry-run support
+- **`tagex/core/operations/`** - Tag modification (rename, merge, delete, add_tags) with dry-run support
 - **`tagex/utils/`** - File discovery, tag normalization, and validation
 - **`tagex/analysis/`** - Relationship analysis and semantic similarity detection
 - **`tagex/config/`** - Configuration management (plural preferences, synonyms)
@@ -95,6 +96,7 @@ uv run pytest tests/
 - **TF-IDF merge suggestions** - Embedding-based similarity detection with morphological fallback
 - **Singleton tag reduction** - Intelligent merging of single-use tags into established frequent tags
 - **Smart processing** - Only modifies files containing target tags
+- **Content-based tag suggestions** - Analyzes note content to suggest relevant existing tags for untagged/lightly-tagged notes
 - **Unified recommendations system** - Consolidates all analyzer suggestions into editable YAML operations file
 - **Apply workflow** - Execute operations from YAML file with enable/disable flags for selective application
 

@@ -10,6 +10,7 @@ tagex is a command-line tool for managing tags across entire Obsidian vaults. It
 
 - Extract tags from frontmatter YAML and inline hashtags
 - Analyze tag relationships and co-occurrence patterns
+- Suggest tags for untagged/lightly-tagged notes based on content analysis
 - Rename, merge, and delete tags across entire vaults
 - Generate vault health metrics and statistics
 - Detect semantic similarities for tag consolidation
@@ -72,6 +73,7 @@ tagex analyze merge tags.json --min-usage 5  # Or use pre-extracted JSON
 tagex analyze quality /path/to/vault
 tagex analyze synonyms /path/to/vault --min-similarity 0.7
 tagex analyze plurals /path/to/vault --prefer usage
+tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
 
 # Unified recommendations workflow (consolidates all analyzers)
 tagex analyze recommendations /path/to/vault --export operations.yaml
@@ -211,11 +213,16 @@ tagex analyze synonyms /path/to/vault --show-related
 
 # Suggest tag merge opportunities
 tagex analyze merge /path/to/vault --min-usage 3
+
+# Suggest tags for untagged/lightly-tagged notes
+tagex analyze suggest --vault-path /vault --min-tags 2
+tagex analyze suggest --vault-path /vault --min-tags 1 --export suggestions.yaml
 ```
 
 | Analysis Type | Description |
 |:--------------|:------------|
 | **Recommendations** | **Unified analysis consolidating all analyzers into editable YAML operations file** |
+| **Content suggestions** | **Suggest tags for notes based on semantic content analysis** |
 | Pairs analysis | Tag co-occurrence and clustering patterns |
 | Quality analysis | Overbroad tag detection and specificity scoring |
 | Plural analysis | Singular/plural variant detection with configurable preference modes |

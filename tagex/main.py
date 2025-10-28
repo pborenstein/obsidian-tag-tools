@@ -19,6 +19,7 @@ from .core.extractor.output_formatter import (
     print_summary
 )
 from .core.operations.tag_operations import RenameOperation, MergeOperation, DeleteOperation
+from .core.operations.add_tags import AddTagsOperation
 
 
 @click.group()
@@ -257,6 +258,24 @@ def apply(operations_file, vault_path, execute, tag_types):
                     tags_to_delete=source_tags,
                     dry_run=dry_run,
                     tag_types=tag_types,
+                    quiet=True
+                )
+                result = operation.run_operation()
+
+            elif op_type == 'add_tags':
+                # For add_tags, target_tag contains the file path
+                # and source_tags contains the tags to add
+                file_path = target_tag
+                tags_to_add = source_tags
+
+                # Create file_tag_map for AddTagsOperation
+                file_tag_map = {file_path: tags_to_add}
+
+                operation = AddTagsOperation(
+                    vault_path=vault_path,
+                    file_tag_map=file_tag_map,
+                    dry_run=dry_run,
+                    tag_types='frontmatter',  # add_tags only supports frontmatter
                     quiet=True
                 )
                 result = operation.run_operation()
@@ -1494,6 +1513,153 @@ def plurals(input_path, tag_types, no_filter, prefer):
             print()
     else:
         print("No plural variant groups found.\n")
+
+
+@analyze.command()
+@click.argument('paths', nargs=-1, type=click.Path(exists=True))
+@click.option('--vault-path', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, help='Vault directory path')
+@click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract')
+@click.option('--min-tags', type=int, default=2, help='Only suggest for notes with fewer than this many tags')
+@click.option('--max-tags', type=int, help='Only suggest for notes with at most this many tags')
+@click.option('--top-n', type=int, default=3, help='Number of tags to suggest per note')
+@click.option('--min-confidence', type=float, default=0.3, help='Minimum confidence threshold (0.0-1.0)')
+@click.option('--no-transformers', is_flag=True, help='Skip semantic analysis, use keyword matching')
+@click.option('--export', type=click.Path(), help='Export operations to YAML file')
+@click.option('--no-filter', is_flag=True, help='Disable noise filtering')
+def suggest(paths, vault_path, tag_types, min_tags, max_tags, top_n, min_confidence, no_transformers, export, no_filter):
+    """Suggest tags for notes based on content analysis.
+
+    PATHS: Optional file paths or glob patterns to analyze (if not specified, analyzes entire vault)
+
+    Analyzes note content and suggests relevant tags from existing tags in the vault.
+    By default, only processes notes with fewer than --min-tags tags.
+
+    Examples:
+      # Suggest tags for all notes with < 2 tags
+      tagex analyze suggest --vault-path /vault --min-tags 2
+
+      # Suggest tags for specific directory
+      tagex analyze suggest /vault/projects/ --vault-path /vault --min-tags 1
+
+      # Export suggestions to YAML for review
+      tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
+    """
+    from .analysis.content_analyzer import ContentAnalyzer
+    from .analysis.merge_analyzer import build_tag_stats
+    from .analysis.recommendations import Operation
+    from .utils.input_handler import load_or_extract_tags
+    from datetime import datetime
+    import yaml
+    from pathlib import Path
+
+    filter_noise = not no_filter
+
+    print(f"Extracting tags from vault: {vault_path}")
+    print(f"Tag types: {tag_types}\n")
+
+    # Extract all tags from vault using the standard loader
+    tag_data = load_or_extract_tags(vault_path, tag_types, filter_noise)
+    tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    print(f"Found {len(tag_stats)} existing tags in vault")
+
+    # Build target criteria description
+    if max_tags is not None:
+        criteria = f"notes with < {min_tags} and <= {max_tags} tags"
+    else:
+        criteria = f"notes with < {min_tags} tags"
+    print(f"Target criteria: {criteria}\n")
+
+    # Run content analyzer
+    analyzer = ContentAnalyzer(
+        tag_stats=tag_stats,
+        vault_path=vault_path,
+        min_tag_count=min_tags,
+        max_tag_count=max_tags
+    )
+
+    # Convert paths to list or None
+    path_list = list(paths) if paths else None
+
+    suggestions = analyzer.analyze(
+        paths=path_list,
+        use_semantic=not no_transformers,
+        top_n=top_n,
+        min_confidence=min_confidence
+    )
+
+    if not suggestions:
+        print("\nNo tag suggestions generated.")
+        return
+
+    # Print suggestions
+    print(f"\n{'='*70}")
+    print(f"TAG SUGGESTIONS ({len(suggestions)} notes)")
+    print('='*70)
+
+    for i, sugg in enumerate(suggestions[:20], 1):
+        file_path = sugg['file']
+        current = sugg['current_tags']
+        suggested = sugg['suggested_tags']
+        confidences = sugg['confidences']
+
+        print(f"\n{i}. {file_path}")
+        print(f"   Current tags: {', '.join(current) if current else '(none)'}")
+        print(f"   Suggested tags:")
+        for tag, conf in zip(suggested, confidences):
+            print(f"     - {tag} (confidence: {conf:.2f})")
+
+    if len(suggestions) > 20:
+        print(f"\n... and {len(suggestions) - 20} more notes")
+
+    # Export if requested
+    if export:
+        print(f"\n{'='*70}")
+        print("Exporting to YAML...")
+
+        # Convert suggestions to operations
+        operations = []
+        for sugg in suggestions:
+            # Create an "add_tags" operation
+            op = Operation(
+                operation_type='add_tags',
+                source_tags=sugg['suggested_tags'],
+                target_tag=sugg['file'],  # Use target to store the file path
+                reason=f"Content-based suggestion (avg confidence: {sum(sugg['confidences'])/len(sugg['confidences']):.2f})",
+                enabled=True,
+                confidence=sum(sugg['confidences'])/len(sugg['confidences']),
+                source_analyzer='content',
+                metadata={
+                    'file': sugg['file'],
+                    'current_tags': sugg['current_tags'],
+                    'confidences': sugg['confidences'],
+                    'methods': sugg['methods']
+                }
+            )
+            operations.append(op)
+
+        # Export to YAML
+        yaml_data = {
+            'metadata': {
+                'generated_by': 'tagex analyze suggest',
+                'timestamp': datetime.now().isoformat(),
+                'vault_path': str(vault_path),
+                'total_suggestions': len(operations)
+            },
+            'operations': [op.to_dict() for op in operations]
+        }
+
+        with open(export, 'w', encoding='utf-8') as f:
+            yaml.dump(yaml_data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+        print(f"Exported {len(operations)} operations to: {export}")
+        print(f"\nNext steps:")
+        print(f"  1. Review and edit: {export}")
+        print(f"  2. Preview changes: tagex apply {export} --vault-path {vault_path}")
+        print(f"  3. Apply changes:  tagex apply {export} --vault-path {vault_path} --execute")
+    else:
+        print(f"\nTo export suggestions to a file:")
+        print(f"  tagex analyze suggest --vault-path {vault_path} --min-tags {min_tags} --export suggestions.yaml")
 
 
 if __name__ == "__main__":
