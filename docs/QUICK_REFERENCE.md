@@ -16,7 +16,7 @@ tagex --help
 tagex stats /vault
 
 # 2. Extract tags
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 
 # 3. Analyze
 tagex analyze [command] tags.json
@@ -36,7 +36,7 @@ tagex stats /vault
 | Command | Purpose | Example |
 |:--------|:--------|:--------|
 | `stats` | Vault health metrics | `tagex stats /vault --top 20` |
-| `extract` | Export tags to file | `tagex extract /vault -o tags.json` |
+| `extract` | Export tags to file | `tagex tags extract /vault -o tags.json` |
 
 ### Analysis Commands
 
@@ -52,9 +52,9 @@ tagex stats /vault
 
 | Command | Action | Example |
 |:--------|:-------|:--------|
-| `rename` | Change one tag | `tagex rename /vault old new` (preview) |
-| `merge` | Combine multiple tags | `tagex merge /vault tag1 tag2 --into new` (preview) |
-| `delete` | Remove tags | `tagex delete /vault unwanted` (preview) |
+| `rename` | Change one tag | `tagex tags rename /vault old new` (preview) |
+| `merge` | Combine multiple tags | `tagex tags merge /vault tag1 tag2 --into new` (preview) |
+| `delete` | Remove tags | `tagex tags delete /vault unwanted` (preview) |
 
 ## Common Options
 
@@ -156,9 +156,9 @@ tagex analyze merge tags.json --no-sklearn  # Pattern-based fallback
 **Safety:** Dry-run by default
 
 ```bash
-tagex rename /vault old-name new-name              # Preview changes
-tagex rename /vault old-name new-name --execute    # Apply changes
-tagex rename /vault --tag-types inline old new     # Preview inline only
+tagex tags rename /vault old-name new-name              # Preview changes
+tagex tags rename /vault old-name new-name --execute    # Apply changes
+tagex tags rename /vault --tag-types inline old new     # Preview inline only
 ```
 
 ### merge
@@ -167,9 +167,9 @@ tagex rename /vault --tag-types inline old new     # Preview inline only
 **Safety:** Dry-run by default
 
 ```bash
-tagex merge /vault tag1 tag2 tag3 --into target              # Preview
-tagex merge /vault tag1 tag2 --into target --execute         # Apply
-tagex merge /vault --tag-types both tag1 tag2 --into new
+tagex tags merge /vault tag1 tag2 tag3 --into target              # Preview
+tagex tags merge /vault tag1 tag2 --into target --execute         # Apply
+tagex tags merge /vault --tag-types both tag1 tag2 --into new
 ```
 
 ### delete
@@ -179,9 +179,9 @@ tagex merge /vault --tag-types both tag1 tag2 --into new
 **Warning:** Permanently removes tags
 
 ```bash
-tagex delete /vault unwanted-tag                  # Preview
-tagex delete /vault tag1 tag2 tag3                # Preview multiple
-tagex delete /vault --tag-types inline temp-tag   # Preview inline only
+tagex tags delete /vault unwanted-tag                  # Preview
+tagex tags delete /vault tag1 tag2 tag3                # Preview multiple
+tagex tags delete /vault --tag-types inline temp-tag   # Preview inline only
 ```
 
 ## Extract Command Details
@@ -190,39 +190,39 @@ tagex delete /vault --tag-types inline temp-tag   # Preview inline only
 
 ```bash
 # JSON to stdout (default)
-tagex extract /vault
+tagex tags extract /vault
 
 # JSON to file
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 
 # CSV format
-tagex extract /vault -f csv -o tags.csv
+tagex tags extract /vault -f csv -o tags.csv
 
 # Text format
-tagex extract /vault -f txt -o tags.txt
+tagex tags extract /vault -f txt -o tags.txt
 ```
 
 ### Filtering
 
 ```bash
 # Frontmatter only (default)
-tagex extract /vault -o fm_tags.json
+tagex tags extract /vault -o fm_tags.json
 
 # Inline only
-tagex extract /vault --tag-types inline -o inline_tags.json
+tagex tags extract /vault --tag-types inline -o inline_tags.json
 
 # Both types
-tagex extract /vault --tag-types both -o all_tags.json
+tagex tags extract /vault --tag-types both -o all_tags.json
 
 # Include technical noise
-tagex extract /vault --no-filter -o raw_tags.json
+tagex tags extract /vault --no-filter -o raw_tags.json
 ```
 
 ### Exclusions
 
 ```bash
 # Exclude patterns (repeatable)
-tagex extract /vault --exclude "*.excalidraw.md" --exclude "templates/*"
+tagex tags extract /vault --exclude "*.excalidraw.md" --exclude "templates/*"
 ```
 
 ## Stats Command Details
@@ -260,7 +260,7 @@ tagex stats /vault --tag-types both
 tagex stats /vault --top 20 > before.txt
 
 # Extract
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 
 # Run all analyses
 tagex analyze quality tags.json > quality.txt
@@ -269,8 +269,8 @@ tagex analyze synonyms tags.json > synonyms.txt
 tagex analyze merge tags.json > merge.txt
 
 # Apply recommended merges (from reports)
-tagex merge /vault family families --into families              # Preview
-tagex merge /vault family families --into families --execute    # Apply
+tagex tags merge /vault family families --into families              # Preview
+tagex tags merge /vault family families --into families --execute    # Apply
 
 # Verify
 tagex stats /vault --top 20 > after.txt
@@ -287,7 +287,7 @@ tagex analyze quality tags.json | grep "extreme"
 tagex analyze plurals tags.json
 
 # Find synonyms for python-related tags
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 grep -i python tags.json
 tagex analyze synonyms tags.json | grep -i python
 ```
@@ -296,9 +296,9 @@ tagex analyze synonyms tags.json | grep -i python
 
 ```bash
 # Preview multiple tag renames
-tagex rename /vault old1 new1 && \
-tagex rename /vault old2 new2 && \
-tagex rename /vault old3 new3
+tagex tags rename /vault old1 new1 && \
+tagex tags rename /vault old2 new2 && \
+tagex tags rename /vault old3 new3
 
 # After verification, add --execute to each command
 ```
@@ -372,15 +372,15 @@ tagex analyze pairs tags.json | grep "Most Connected"
 
 ```bash
 tagex stats /vault | grep "Singletons"
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 jq '.[] | select(.tagCount == 1) | .tag' tags.json
 ```
 
 ### Compare tag types
 
 ```bash
-tagex extract /vault -o fm.json
-tagex extract /vault --tag-types inline -o inline.json
+tagex tags extract /vault -o fm.json
+tagex tags extract /vault --tag-types inline -o inline.json
 wc -l fm.json inline.json  # Compare counts
 ```
 

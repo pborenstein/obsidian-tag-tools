@@ -7,8 +7,8 @@ The `tagex analyze` command provides comprehensive analytical tools for understa
 ```
 # Unified recommendations workflow (RECOMMENDED)
 tagex analyze recommendations /vault --export ops.yaml  ← Consolidate all analyzer suggestions
-tagex apply ops.yaml                                    ← Preview changes (safe default)
-tagex apply ops.yaml --execute                          ← Apply changes (explicit flag required)
+tagex tags apply ops.yaml                                    ← Preview changes (safe default)
+tagex tags apply ops.yaml --execute                          ← Apply changes (explicit flag required)
 
 # Individual analyzers
 tagex analyze pairs      ← Tag co-occurrence and clustering analysis
@@ -123,9 +123,9 @@ Extract tags before running analysis:
 | Command | Purpose | Output |
 |:--------|:--------|:-------|
 | `tagex stats /vault` | Quick vault overview | Console statistics |
-| `tagex extract /vault -o tags.json` | Filtered tags for analysis | JSON file |
-| `tagex extract /vault --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
-| `tagex extract /vault --tag-types both -o all_tags.json` | Both frontmatter and inline | JSON file |
+| `tagex tags extract /vault -o tags.json` | Filtered tags for analysis | JSON file |
+| `tagex tags extract /vault --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
+| `tagex tags extract /vault --tag-types both -o all_tags.json` | Both frontmatter and inline | JSON file |
 
 The analysis scripts expect tag data in JSON format by default.
 
@@ -171,9 +171,9 @@ The analysis helps identify:
 
 | Tag Type | Extract Command | Analysis Focus |
 |:---------|:----------------|:---------------|
-| **Frontmatter** | `tagex extract /vault -o fm_tags.json` | Formal categorization |
+| **Frontmatter** | `tagex tags extract /vault -o fm_tags.json` | Formal categorization |
 | **Inline** | `tagex --tag-types inline /vault extract -o inline_tags.json` | Content-driven tagging |
-| **Both** | `tagex extract /vault --tag-types both -o all_tags.json` | Complete pattern analysis |
+| **Both** | `tagex tags extract /vault --tag-types both -o all_tags.json` | Complete pattern analysis |
 
 Run pair or merge analysis on any extracted tag file to compare patterns across tag types.
 
@@ -297,13 +297,13 @@ Health Assessment:
 | Step | Command | When to Use |
 |:-----|:--------|:------------|
 | 1. Overview | `tagex stats /vault` | Always start here - get baseline metrics |
-| 2. Extract | `tagex extract /vault -o tags.json` | Create snapshot for analysis |
+| 2. Extract | `tagex tags extract /vault -o tags.json` | Create snapshot for analysis |
 | 3. Quality check | `tagex analyze quality tags.json` | Identify overbroad/generic tags |
 | 4. Find plurals | `tagex analyze plurals tags.json` | Detect singular/plural splits |
 | 5. Find synonyms | `tagex analyze synonyms tags.json` | Context-based duplicate detection |
 | 6. Merge analysis | `tagex analyze merge tags.json` | Semantic/morphological duplicates |
 | 7. Pair analysis | `tagex analyze pairs tags.json` | Understand tag relationships |
-| 8. Apply changes | `tagex merge /vault tag1 tag2 --into new-tag` | Preview (safe by default) |
+| 8. Apply changes | `tagex tags merge /vault tag1 tag2 --into new-tag` | Preview (safe by default) |
 | 9. Verify | `tagex stats /vault` | Confirm improvements |
 
 **Recommended Workflow for Tag Cleanup:**
@@ -313,7 +313,7 @@ Health Assessment:
 tagex stats /vault --top 20
 
 # Step 2: Extract current state
-tagex extract /vault -o tags.json
+tagex tags extract /vault -o tags.json
 
 # Step 3: Run all analyses
 tagex analyze quality tags.json > quality-report.txt
@@ -325,11 +325,11 @@ tagex analyze pairs tags.json --min-pairs 3 > pairs-report.txt
 # Step 4: Review reports and plan consolidations
 
 # Step 5: Apply merges (safe by default)
-tagex merge /vault tag1 tag2 --into target              # Preview changes
-tagex merge /vault tag1 tag2 --into target --execute    # Apply changes
+tagex tags merge /vault tag1 tag2 --into target              # Preview changes
+tagex tags merge /vault tag1 tag2 --into target --execute    # Apply changes
 
 # Step 6: Verify improvements
-tagex extract /vault -o tags-after.json
+tagex tags extract /vault -o tags-after.json
 tagex stats /vault --top 20
 ```
 
@@ -647,7 +647,7 @@ See [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) for detailed technical implemen
 | `tagex analyze merge tags.json --min-usage 10` | Higher usage threshold |
 | `tagex analyze merge tags.json --no-filter` | Include all tags |
 | `tagex analyze merge tags.json --no-sklearn` | Pattern-based fallback |
-| `tagex merge /vault writers writering --into writing` | Preview suggestions |
+| `tagex tags merge /vault writers writering --into writing` | Preview suggestions |
 
 ### Dependencies and Fallback Strategy
 
@@ -1159,39 +1159,39 @@ DETECTED VARIANTS (usage-based preference):
   Irregular Plurals:
     child (12 uses) / children (8 uses)
       Recommendation: Merge into 'child' (more common, 60%)
-      Command: tagex merge /vault children --into child
+      Command: tagex tags merge /vault children --into child
 
     person (5 uses) / people (23 uses)
       Recommendation: Merge into 'people' (more common, 82%)
-      Command: tagex merge /vault person --into people
+      Command: tagex tags merge /vault person --into people
 
   Pattern: -ies/-y
     family (45 uses) / families (3 uses)
       Recommendation: Merge into 'family' (more common, 94%)
-      Command: tagex merge /vault families --into family
+      Command: tagex tags merge /vault families --into family
 
     category (12 uses) / categories (34 uses)
       Recommendation: Merge into 'categories' (more common, 74%)
-      Command: tagex merge /vault category --into categories
+      Command: tagex tags merge /vault category --into categories
 
   Pattern: -ves/-f
     life (8 uses) / lives (3 uses)
       Recommendation: Merge into 'life' (more common, 73%)
-      Command: tagex merge /vault lives --into life
+      Command: tagex tags merge /vault lives --into life
 
   Pattern: -s (regular)
     parent (23 uses) / parents (8 uses)
       Recommendation: Merge into 'parent' (more common, 74%)
-      Command: tagex merge /vault parents --into parent
+      Command: tagex tags merge /vault parents --into parent
 
     book (67 uses) / books (12 uses)
       Recommendation: Merge into 'book' (more common, 85%)
-      Command: tagex merge /vault books --into book
+      Command: tagex tags merge /vault books --into book
 
   Compound Words:
     tax-break (5 uses) / tax-breaks (2 uses)
       Recommendation: Merge into 'tax-break' (more common, 71%)
-      Command: tagex merge /vault tax-breaks --into tax-break
+      Command: tagex tags merge /vault tax-breaks --into tax-break
 
 
 SUMMARY:
@@ -1305,8 +1305,8 @@ tagex analyze recommendations /vault --analyzers synonyms,plurals,singletons --e
 tagex analyze recommendations /vault --analyzers singletons --no-transformers --export ops.yaml
 
 # Review and apply
-tagex apply cleanup.yaml          # Preview
-tagex apply cleanup.yaml --execute  # Apply
+tagex tags apply cleanup.yaml          # Preview
+tagex tags apply cleanup.yaml --execute  # Apply
 ```
 
 ### Output Format
@@ -1386,10 +1386,10 @@ tagex analyze recommendations /vault --analyzers singletons --export singleton-c
 # - Delete operations you don't want
 
 # 4. Preview changes
-tagex apply singleton-cleanup.yaml
+tagex tags apply singleton-cleanup.yaml
 
 # 5. Apply changes
-tagex apply singleton-cleanup.yaml --execute
+tagex tags apply singleton-cleanup.yaml --execute
 
 # 6. Verify improvement
 tagex stats /vault
@@ -1539,10 +1539,10 @@ tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
 # - Delete operations entirely
 
 # 3. Preview changes
-tagex apply suggestions.yaml --vault-path /vault
+tagex tags apply suggestions.yaml --vault-path /vault
 
 # 4. Apply tags
-tagex apply suggestions.yaml --vault-path /vault --execute
+tagex tags apply suggestions.yaml --vault-path /vault --execute
 ```
 
 ### When to Use
@@ -1575,10 +1575,10 @@ tagex analyze suggest --vault-path /vault --min-tags 1 --export tag-suggestions.
 # - Modify tag lists
 
 # 4. Preview
-tagex apply tag-suggestions.yaml --vault-path /vault
+tagex tags apply tag-suggestions.yaml --vault-path /vault
 
 # 5. Apply
-tagex apply tag-suggestions.yaml --vault-path /vault --execute
+tagex tags apply tag-suggestions.yaml --vault-path /vault --execute
 
 # 6. Verify improvement
 tagex stats /vault
@@ -1642,8 +1642,8 @@ The generated YAML file is fully editable:
 # - Delete operations you don't want
 # - Reorder operations (they execute top-to-bottom)
 #
-# Preview with: tagex apply <this-file>
-# Apply with:   tagex apply <this-file> --execute
+# Preview with: tagex tags apply <this-file>
+# Apply with:   tagex tags apply <this-file> --execute
 
 operations:
 - type: merge
@@ -1674,16 +1674,16 @@ operations:
 
 ```bash
 # Preview changes (default - safe, no modifications)
-tagex apply operations.yaml
+tagex tags apply operations.yaml
 
 # Apply changes (requires explicit --execute flag)
-tagex apply operations.yaml --execute
+tagex tags apply operations.yaml --execute
 
 # Specify vault if different from working directory
-tagex apply operations.yaml --vault-path /path/to/vault --execute
+tagex tags apply operations.yaml --vault-path /path/to/vault --execute
 
 # Process specific tag types
-tagex apply operations.yaml --tag-types both --execute
+tagex tags apply operations.yaml --tag-types both --execute
 ```
 
 ### Safety Features
@@ -1727,10 +1727,10 @@ tagex analyze recommendations /vault --export ops.yaml
 # - Reorder operations
 
 # 4. Preview changes
-tagex apply ops.yaml
+tagex tags apply ops.yaml
 
 # 5. Apply changes
-tagex apply ops.yaml --execute
+tagex tags apply ops.yaml --execute
 
 # 6. Verify improvements
 tagex health /vault
@@ -1774,8 +1774,8 @@ tagex analyze synonyms /vault     # Review output
 tagex analyze plurals /vault      # Review output
 tagex analyze merge /vault        # Review output
 # Manually run merge commands one by one
-tagex merge /vault tag1 tag2 --into target1
-tagex merge /vault tag3 tag4 --into target2
+tagex tags merge /vault tag1 tag2 --into target1
+tagex tags merge /vault tag3 tag4 --into target2
 # ...many more commands...
 ```
 
@@ -1783,7 +1783,7 @@ tagex merge /vault tag3 tag4 --into target2
 ```bash
 tagex analyze recommendations /vault --export ops.yaml  # All analyzers
 # Edit ops.yaml once
-tagex apply ops.yaml --execute                         # Apply all at once
+tagex tags apply ops.yaml --execute                         # Apply all at once
 ```
 
 The recommendations system is the **recommended approach** for systematic tag cleanup across your vault.
