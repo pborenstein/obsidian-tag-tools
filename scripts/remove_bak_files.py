@@ -34,21 +34,25 @@ class BakRemover:
         if self.verbose or level == "ERROR":
             print(entry)
 
-    def find_bak_files(self, directory: Path) -> List[Path]:
+    def find_bak_files(self, directory: Path, recursive: bool = True) -> List[Path]:
         """Find all .bak files in directory."""
-        bak_files = list(directory.glob("*.bak"))
+        if recursive:
+            bak_files = list(directory.rglob("**/*.bak"))
+        else:
+            bak_files = list(directory.glob("*.bak"))
         return sorted(bak_files)
 
-    def remove_files(self, directory: Path):
+    def remove_files(self, directory: Path, recursive: bool = True):
         """Remove .bak files from directory."""
         self.log(f"\n{'='*70}")
         self.log(f"Scanning for .bak files")
         self.log(f"Directory: {directory}")
+        self.log(f"Recursive: {'Yes' if recursive else 'No (single directory only)'}")
         self.log(f"Mode: {'DRY-RUN (no deletions)' if self.dry_run else 'LIVE (files will be deleted)'}")
         self.log(f"{'='*70}\n")
 
         # Find all .bak files
-        bak_files = self.find_bak_files(directory)
+        bak_files = self.find_bak_files(directory, recursive=recursive)
         self.stats['found'] = len(bak_files)
 
         if not bak_files:
@@ -99,10 +103,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Dry-run (safe, shows what will be deleted)
+  # Dry-run recursively (safe, shows what will be deleted, default)
   python remove_bak_files.py /path/to/directory
 
-  # Actually delete files
+  # Dry-run single directory only (not recursive)
+  python remove_bak_files.py /path/to/directory --no-recursive
+
+  # Actually delete files recursively
   python remove_bak_files.py /path/to/directory --execute
 
   # Quiet mode
@@ -114,6 +121,10 @@ Examples:
                        help='Directory containing .bak files')
     parser.add_argument('--execute', action='store_true',
                        help='Actually delete files (default is dry-run)')
+    parser.add_argument('--recursive', action='store_true', default=True,
+                       help='Search subdirectories recursively (default: True)')
+    parser.add_argument('--no-recursive', dest='recursive', action='store_false',
+                       help='Only search immediate directory, not subdirectories')
     parser.add_argument('--quiet', action='store_true',
                        help='Reduce output verbosity')
 
@@ -133,7 +144,7 @@ Examples:
         verbose=not args.quiet
     )
 
-    remover.remove_files(directory)
+    remover.remove_files(directory, recursive=args.recursive)
 
     # Exit with error code if there were errors
     if remover.stats['errors'] > 0:

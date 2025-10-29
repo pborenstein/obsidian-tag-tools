@@ -240,13 +240,16 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Dry-run on directory (safe, no changes)
+  # Dry-run on directory recursively (safe, no changes, default)
   python fix_duplicate_tags.py /path/to/clippings
+
+  # Dry-run on single directory only (not recursive)
+  python fix_duplicate_tags.py /path/to/clippings --no-recursive
 
   # Dry-run on filelist
   python fix_duplicate_tags.py --filelist ~/filelist.txt
 
-  # Actually fix files (creates .bak backups)
+  # Actually fix files recursively (creates .bak backups)
   python fix_duplicate_tags.py /path/to/clippings --execute
 
   # Fix both directory and filelist
@@ -260,6 +263,10 @@ Examples:
                        help='Text file containing list of files to process')
     parser.add_argument('--execute', action='store_true',
                        help='Actually modify files (default is dry-run)')
+    parser.add_argument('--recursive', action='store_true', default=True,
+                       help='Search subdirectories recursively (default: True)')
+    parser.add_argument('--no-recursive', dest='recursive', action='store_false',
+                       help='Only search immediate directory, not subdirectories')
     parser.add_argument('--quiet', action='store_true',
                        help='Reduce output verbosity')
     parser.add_argument('--log', type=Path,
@@ -280,9 +287,13 @@ Examples:
             sys.exit(1)
 
         # Find all .md files
-        md_files = list(directory.glob("*.md"))
+        if args.recursive:
+            md_files = list(directory.rglob("**/*.md"))
+            print(f"Found {len(md_files)} markdown files in directory tree (recursive)")
+        else:
+            md_files = list(directory.glob("*.md"))
+            print(f"Found {len(md_files)} markdown files in directory (non-recursive)")
         files_to_process.extend(md_files)
-        print(f"Found {len(md_files)} markdown files in directory")
 
     if args.filelist:
         if not args.filelist.exists():
