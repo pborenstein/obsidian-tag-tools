@@ -19,7 +19,9 @@ def temp_vault(tmp_path):
 @pytest.fixture
 def config_file(temp_vault):
     """Create a test synonym configuration file."""
-    config_path = temp_vault / '.tagex-synonyms.yaml'
+    tagex_dir = temp_vault / '.tagex'
+    tagex_dir.mkdir(exist_ok=True)
+    config_path = temp_vault / '.tagex/synonyms.yaml'
     config = {
         'synonyms': [
             ['neuro', 'neurodivergent', 'neurodivergence'],
@@ -256,14 +258,18 @@ class TestEdgeCases:
 
     def test_empty_config_file(self, temp_vault):
         # Create empty config file
-        config_path = temp_vault / '.tagex-synonyms.yaml'
+        tagex_dir = temp_vault / '.tagex'
+        tagex_dir.mkdir(exist_ok=True)
+        config_path = temp_vault / '.tagex/synonyms.yaml'
         config_path.write_text('')
 
         config = SynonymConfig(temp_vault)
         assert len(config.synonym_groups) == 0
 
     def test_config_with_empty_groups(self, temp_vault):
-        config_path = temp_vault / '.tagex-synonyms.yaml'
+        tagex_dir = temp_vault / '.tagex'
+        tagex_dir.mkdir(exist_ok=True)
+        config_path = temp_vault / '.tagex/synonyms.yaml'
         config_data = {
             'synonyms': [
                 ['valid', 'group'],

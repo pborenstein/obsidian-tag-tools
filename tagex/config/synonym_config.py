@@ -155,6 +155,9 @@ class SynonymConfig:
 
     def save(self) -> None:
         """Save synonym configuration to YAML file."""
+        # Ensure .tagex directory exists
+        self.config_file.parent.mkdir(exist_ok=True)
+
         config = {'synonyms': self.synonym_groups}
         with open(self.config_file, 'w') as f:
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
