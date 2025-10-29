@@ -78,11 +78,11 @@ tagex stats [vault_path] --top 15
 tagex health [vault_path]
 
 # Analyze tag relationships and quality (accept vault or JSON input, defaults to cwd)
-tagex analyze pairs [vault_path]             # Auto-extract and analyze
-tagex analyze merge tags.json --min-usage 5  # Or use pre-extracted JSON
+tagex analyze pairs [vault_path]                                      # Auto-extract and analyze
+tagex analyze merge [vault_path] --min-usage 5 --export ops.yaml     # Export operations to YAML
 tagex analyze quality [vault_path]
-tagex analyze synonyms [vault_path] --min-similarity 0.7
-tagex analyze plurals [vault_path] --prefer usage
+tagex analyze synonyms [vault_path] --min-similarity 0.7 --export ops.yaml
+tagex analyze plurals [vault_path] --prefer usage --export ops.yaml
 tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
 
 # Unified recommendations workflow (consolidates all analyzers, defaults to cwd)

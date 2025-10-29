@@ -138,6 +138,7 @@ tagex analyze quality tags.json --min-usage 10
 ```bash
 tagex analyze plurals tags.json
 tagex analyze plurals tags.json --min-usage 5
+tagex analyze plurals /vault --export ops.yaml     # Export to YAML
 ```
 
 **Handles:** 34 irregular plurals + 5 pattern rules + compounds
@@ -152,6 +153,7 @@ tagex analyze plurals tags.json --min-usage 5
 tagex analyze synonyms tags.json
 tagex analyze synonyms tags.json --min-shared 5
 tagex analyze synonyms tags.json --min-similarity 0.8
+tagex analyze synonyms /vault --export ops.yaml     # Export to YAML
 ```
 
 **Detects:** Abbreviations, acronyms, conceptual equivalents
@@ -166,6 +168,7 @@ tagex analyze synonyms tags.json --min-similarity 0.8
 tagex analyze merge tags.json
 tagex analyze merge tags.json --min-usage 10
 tagex analyze merge tags.json --no-sklearn  # Pattern-based fallback
+tagex analyze merge /vault --export ops.yaml     # Export to YAML
 ```
 
 **Methods:** String similarity (85%+), TF-IDF embeddings (0.6+), file overlap (80%+), morphological patterns

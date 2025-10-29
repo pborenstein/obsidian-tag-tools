@@ -1015,7 +1015,8 @@ def pairs(input_path, tag_types, min_pairs, no_filter):
 @click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--no-sklearn', is_flag=True, help='Force use of pattern-based fallback instead of embeddings')
-def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
+@click.option('--export', type=click.Path(), help='Export operations to YAML file')
+def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn, export):
     """Suggest tag merge opportunities.
 
     INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
@@ -1086,6 +1087,84 @@ def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
             print(f"\nFiltered out {excluded_count} suggestion groups involving excluded tags\n")
 
     print_merge_suggestions(suggestions)
+
+    # Export if requested
+    if export:
+        from .analysis.recommendations import Operation
+        from datetime import datetime
+        import yaml
+
+        print(f"\n{'='*70}")
+        print("Exporting to YAML...")
+
+        operations = []
+
+        # Convert suggestions to operations
+        for category, groups in suggestions.items():
+            for group in groups:
+                all_tags = group.get('tags', [])
+                if len(all_tags) < 2:
+                    continue
+
+                # Use most frequent tag as target
+                tag_counts = {tag: tag_stats[tag]['count'] for tag in all_tags if tag in tag_stats}
+                target = max(tag_counts, key=tag_counts.get)
+                sources = [t for t in all_tags if t != target]
+
+                # Determine reason based on category
+                if category == 'similar_names':
+                    reason = f"Similar names (score: {group.get('score', 0):.3f})"
+                elif category == 'semantic_duplicates':
+                    reason = f"Semantic duplicates (similarity: {group.get('similarity', 0):.3f})"
+                elif category == 'high_overlap':
+                    reason = f"High file overlap ({group.get('overlap_ratio', 0):.1%})"
+                elif category == 'variant_patterns':
+                    reason = "Variant patterns"
+                else:
+                    reason = f"Merge suggestion ({category})"
+
+                confidence = group.get('score', group.get('similarity', group.get('overlap_ratio', 0.5)))
+
+                op = Operation(
+                    operation_type='merge',
+                    source_tags=sources,
+                    target_tag=target,
+                    reason=reason,
+                    enabled=True,
+                    confidence=confidence,
+                    source_analyzer='merge',
+                    metadata={
+                        'category': category,
+                        'all_tags': all_tags,
+                        **{k: v for k, v in group.items() if k not in ['tags', 'score', 'similarity', 'overlap_ratio']}
+                    }
+                )
+                operations.append(op)
+
+        if operations:
+            # Export to YAML
+            yaml_data = {
+                'metadata': {
+                    'generated_by': 'tagex analyze merge',
+                    'timestamp': datetime.now().isoformat(),
+                    'vault_path': str(vault_path) if vault_path else None,
+                    'min_usage': min_usage,
+                    'total_operations': len(operations)
+                },
+                'operations': [op.to_dict() for op in operations]
+            }
+
+            with open(export, 'w', encoding='utf-8') as f:
+                yaml.dump(yaml_data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+            print(f"Exported {len(operations)} operations to: {export}")
+            print(f"\nNext steps:")
+            print(f"  1. Review and edit: {export}")
+            vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
+            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
+        else:
+            print(f"No merge operations to export.")
 
 
 def calculate_tag_statistics(tag_data, basic_stats, top_count):
@@ -1347,7 +1426,8 @@ def quality(input_path, tag_types, no_filter, format, max_items):
 @click.option('--min-similarity', type=float, default=0.7, help='Minimum semantic similarity threshold (0.0-1.0)')
 @click.option('--show-related', is_flag=True, help='Also show related tags (co-occurrence based)')
 @click.option('--no-transformers', is_flag=True, help='Skip semantic analysis (faster, co-occurrence only)')
-def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_transformers):
+@click.option('--export', type=click.Path(), help='Export operations to YAML file')
+def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_transformers, export):
     """Detect synonym tags using semantic similarity.
 
     INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
@@ -1394,6 +1474,9 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
         print(f"Loaded {len(excluded_tags)} excluded tags from .tagex/exclusions.yaml\n")
 
     print(f"Analyzing {len(tag_stats)} tags for synonyms...\n")
+
+    # Initialize variables for export
+    synonym_candidates = []
 
     # Semantic synonym detection (the real thing)
     if not no_transformers:
@@ -1490,6 +1573,82 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
             print(f"    Suggestion: {candidate['suggestion']}")
             print()
 
+    # Export if requested
+    if export:
+        from .analysis.recommendations import Operation
+        from datetime import datetime
+        import yaml
+
+        print(f"\n{'='*70}")
+        print("Exporting to YAML...")
+
+        operations = []
+
+        # Add semantic synonym operations
+        if not no_transformers and synonym_candidates:
+            for candidate in synonym_candidates:
+                source = candidate['source']
+                target = candidate['target']
+
+                op = Operation(
+                    operation_type='merge',
+                    source_tags=[source],
+                    target_tag=target,
+                    reason=f"Semantic synonyms (similarity: {candidate['semantic_similarity']:.3f})",
+                    enabled=True,
+                    confidence=candidate['semantic_similarity'],
+                    source_analyzer='synonyms',
+                    metadata={
+                        'co_occurrence_ratio': round(candidate['co_occurrence_ratio'], 3),
+                        'shared_files': candidate['shared_files']
+                    }
+                )
+                operations.append(op)
+
+        # Add acronym expansion operations
+        if acronym_candidates:
+            for candidate in acronym_candidates[:10]:
+                op = Operation(
+                    operation_type='merge',
+                    source_tags=[candidate['acronym']],
+                    target_tag=candidate['expansion'],
+                    reason=f"Acronym expansion (overlap: {candidate['overlap_ratio']:.1%})",
+                    enabled=True,
+                    confidence=candidate['overlap_ratio'],
+                    source_analyzer='synonyms',
+                    metadata={
+                        'shared_files': candidate['shared_files'],
+                        'acronym_count': candidate['acronym_count'],
+                        'expansion_count': candidate['expansion_count']
+                    }
+                )
+                operations.append(op)
+
+        if operations:
+            # Export to YAML
+            yaml_data = {
+                'metadata': {
+                    'generated_by': 'tagex analyze synonyms',
+                    'timestamp': datetime.now().isoformat(),
+                    'vault_path': str(vault_path) if vault_path else None,
+                    'min_similarity': min_similarity,
+                    'total_operations': len(operations)
+                },
+                'operations': [op.to_dict() for op in operations]
+            }
+
+            with open(export, 'w', encoding='utf-8') as f:
+                yaml.dump(yaml_data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+            print(f"Exported {len(operations)} operations to: {export}")
+            print(f"\nNext steps:")
+            print(f"  1. Review and edit: {export}")
+            vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
+            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
+        else:
+            print(f"No synonym operations to export.")
+
 
 @analyze.command()
 @click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
@@ -1574,7 +1733,8 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--prefer', type=click.Choice(['usage', 'plural', 'singular']), help='Override preference mode (default: usage-based or from config)')
-def plurals(input_path, tag_types, no_filter, prefer):
+@click.option('--export', type=click.Path(), help='Export operations to YAML file')
+def plurals(input_path, tag_types, no_filter, prefer, export):
     """Detect singular/plural variants.
 
     INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
@@ -1690,6 +1850,72 @@ def plurals(input_path, tag_types, no_filter, prefer):
                 print(f"    - {tag} ({count} uses){is_canonical}")
             print(f"    → Suggestion: merge all into '{canonical}' ({suggestion_reason})")
             print()
+
+        # Export if requested
+        if export:
+            from .analysis.recommendations import Operation
+            from datetime import datetime
+            import yaml
+
+            print(f"\n{'='*70}")
+            print("Exporting to YAML...")
+
+            # Convert variant groups to operations
+            operations = []
+            for canonical, variants in sorted_groups:
+                # Calculate total usage
+                total_usage = sum(tag_stats[t]['count'] for t in variants)
+                canonical_usage = tag_stats[canonical]['count']
+
+                # Remove canonical from sources
+                sources = [v for v in variants if v != canonical]
+
+                if sources:  # Only add if there are sources to merge
+                    # Determine reason based on preference mode
+                    if preference == 'usage':
+                        reason = f"Plural variant (most-used: {canonical_usage}/{total_usage} uses)"
+                    elif preference == 'plural':
+                        reason = "Plural variant (plural preferred)"
+                    else:
+                        reason = "Plural variant (singular preferred)"
+
+                    op = Operation(
+                        operation_type='merge',
+                        source_tags=sources,
+                        target_tag=canonical,
+                        reason=reason,
+                        enabled=True,
+                        confidence=canonical_usage / total_usage if total_usage > 0 else 0.5,
+                        source_analyzer='plurals',
+                        metadata={
+                            'total_usage': total_usage,
+                            'canonical_usage': canonical_usage,
+                            'preference_mode': preference
+                        }
+                    )
+                    operations.append(op)
+
+            # Export to YAML
+            yaml_data = {
+                'metadata': {
+                    'generated_by': 'tagex analyze plurals',
+                    'timestamp': datetime.now().isoformat(),
+                    'vault_path': str(vault_path) if vault_path else None,
+                    'preference_mode': preference,
+                    'total_operations': len(operations)
+                },
+                'operations': [op.to_dict() for op in operations]
+            }
+
+            with open(export, 'w', encoding='utf-8') as f:
+                yaml.dump(yaml_data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+            print(f"Exported {len(operations)} operations to: {export}")
+            print(f"\nNext steps:")
+            print(f"  1. Review and edit: {export}")
+            vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
+            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
     else:
         print("No plural variant groups found.\n")
 

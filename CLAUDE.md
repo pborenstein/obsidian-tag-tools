@@ -35,8 +35,9 @@ tagex health [vault_path]
 # Analysis commands (accept vault path or JSON file, default to cwd)
 tagex analyze pairs [vault_path] [--no-filter] [--min-pairs N]
 tagex analyze quality [vault_path] [--format text|json]
-tagex analyze synonyms [vault_path] [--min-similarity 0.7] [--show-related] [--no-transformers]
-tagex analyze plurals [vault_path] [--prefer usage|plural|singular]
+tagex analyze synonyms [vault_path] [--min-similarity 0.7] [--show-related] [--no-transformers] [--export ops.yaml]
+tagex analyze plurals [vault_path] [--prefer usage|plural|singular] [--export ops.yaml]
+tagex analyze merge [vault_path] [--min-usage 3] [--no-sklearn] [--export ops.yaml]
 tagex analyze suggest [--vault-path /vault] [paths...] [--min-tags 2] [--export suggestions.yaml]
 
 # Unified recommendations and apply workflow (safe by default, defaults to cwd)

@@ -10,13 +10,13 @@ tagex analyze recommendations --export ops.yaml  ← Consolidate all analyzer su
 tagex tags apply ops.yaml                        ← Preview changes (safe default)
 tagex tags apply ops.yaml --execute              ← Apply changes (explicit flag required)
 
-# Individual analyzers (all default to cwd)
+# Individual analyzers (all default to cwd, can export to YAML)
 tagex analyze pairs      ← Tag co-occurrence and clustering analysis
-tagex analyze merge      ← Tag merge suggestion engine with embeddings
+tagex analyze merge      ← Tag merge suggestion engine with embeddings [--export ops.yaml]
 tagex analyze quality    ← Overbroad tag detection and specificity scoring
-tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers
-tagex analyze plurals    ← Singular/plural variant detection
-tagex analyze suggest    ← Content-based tag suggestions for untagged/lightly-tagged notes
+tagex analyze synonyms   ← Semantic synonym detection using sentence-transformers [--export ops.yaml]
+tagex analyze plurals    ← Singular/plural variant detection [--export ops.yaml]
+tagex analyze suggest    ← Content-based tag suggestions for untagged/lightly-tagged notes [--export ops.yaml]
 
 # Singleton reduction (via recommendations)
 tagex analyze recommendations --analyzers singletons --export ops.yaml
@@ -109,14 +109,14 @@ Legend:
 | Initialize tagex configuration | `tagex init` (defaults to cwd) |
 | Validate configuration files | `tagex validate` (defaults to cwd) |
 | Fix duplicate 'tags:' frontmatter fields | `tagex tags fix-duplicates` then `--execute` |
-| Find singular/plural splits (book/books) | `tagex analyze plurals` (defaults to cwd) |
-| Find semantic synonyms (film/movies, tech/technology) | `tagex analyze synonyms` (defaults to cwd) |
+| Find singular/plural splits (book/books) | `tagex analyze plurals --export ops.yaml` (defaults to cwd) |
+| Find semantic synonyms (film/movies, tech/technology) | `tagex analyze synonyms --export ops.yaml` (defaults to cwd) |
 | Find related tags (co-occurrence patterns) | `tagex analyze synonyms --show-related` |
-| Find spelling/morphological variants (writing/writers) | `tagex analyze merge` (defaults to cwd) |
+| Find spelling/morphological variants (writing/writers) | `tagex analyze merge --export ops.yaml` (defaults to cwd) |
 | Find tags that are too generic (notes, misc) | `tagex analyze quality` (defaults to cwd) |
 | Understand which tags appear together | `tagex analyze pairs` (defaults to cwd) |
 | Reduce singleton tags (used only once) | `tagex analyze recommendations --analyzers singletons --export ops.yaml` |
-| Suggest tags for untagged/lightly-tagged notes | `tagex analyze suggest --min-tags 2` |
+| Suggest tags for untagged/lightly-tagged notes | `tagex analyze suggest --min-tags 2 --export ops.yaml` |
 | Clean up backup files | `tagex vault cleanup-backups /vault` |
 | Clean up all duplicates systematically | Use `recommendations` command or run all: plurals, synonyms, singletons |
 
@@ -665,6 +665,7 @@ See [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) for detailed technical implemen
 | `tagex analyze merge tags.json --min-usage 10` | Higher usage threshold |
 | `tagex analyze merge tags.json --no-filter` | Include all tags |
 | `tagex analyze merge tags.json --no-sklearn` | Pattern-based fallback |
+| `tagex analyze merge /vault --export ops.yaml` | Export operations to YAML file |
 | `tagex tags merge /vault writers writering --into writing` | Preview suggestions |
 
 ### Dependencies and Fallback Strategy
@@ -1042,6 +1043,7 @@ synonyms = config.get_synonyms("python")  # Returns {"py", "python3"}
 | `tagex analyze synonyms /vault --show-related` | Show related tags (co-occurrence) |
 | `tagex analyze synonyms /vault --no-transformers` | Pattern-based fallback |
 | `tagex analyze synonyms /vault --no-filter` | Include all tags |
+| `tagex analyze synonyms /vault --export ops.yaml` | Export operations to YAML file |
 
 ### Why Semantic Similarity Works
 
@@ -1229,6 +1231,7 @@ SUMMARY:
 | `tagex analyze plurals /vault --prefer singular` | Override to always prefer singulars |
 | `tagex analyze plurals /vault --min-usage 5` | Only show variants with 5+ total uses |
 | `tagex analyze plurals /vault --no-filter` | Include technical tags |
+| `tagex analyze plurals /vault --export ops.yaml` | Export operations to YAML file |
 
 ### Compound Word Handling
 
