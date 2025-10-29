@@ -32,11 +32,11 @@ For each tag, extract all contiguous character sequences of length 2-4:
 
 ```
 Tag: "writing"
-┌─────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────┐
 │ 2-grams: [wr][ri][it][ti][in][ng]             │
 │ 3-grams: [wri][rit][iti][tin][ing]            │
 │ 4-grams: [writ][riti][itin][ting]             │
-└─────────────────────────────────────────────────┘
+└───────────────────────────────────────────────┘
 ```
 
 **Implementation:**
