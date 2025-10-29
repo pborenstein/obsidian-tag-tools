@@ -5,7 +5,7 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 ## Quick Navigation
 
 - **New to tagex?** Start with the [main README](../README.md) for installation and quick start
-- **Setting up your vault?** See [Configuration Guide](CONFIGURATION.md) for best practices
+- **Setting up your vault?** See [Setup Guide](SETUP_GUIDE.md) for installation and best practices
 - **Encountering issues?** Check [Troubleshooting](TROUBLESHOOTING.md) for solutions
 - **Understanding the system?** See [Architecture Overview](ARCHITECTURE.md)
 - **Using analysis tools?** Check out the [Analytics Guide](ANALYTICS.md)
@@ -17,9 +17,10 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 
 1. **[Main README](../README.md)** - Installation, commands, and basic usage
 2. **[Quick Reference](QUICK_REFERENCE.md)** - Command cheat sheet (keep this handy!)
-3. **[Analytics Guide](ANALYTICS.md)** - Complete analysis guide with decision tree
-4. **[Configuration Guide](CONFIGURATION.md)** - Vault setup and best practices
-5. **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+3. **[Setup Guide](SETUP_GUIDE.md)** - Installation and vault setup
+4. **[Configuration Reference](CONFIGURATION_REFERENCE.md)** - `.tagex/` directory configuration files
+5. **[Analytics Guide](ANALYTICS.md)** - Complete analysis guide with decision tree
+6. **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### For Contributors
 
@@ -39,9 +40,9 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 | Document | Description | Audience |
 |:---------|:------------|:---------|
 | **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | **Single-page command reference and cheat sheet** | **Users** |
+| [SETUP_GUIDE.md](SETUP_GUIDE.md) | Installation, vault setup, git integration, naming conventions | Users |
+| [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md) | `.tagex/` directory configuration files (config.yaml, synonyms.yaml, exclusions.yaml) | Users & Developers |
 | [ANALYTICS.md](ANALYTICS.md) | Complete analysis guide with decision tree and workflows | Users & Developers |
-| [SYNONYM_CONFIGURATION.md](SYNONYM_CONFIGURATION.md) | .tagex-synonyms.yaml format, examples, and best practices | Users & Developers |
-| [CONFIGURATION.md](CONFIGURATION.md) | Vault setup, git integration, naming conventions | Users & Developers |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
 
 ### Technical Documentation
@@ -50,12 +51,12 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 |:---------|:------------|:---------|
 | [ALGORITHMS.md](ALGORITHMS.md) | Algorithm details: TF-IDF, Jaccard, specificity scoring, etc. | Developers |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
-| [DESIGN_CONSIDERATIONS.md](DESIGN_CONSIDERATIONS.md) | Future design discussions and unresolved tensions | Developers |
 
 ### Archive
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
+| [archive/DESIGN_CONSIDERATIONS.md](archive/DESIGN_CONSIDERATIONS.md) | Future design discussions and unresolved tensions | Developers |
 | [archive/SEMANTIC_ANALYSIS.md](archive/SEMANTIC_ANALYSIS.md) | Original TF-IDF documentation (superseded by ALGORITHMS.md) | Developers |
 | [archive/TESTING_NARRATIVE.md](archive/TESTING_NARRATIVE.md) | Documentation-driven test development methodology | Developers |
 | [archive/FRONTMATTER_PARSER_DECISION.md](archive/FRONTMATTER_PARSER_DECISION.md) | PyYAML vs python-frontmatter analysis (Sep 2024) | Developers |

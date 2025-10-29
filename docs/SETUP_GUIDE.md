@@ -1,16 +1,19 @@
-# Configuration Guide
+# Setup Guide
 
-Best practices and recommendations for configuring tagex with your Obsidian vault.
+Complete guide to installing tagex and setting up your Obsidian vault for tag management.
 
 ## Table of Contents
 
 - [Vault Setup](#vault-setup)
-- [Tagex Configuration](#tagex-configuration)
 - [Git Integration](#git-integration)
 - [Tag Naming Conventions](#tag-naming-conventions)
 - [Frontmatter vs Inline Tags](#frontmatter-vs-inline-tags)
-- [Exclusion Patterns](#exclusion-patterns)
 - [Workflow Configuration](#workflow-configuration)
+- [Environment Variables](#environment-variables)
+- [Performance Tuning](#performance-tuning)
+- [Integration with Obsidian](#integration-with-obsidian)
+- [Best Practices Summary](#best-practices-summary)
+- [Getting Started Checklist](#getting-started-checklist)
 
 ## Vault Setup
 
@@ -95,218 +98,6 @@ All commands default to the current working directory, making it convenient to w
    jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
    ```
 
-## Tagex Configuration
-
-Tagex stores vault-specific configuration in the `.tagex/` directory within your vault.
-
-### Directory Structure
-
-```
-your-vault/
-├── .tagex/
-│   ├── config.yaml      # General settings (plural preferences, file exclusions)
-│   ├── synonyms.yaml    # User-defined synonym mappings
-│   ├── exclusions.yaml  # Tag exclusions (merge and auto-generated)
-│   └── README.md        # Configuration documentation
-├── .obsidian/           # Obsidian's configuration
-└── your-notes.md
-```
-
-### Initializing Configuration
-
-Create the `.tagex/` directory with template files:
-
-```bash
-# Navigate to your vault
-cd /path/to/vault
-
-# Initialize with default templates (defaults to cwd)
-tagex init
-
-# Or specify a path explicitly
-tagex init /path/to/vault
-
-# Reinitialize (overwrites existing files)
-tagex init --force
-```
-
-### Configuration Files
-
-#### config.yaml
-
-Controls general tagex behavior:
-
-```yaml
-# .tagex/config.yaml
-
-plural:
-  # Preference mode: usage, plural, or singular
-  preference: usage
-
-  # Minimum usage ratio to prefer most-used form (usage mode only)
-  # Example: If tag1 has 10 uses and tag2 has 3 uses, ratio is 3.33
-  # With threshold 2.0, prefer tag1 (10 > 3 * 2.0)
-  usage_ratio_threshold: 2.0
-```
-
-**Plural preference modes:**
-
-| Mode | Behavior | Example |
-|:-----|:---------|:--------|
-| `usage` | Prefer most-used form | `book (67)` + `books (12)` → `book` |
-| `plural` | Always prefer plurals | `book (67)` + `books (12)` → `books` |
-| `singular` | Always prefer singulars | `books (67)` + `book (12)` → `book` |
-
-#### synonyms.yaml
-
-Define explicit synonym relationships:
-
-```yaml
-# .tagex/synonyms.yaml
-
-# Canonical tag as key, synonyms as list values
-python:
-  - py
-  - python3
-  - python-lang
-
-javascript:
-  - js
-  - ecmascript
-
-neuro:
-  - neurodivergent
-  - neurodivergence
-  - neurotype
-
-tech:
-  - technology
-  - technical
-```
-
-**Usage:**
-- Tags listed under a key will be suggested for merge into that key
-- The `analyze synonyms` command respects these mappings
-- Helps codify vault-specific terminology decisions
-
-#### exclusions.yaml
-
-Exclude specific tags from operations and suggestions:
-
-```yaml
-# .tagex/exclusions.yaml
-
-exclude_tags:
-  # Tags to exclude from merge/synonym suggestions
-  # Useful for proper nouns, country names, etc.
-  - spain
-  - france
-  - shakespeare
-  - orwell
-
-auto_generated_tags:
-  # Tags inserted automatically by other tools
-  # These will never be suggested when recommending tags for notes
-  - copilot-conversation
-  - daily-note
-  - auto-generated
-  - fragments
-```
-
-**Two types of exclusions:**
-
-1. **exclude_tags** - Tags to exclude from merge operations
-   - Never suggested for merging/consolidation
-   - Useful for proper nouns, place names, historical events
-   - Example: `spain`, `shakespeare`, `ww2`
-
-2. **auto_generated_tags** - Tags inserted automatically by tools
-   - Never suggested when recommending tags for content
-   - Useful for tool-generated tags like `copilot-conversation`, `daily-note`
-   - Prevents auto-tags from polluting manual tag suggestions
-
-**Use cases:**
-
-```yaml
-# Proper nouns and places
-exclude_tags:
-  - boston
-  - massachusetts
-  - shakespeare
-  - orwell
-
-# Tool-generated tags
-auto_generated_tags:
-  - copilot-conversation  # GitHub Copilot
-  - daily-note            # Templater/Daily Notes
-  - auto-tag              # Obsidian plugins
-  - fragments             # Custom automation
-```
-
-**Why this matters:**
-
-- **Merge operations**: Prevents consolidating important proper nouns
-- **Content suggestions**: Keeps auto-generated tags from being suggested for manual notes
-- **Tag quality**: Maintains clean separation between manual and automated tagging
-
-### Validating Configuration
-
-Check configuration files for errors:
-
-```bash
-# Basic validation (run from vault directory)
-cd /path/to/vault
-tagex validate
-
-# Or specify path explicitly
-tagex validate /path/to/vault
-
-# Strict mode (treats warnings as errors)
-tagex validate --strict
-```
-
-**What gets validated:**
-- YAML syntax correctness
-- Valid preference modes
-- Numeric values in acceptable ranges
-- Synonym conflicts (e.g., canonical tag also listed as synonym)
-- File existence and readability
-
-### Configuration Best Practices
-
-1. **Version control your configuration:**
-   ```bash
-   git add .tagex/
-   git commit -m "Add tagex configuration"
-   ```
-
-2. **Document decisions in synonyms.yaml:**
-   ```yaml
-   # Use 'tech' over 'technology' for brevity
-   tech:
-     - technology
-     - technical
-   ```
-
-3. **Start with usage mode:**
-   - Least disruptive to existing vault
-   - Respects established patterns
-   - Can always switch later
-
-4. **Validate after editing:**
-   ```bash
-   # Edit configuration
-   vim .tagex/config.yaml
-
-   # Validate changes (from vault directory)
-   tagex validate
-   ```
-
-5. **Use init --force to reset:**
-   ```bash
-   # If configuration becomes corrupted (from vault directory)
-   tagex init --force
-   ```
 
 ## Git Integration
 
@@ -394,6 +185,7 @@ git merge tag-cleanup
 - Temporary extraction files
 - Python cache files
 - Virtual environment
+
 
 ## Tag Naming Conventions
 
@@ -496,6 +288,7 @@ tags:
 tags: [work]  # Preferred - consistent structure
 ```
 
+
 ## Frontmatter vs Inline Tags
 
 ### Frontmatter Tags
@@ -593,166 +386,6 @@ tagex extract /vault --tag-types both
 tagex rename /vault old-tag new-tag --tag-types both
 ```
 
-## Exclusion Patterns
-
-Tagex provides two ways to exclude files and directories from processing:
-
-1. **Configuration-based** (recommended): Define exclusions in `.tagex/config.yaml`
-2. **CLI-based**: Override or supplement with `--exclude` flag
-
-### Default Behavior
-
-By default, tagex **excludes all dotfiles and dotdirectories**:
-
-```
-.obsidian/     ← Excluded by default
-.git/          ← Excluded by default
-.trash/        ← Excluded by default
-.tools/        ← Excluded by default
-.claude/       ← Excluded by default
-note.md        ← Included (not a dotfile)
-templates/     ← Included (not a dotfile)
-```
-
-This prevents processing tool-specific directories like `.obsidian`, `.git`, `.vscode`, `.trash`, etc.
-
-### Configuration-Based Exclusions
-
-Define persistent exclusion rules in `.tagex/config.yaml`:
-
-```yaml
-file_exclusions:
-  # Exclude all dotfiles/directories (default: true)
-  exclude_dotfiles: true
-
-  # Allowlist: specific dotfiles to include
-  include_dotfiles:
-    - .gitignore    # Process .gitignore file
-
-  # Additional patterns to exclude (beyond dotfiles)
-  exclude_patterns:
-    - "templates/*"           # Exclude templates directory
-    - "*.excalidraw.md"       # Exclude Excalidraw files
-    - "archive/*"             # Exclude archive directory
-    - "_drafts/*"             # Exclude drafts directory
-```
-
-**Advantages:**
-- Persistent across all commands
-- Vault-specific configuration
-- No need to repeat flags
-- Version-controlled with your vault
-
-### CLI-Based Exclusions
-
-Override or supplement configuration with the `--exclude` flag:
-
-```bash
-# Exclude templates directory
-tagex tags extract /vault --exclude "templates/*"
-
-# Exclude multiple patterns
-tagex tags extract /vault \
-  --exclude "templates/*" \
-  --exclude "archive/*" \
-  --exclude "daily/*"
-
-# Combine with configuration (patterns are merged)
-tagex tags extract /vault --exclude "drafts/*"
-```
-
-**Use CLI exclusions when:**
-- One-time exclusions needed
-- Testing different exclusion patterns
-- Scripting with dynamic patterns
-
-### Dotfile Handling
-
-#### Including Specific Dotfiles
-
-To process specific dotfiles while excluding all others:
-
-```yaml
-# .tagex/config.yaml
-file_exclusions:
-  exclude_dotfiles: true
-  include_dotfiles:
-    - .gitignore
-    - .project-notes.md
-```
-
-#### Disabling Dotfile Exclusion
-
-To process all dotfiles (not recommended):
-
-```yaml
-# .tagex/config.yaml
-file_exclusions:
-  exclude_dotfiles: false
-```
-
-### Pattern Syntax
-
-Exclusion patterns use glob-style matching:
-
-| Pattern | Matches | Example |
-|:--------|:--------|:--------|
-| `*.md` | All markdown files | `note.md`, `file.md` |
-| `dir/*` | All files in directory | `templates/template.md` |
-| `**/archive/*` | Archive in any subdirectory | `notes/archive/old.md` |
-| `daily-*.md` | Files with prefix | `daily-2024-01-15.md` |
-| `.tools` | Exact dotfile/directory name | `.tools/` |
-
-### Common Exclusion Scenarios
-
-**Default setup** (already configured by default):
-
-```yaml
-# .tagex/config.yaml - Already defaults to this
-file_exclusions:
-  exclude_dotfiles: true  # Excludes .obsidian, .git, .trash, etc.
-  include_dotfiles: []
-  exclude_patterns: []
-```
-
-**With templates and archive**:
-
-```yaml
-file_exclusions:
-  exclude_dotfiles: true
-  include_dotfiles: []
-  exclude_patterns:
-    - "templates/*"
-    - "archive/*"
-    - "_drafts/*"
-```
-
-**Daily notes and attachments**:
-
-```yaml
-file_exclusions:
-  exclude_dotfiles: true
-  include_dotfiles: []
-  exclude_patterns:
-    - "daily/*"
-    - "attachments/*"
-    - "*.excalidraw.md"
-```
-
-### Verification
-
-Check which files are being processed:
-
-```bash
-# Extract and see file count
-tagex tags extract /vault -o tags.json
-
-# Check specific file appears
-grep "suspicious-file" tags.json
-
-# View all processed files
-jq -r '.[] | .relativePaths[]' tags.json | sort | uniq
-```
 
 ## Workflow Configuration
 
@@ -860,6 +493,7 @@ tagex analyze pairs "$OUTPUT_DIR/tags-$DATE.json" > "$OUTPUT_DIR/pairs-$DATE.txt
 0 9 * * 0 ~/scripts/tagex-weekly.sh
 ```
 
+
 ## Environment Variables
 
 ### Python Path Configuration
@@ -879,6 +513,7 @@ Configure uv tool directory:
 # Add uv bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 ```
+
 
 ## Performance Tuning
 
@@ -916,6 +551,7 @@ tagex extract /vault --min-usage 3 -o filtered.json
 tagex analyze merge filtered.json
 ```
 
+
 ## Integration with Obsidian
 
 ### Obsidian Settings
@@ -945,6 +581,7 @@ tagex analyze merge filtered.json
 - Pull latest changes first
 - Push after operations complete
 
+
 ## Best Practices Summary
 
 1. **Always use `--dry-run`** before operations
@@ -955,6 +592,7 @@ tagex analyze merge filtered.json
 6. **Review logs** after operations
 7. **Extract regularly** to track tag evolution
 8. **Analyze before cleanup** to inform decisions
+
 
 ## Getting Started Checklist
 
@@ -967,9 +605,11 @@ tagex analyze merge filtered.json
 - [ ] Test with `--dry-run` first
 - [ ] Set up backup workflow
 
+
+
 ## Next Steps
 
-- Read [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
-- Review [ARCHITECTURE.md](ARCHITECTURE.md) for system design
+- Read [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md) for `.tagex/` directory details
+- Review [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 - See [ANALYTICS.md](ANALYTICS.md) for analysis features
-- Check [README.md](../README.md) for command reference
+- Check [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for command syntax
