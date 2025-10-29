@@ -1063,15 +1063,23 @@ def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
 
     # Filter excluded tags from suggestions
     if excluded_tags:
-        filtered_suggestions = []
+        filtered_suggestions = {
+            'similar_names': [],
+            'semantic_duplicates': [],
+            'high_overlap': [],
+            'variant_patterns': []
+        }
         excluded_count = 0
-        for group in suggestions:
-            # Check if any tag in the group is excluded
-            all_tags = group['similar_tags'] + [group['representative']]
-            if any(exclusions.is_excluded(tag) for tag in all_tags):
-                excluded_count += 1
-                continue
-            filtered_suggestions.append(group)
+
+        # Iterate over each category
+        for category, groups in suggestions.items():
+            for group in groups:
+                # Check if any tag in the group is excluded
+                all_tags = group.get('tags', [])
+                if any(exclusions.is_excluded(tag) for tag in all_tags):
+                    excluded_count += 1
+                    continue
+                filtered_suggestions[category].append(group)
 
         suggestions = filtered_suggestions
         if excluded_count > 0:
