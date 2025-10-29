@@ -99,8 +99,11 @@ class AddTagsOperation(TagOperationEngine):
         Returns:
             Content with new frontmatter prepended
         """
-        # Create frontmatter YAML
-        frontmatter_content = "tags: [" + ", ".join(tags) + "]"
+        # Create frontmatter YAML in multiline format
+        frontmatter_lines = ["tags:"]
+        for tag in tags:
+            frontmatter_lines.append(f"  - {tag}")
+        frontmatter_content = "\n".join(frontmatter_lines)
         new_frontmatter = f"---\n{frontmatter_content}\n---\n"
 
         # Prepend to content
@@ -187,18 +190,21 @@ class AddTagsOperation(TagOperationEngine):
                     indent = line[:len(line) - len(line.lstrip())]
 
                     if value_part:
-                        # Inline format: tags: [tag1, tag2] or tags: tag1
+                        # Inline format: convert to multiline and append
                         if value_part.startswith('[') and value_part.endswith(']'):
-                            # Array format - append to array
+                            # Inline array format - extract existing tags
                             inner = value_part[1:-1]
                             existing_tags = [t.strip().strip('"\'') for t in inner.split(',') if t.strip()]
-                            all_tags = existing_tags + new_tags
-                            updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
                         else:
-                            # Convert single tag to array with new tags
+                            # Single tag - convert to list
                             existing_tag = value_part.strip().strip('"\'')
-                            all_tags = [existing_tag] + new_tags
-                            updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
+                            existing_tags = [existing_tag]
+
+                        # Convert to multiline format with all tags
+                        updated_lines.append(f"{indent}{key_part}")
+                        array_indent = indent + "  "
+                        for tag in existing_tags + new_tags:
+                            updated_lines.append(f"{array_indent}- {tag}")
                     else:
                         # Multi-line array format
                         updated_lines.append(line)  # Keep the "tags:" line
@@ -260,16 +266,19 @@ class AddTagsOperation(TagOperationEngine):
 
             i += 1
 
-        # Add tags field at the end of YAML
-        tags_line = f"tags: [{', '.join(tags)}]"
+        # Add tags field in multiline format at the end of YAML
+        tags_lines = ["tags:"]
+        for tag in tags:
+            tags_lines.append(f"  - {tag}")
+        tags_block = "\n".join(tags_lines)
 
         cleaned_yaml = '\n'.join(filtered_lines)
         if cleaned_yaml.strip():
             # Existing YAML - append tags field
-            return f"{cleaned_yaml}\n{tags_line}"
+            return f"{cleaned_yaml}\n{tags_block}"
         else:
             # Empty YAML - just add tags
-            return tags_line
+            return tags_block
 
     def get_file_modifications(self, original: str, modified: str) -> List[Dict]:
         """Get specific tag addition modifications."""

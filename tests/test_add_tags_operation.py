@@ -41,9 +41,11 @@ class TestAddTagsOperation:
         assert result['stats']['files_modified'] == 1
         assert result['stats']['tags_modified'] == 2
 
-        # Verify file content
+        # Verify file content (multiline format)
         content = note.read_text()
-        assert 'tags: [python, programming]' in content
+        assert 'tags:' in content
+        assert '  - python' in content
+        assert '  - programming' in content
         assert '# Test Note' in content
 
     def test_add_tags_to_note_with_existing_frontmatter_no_tags(self, tmp_path):
@@ -80,9 +82,10 @@ Content here.
         assert result['stats']['files_modified'] == 1
         assert result['stats']['tags_modified'] == 1
 
-        # Verify file content
+        # Verify file content (multiline format)
         content = note.read_text()
-        assert 'tags: [python]' in content
+        assert 'tags:' in content
+        assert '  - python' in content
         assert 'title: My Note' in content
 
     def test_add_tags_to_note_with_existing_tags(self, tmp_path):
