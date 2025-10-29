@@ -12,21 +12,21 @@ tagex --help
 ## Core Workflow
 
 ```bash
-# 1. Get overview
-tagex stats /vault
+# 1. Get overview (defaults to current directory)
+tagex stats
 
-# 2. Extract tags
-tagex tags extract /vault -o tags.json
+# 2. Extract tags (defaults to current directory)
+tagex tags extract -o tags.json
 
-# 3. Analyze
+# 3. Analyze (defaults to current directory)
 tagex analyze [command] tags.json
 
 # 4. Apply changes (safe by default)
-tagex [operation] /vault             # Preview changes
-tagex [operation] /vault --execute   # Apply changes
+tagex tags [operation] /vault             # Preview changes
+tagex tags [operation] /vault --execute   # Apply changes
 
-# 5. Verify
-tagex stats /vault
+# 5. Verify (defaults to current directory)
+tagex stats
 ```
 
 ## Commands by Function
@@ -35,8 +35,9 @@ tagex stats /vault
 
 | Command | Purpose | Example |
 |:--------|:--------|:--------|
-| `stats` | Vault health metrics | `tagex stats /vault --top 20` |
-| `extract` | Export tags to file | `tagex tags extract /vault -o tags.json` |
+| `stats` | Vault health metrics | `tagex stats --top 20` |
+| `health` | Comprehensive health report | `tagex health` |
+| `extract` | Export tags to file | `tagex tags extract -o tags.json` |
 
 ### Analysis Commands
 
@@ -55,31 +56,52 @@ tagex stats /vault
 | `rename` | Change one tag | `tagex tags rename /vault old new` (preview) |
 | `merge` | Combine multiple tags | `tagex tags merge /vault tag1 tag2 --into new` (preview) |
 | `delete` | Remove tags | `tagex tags delete /vault unwanted` (preview) |
+| `fix-duplicates` | Fix duplicate 'tags:' fields | `tagex tags fix-duplicates /vault` (preview) |
+| `apply` | Apply YAML operations file | `tagex tags apply ops.yaml` (preview) |
+
+### Configuration Commands
+
+| Command | Action | Example |
+|:--------|:-------|:--------|
+| `init` | Initialize .tagex/ config | `tagex init` (defaults to cwd) |
+| `validate` | Validate configuration | `tagex validate` (defaults to cwd) |
+
+### Vault Maintenance
+
+| Command | Action | Example |
+|:--------|:-------|:--------|
+| `cleanup-backups` | Remove .bak files | `tagex vault cleanup-backups /vault` |
 
 ## Common Options
 
 | Option | Available On | Effect | Default |
 |:-------|:-------------|:-------|:--------|
-| `--tag-types` | All commands | frontmatter/inline/both | frontmatter |
-| `--execute` | Operations | Apply changes (preview is default) | disabled |
-| `--no-filter` | Extract, analysis | Include technical noise | disabled |
+| `--tag-types` | All tag operations | frontmatter/inline/both | frontmatter |
+| `--execute` | Operations (rename, merge, delete, fix-duplicates, apply) | Apply changes (preview is default) | disabled |
+| `--no-filter` | extract, stats, analyze | Include technical noise | disabled |
 | `-o, --output` | extract | Output file path | stdout |
 | `-f, --format` | extract, stats | json/csv/txt or text/json | json, text |
 | `--top N` | stats | Show top N tags | 20 |
-| `--min-usage N` | Analysis | Minimum tag uses | varies |
+| `--min-usage N` | analyze commands | Minimum tag uses | varies |
+| `--force` | init | Overwrite existing config | disabled |
+| `--strict` | validate | Treat warnings as errors | disabled |
 
 ## Quick Decision Tree
 
 ```
 Need to... → Use this command
-├─ Understand vault health → tagex stats /vault
+├─ Understand vault health → tagex stats (or tagex health)
+├─ Fix frontmatter issues → tagex tags fix-duplicates
 ├─ Find duplicates
 │  ├─ Plural variants (book/books) → analyze plurals
 │  ├─ Synonyms (python/py) → analyze synonyms
 │  ├─ Typos/morphology (write/writing) → analyze merge
 │  └─ Too generic (notes, misc) → analyze quality
 ├─ See relationships → analyze pairs
-└─ Make changes → rename/merge/delete (preview), then --execute
+├─ Suggest tags for notes → analyze suggest
+├─ Get all recommendations → analyze recommendations --export ops.yaml
+├─ Make changes → tags rename/merge/delete (preview), then --execute
+└─ Maintain vault → vault cleanup-backups
 ```
 
 ## Analysis Command Details
@@ -183,6 +205,18 @@ tagex tags delete /vault unwanted-tag                  # Preview
 tagex tags delete /vault tag1 tag2 tag3                # Preview multiple
 tagex tags delete /vault --tag-types inline temp-tag   # Preview inline only
 ```
+
+### fix-duplicates
+
+**What:** Fix duplicate 'tags:' fields in frontmatter
+**Safety:** Dry-run by default
+
+```bash
+tagex tags fix-duplicates /vault                # Preview duplicates
+tagex tags fix-duplicates /vault --execute      # Fix duplicates
+```
+
+**Use when:** You have files with multiple 'tags:' keys in frontmatter, which can happen after manual edits or plugin conflicts.
 
 ## Extract Command Details
 

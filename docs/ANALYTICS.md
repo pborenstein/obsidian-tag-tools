@@ -5,12 +5,12 @@
 The `tagex analyze` command provides comprehensive analytical tools for understanding tag usage patterns, identifying consolidation opportunities, and improving tag quality across your Obsidian vault.
 
 ```
-# Unified recommendations workflow (RECOMMENDED)
-tagex analyze recommendations /vault --export ops.yaml  ← Consolidate all analyzer suggestions
-tagex tags apply ops.yaml                                    ← Preview changes (safe default)
-tagex tags apply ops.yaml --execute                          ← Apply changes (explicit flag required)
+# Unified recommendations workflow (RECOMMENDED - defaults to cwd)
+tagex analyze recommendations --export ops.yaml  ← Consolidate all analyzer suggestions
+tagex tags apply ops.yaml                        ← Preview changes (safe default)
+tagex tags apply ops.yaml --execute              ← Apply changes (explicit flag required)
 
-# Individual analyzers
+# Individual analyzers (all default to cwd)
 tagex analyze pairs      ← Tag co-occurrence and clustering analysis
 tagex analyze merge      ← Tag merge suggestion engine with embeddings
 tagex analyze quality    ← Overbroad tag detection and specificity scoring
@@ -19,12 +19,20 @@ tagex analyze plurals    ← Singular/plural variant detection
 tagex analyze suggest    ← Content-based tag suggestions for untagged/lightly-tagged notes
 
 # Singleton reduction (via recommendations)
-tagex analyze recommendations /vault --analyzers singletons --export ops.yaml
+tagex analyze recommendations --analyzers singletons --export ops.yaml
 
-# Configuration and health commands
-tagex init /vault        ← Initialize .tagex/ configuration directory
-tagex validate /vault    ← Validate configuration files
-tagex health /vault      ← Comprehensive vault health report
+# Configuration and health commands (all default to cwd)
+tagex init               ← Initialize .tagex/ configuration directory
+tagex validate           ← Validate configuration files
+tagex health             ← Comprehensive vault health report
+tagex stats              ← Quick vault statistics
+
+# Tag maintenance commands
+tagex tags fix-duplicates                        ← Preview duplicate 'tags:' fields
+tagex tags fix-duplicates --execute              ← Fix duplicate 'tags:' fields
+
+# Vault maintenance
+tagex vault cleanup-backups /vault               ← Remove .bak backup files
 
 See SEMANTIC_ANALYSIS.md for technical documentation on semantic similarity.
 ```
@@ -95,19 +103,21 @@ Legend:
 
 | Goal | Command |
 |:-----|:--------|
-| **Get unified recommendations and apply them** | **`tagex analyze recommendations /vault --export ops.yaml`** |
-| Get overall vault health metrics | `tagex stats /vault` |
-| Get comprehensive health report with all analyses | `tagex health /vault` |
-| Initialize tagex configuration | `tagex init /vault` |
-| Validate configuration files | `tagex validate /vault` |
-| Find singular/plural splits (book/books) | `tagex analyze plurals /vault` |
-| Find semantic synonyms (film/movies, tech/technology) | `tagex analyze synonyms /vault` |
-| Find related tags (co-occurrence patterns) | `tagex analyze synonyms /vault --show-related` |
-| Find spelling/morphological variants (writing/writers) | `tagex analyze merge /vault` |
-| Find tags that are too generic (notes, misc) | `tagex analyze quality /vault` |
-| Understand which tags appear together | `tagex analyze pairs /vault` |
-| Reduce singleton tags (used only once) | `tagex analyze recommendations /vault --analyzers singletons --export ops.yaml` |
-| Suggest tags for untagged/lightly-tagged notes | `tagex analyze suggest --vault-path /vault --min-tags 2` |
+| **Get unified recommendations and apply them** | **`tagex analyze recommendations --export ops.yaml`** (defaults to cwd) |
+| Get overall vault health metrics | `tagex stats` (defaults to cwd) |
+| Get comprehensive health report with all analyses | `tagex health` (defaults to cwd) |
+| Initialize tagex configuration | `tagex init` (defaults to cwd) |
+| Validate configuration files | `tagex validate` (defaults to cwd) |
+| Fix duplicate 'tags:' frontmatter fields | `tagex tags fix-duplicates` then `--execute` |
+| Find singular/plural splits (book/books) | `tagex analyze plurals` (defaults to cwd) |
+| Find semantic synonyms (film/movies, tech/technology) | `tagex analyze synonyms` (defaults to cwd) |
+| Find related tags (co-occurrence patterns) | `tagex analyze synonyms --show-related` |
+| Find spelling/morphological variants (writing/writers) | `tagex analyze merge` (defaults to cwd) |
+| Find tags that are too generic (notes, misc) | `tagex analyze quality` (defaults to cwd) |
+| Understand which tags appear together | `tagex analyze pairs` (defaults to cwd) |
+| Reduce singleton tags (used only once) | `tagex analyze recommendations --analyzers singletons --export ops.yaml` |
+| Suggest tags for untagged/lightly-tagged notes | `tagex analyze suggest --min-tags 2` |
+| Clean up backup files | `tagex vault cleanup-backups /vault` |
 | Clean up all duplicates systematically | Use `recommendations` command or run all: plurals, synonyms, singletons |
 
 **Note:** All `analyze` commands now accept either a vault path (auto-extracts tags) or a JSON file (pre-extracted tags).
@@ -122,10 +132,10 @@ Extract tags before running analysis:
 
 | Command | Purpose | Output |
 |:--------|:--------|:-------|
-| `tagex stats /vault` | Quick vault overview | Console statistics |
-| `tagex tags extract /vault -o tags.json` | Filtered tags for analysis | JSON file |
-| `tagex tags extract /vault --no-filter -o raw_tags.json` | Raw tags with noise | JSON file |
-| `tagex tags extract /vault --tag-types both -o all_tags.json` | Both frontmatter and inline | JSON file |
+| `tagex stats` | Quick vault overview (defaults to cwd) | Console statistics |
+| `tagex tags extract -o tags.json` | Filtered tags for analysis (defaults to cwd) | JSON file |
+| `tagex tags extract --no-filter -o raw_tags.json` | Raw tags with noise (defaults to cwd) | JSON file |
+| `tagex tags extract --tag-types both -o all_tags.json` | Both frontmatter and inline (defaults to cwd) | JSON file |
 
 The analysis scripts expect tag data in JSON format by default.
 
@@ -137,11 +147,11 @@ All analysis commands now support **dual input modes**:
 
 | Analysis Type | Command (Vault) | Command (JSON) | Purpose |
 |:--------------|:----------------|:---------------|:---------|
-| **Pair Analysis** | `tagex analyze pairs /vault` | `tagex analyze pairs tags.json` | Find tags that appear together |
-| **Merge Analysis** | `tagex analyze merge /vault` | `tagex analyze merge tags.json` | Get consolidation suggestions |
-| **Quality Analysis** | `tagex analyze quality /vault` | `tagex analyze quality tags.json` | Detect overbroad and generic tags |
-| **Synonym Analysis** | `tagex analyze synonyms /vault` | `tagex analyze synonyms tags.json` | Find semantic synonym candidates |
-| **Plural Analysis** | `tagex analyze plurals /vault` | `tagex analyze plurals tags.json` | Detect singular/plural variants |
+| **Pair Analysis** | `tagex analyze pairs` (defaults to cwd) | `tagex analyze pairs tags.json` | Find tags that appear together |
+| **Merge Analysis** | `tagex analyze merge` (defaults to cwd) | `tagex analyze merge tags.json` | Get consolidation suggestions |
+| **Quality Analysis** | `tagex analyze quality` (defaults to cwd) | `tagex analyze quality tags.json` | Detect overbroad and generic tags |
+| **Synonym Analysis** | `tagex analyze synonyms` (defaults to cwd) | `tagex analyze synonyms tags.json` | Find semantic synonym candidates |
+| **Plural Analysis** | `tagex analyze plurals` (defaults to cwd) | `tagex analyze plurals tags.json` | Detect singular/plural variants |
 
 **Common Options:**
 - `--min-pairs N` / `--min-usage N` / `--min-shared N`: Set minimum thresholds
@@ -309,28 +319,36 @@ Health Assessment:
 **Recommended Workflow for Tag Cleanup:**
 
 ```bash
-# Step 1: Baseline
-tagex stats /vault --top 20
+# Step 1: Baseline (run from vault directory or specify path)
+cd /path/to/vault
+tagex stats --top 20
 
 # Step 2: Extract current state
-tagex tags extract /vault -o tags.json
+tagex tags extract -o tags.json
 
-# Step 3: Run all analyses
+# Step 3: Fix any frontmatter issues first
+tagex tags fix-duplicates                   # Preview
+tagex tags fix-duplicates --execute         # Fix if needed
+
+# Step 4: Run all analyses
 tagex analyze quality tags.json > quality-report.txt
 tagex analyze plurals tags.json > plurals-report.txt
 tagex analyze synonyms tags.json --min-shared 3 > synonyms-report.txt
 tagex analyze merge tags.json > merge-report.txt
 tagex analyze pairs tags.json --min-pairs 3 > pairs-report.txt
 
-# Step 4: Review reports and plan consolidations
+# Step 5: Review reports and plan consolidations
 
-# Step 5: Apply merges (safe by default)
-tagex tags merge /vault tag1 tag2 --into target              # Preview changes
-tagex tags merge /vault tag1 tag2 --into target --execute    # Apply changes
+# Step 6: Apply merges (safe by default)
+tagex tags merge tag1 tag2 --into target              # Preview changes
+tagex tags merge tag1 tag2 --into target --execute    # Apply changes
 
-# Step 6: Verify improvements
-tagex tags extract /vault -o tags-after.json
-tagex stats /vault --top 20
+# Step 7: Verify improvements
+tagex tags extract -o tags-after.json
+tagex stats --top 20
+
+# Step 8: Clean up backup files if desired
+tagex vault cleanup-backups .
 ```
 
 ---
@@ -1699,11 +1717,16 @@ tagex tags apply operations.yaml --tag-types both --execute
 ### Workflow Example
 
 ```bash
-# 1. Initialize configuration (first time)
-tagex init /vault
+# 1. Initialize configuration (first time, run from vault directory)
+cd /path/to/vault
+tagex init
 
-# 2. Generate recommendations
-tagex analyze recommendations /vault --export ops.yaml
+# 2. Fix any frontmatter issues first
+tagex tags fix-duplicates                    # Preview
+tagex tags fix-duplicates --execute          # Fix if needed
+
+# 3. Generate recommendations (defaults to cwd)
+tagex analyze recommendations --export ops.yaml
 
 # Output:
 # Analyzing 450 tags for improvement opportunities...
@@ -1720,20 +1743,23 @@ tagex analyze recommendations /vault --export ops.yaml
 #   plurals: 12
 #   merge: 3
 
-# 3. Review and edit ops.yaml
+# 4. Review and edit ops.yaml
 # - Disable operations you don't want (enabled: false)
 # - Modify source/target tags
 # - Delete operations
 # - Reorder operations
 
-# 4. Preview changes
+# 5. Preview changes
 tagex tags apply ops.yaml
 
-# 5. Apply changes
+# 6. Apply changes
 tagex tags apply ops.yaml --execute
 
-# 6. Verify improvements
-tagex health /vault
+# 7. Verify improvements
+tagex health
+
+# 8. Clean up backup files if desired
+tagex vault cleanup-backups .
 ```
 
 ### Command Options

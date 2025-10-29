@@ -25,23 +25,27 @@ tagex tags extract [vault_path] [options]                          # Defaults to
 tagex tags rename /path/to/vault old-tag new-tag [--execute]
 tagex tags merge /path/to/vault tag1 tag2 --into target [--execute]
 tagex tags delete /path/to/vault unwanted-tag another-tag [--execute]
+tagex tags fix-duplicates [vault_path] [--execute]                 # Fix duplicate 'tags:' fields
 tagex tags apply operations.yaml [--vault-path /vault] [--execute]
 
 # Quick info commands (top level for convenience, default to cwd)
 tagex stats [vault_path] [--top N] [--format text|json]
 tagex health [vault_path]
 
-# Analysis commands (accept vault path or JSON file)
-tagex analyze pairs /path/to/vault [--no-filter] [--min-pairs N]
-tagex analyze quality /path/to/vault [--format text|json]
-tagex analyze synonyms /path/to/vault [--min-similarity 0.7] [--show-related] [--no-transformers]
-tagex analyze plurals /path/to/vault [--prefer usage|plural|singular]
-tagex analyze suggest --vault-path /vault [paths...] [--min-tags 2] [--export suggestions.yaml]
+# Analysis commands (accept vault path or JSON file, default to cwd)
+tagex analyze pairs [vault_path] [--no-filter] [--min-pairs N]
+tagex analyze quality [vault_path] [--format text|json]
+tagex analyze synonyms [vault_path] [--min-similarity 0.7] [--show-related] [--no-transformers]
+tagex analyze plurals [vault_path] [--prefer usage|plural|singular]
+tagex analyze suggest [--vault-path /vault] [paths...] [--min-tags 2] [--export suggestions.yaml]
 
-# Unified recommendations and apply workflow (safe by default)
-tagex analyze recommendations [vault_path] [--export operations.yaml] [--analyzers synonyms,plurals,singletons]  # Defaults to cwd
+# Unified recommendations and apply workflow (safe by default, defaults to cwd)
+tagex analyze recommendations [vault_path] [--export operations.yaml] [--analyzers synonyms,plurals,singletons]
 tagex tags apply operations.yaml [--vault-path /vault]              # Preview mode (default)
 tagex tags apply operations.yaml [--vault-path /vault] --execute    # Actually apply changes
+
+# Vault maintenance operations
+tagex vault cleanup-backups /path/to/vault                          # Remove .bak backup files
 
 # Or using uv run during development (preview mode by default, commands default to cwd)
 uv run python -m tagex.main init [vault_path]                                 # Defaults to cwd
@@ -81,7 +85,7 @@ uv run pytest tests/
 
 - **`tagex/core/extractor/`** - Tag extraction with filtering and validation
 - **`tagex/core/parsers/`** - Frontmatter and inline tag parsing
-- **`tagex/core/operations/`** - Tag modification (rename, merge, delete, add_tags) with dry-run support
+- **`tagex/core/operations/`** - Tag modification (rename, merge, delete, fix_duplicates, add_tags) with dry-run support
 - **`tagex/utils/`** - File discovery, tag normalization, and validation
 - **`tagex/analysis/`** - Relationship analysis and semantic similarity detection
 - **`tagex/config/`** - Configuration management (plural preferences, synonyms)
@@ -91,7 +95,7 @@ uv run pytest tests/
 - **Vault-first CLI structure** - Vault path comes first, then command
 - **Configuration system** - .tagex/ directory for vault-specific settings
 - **Global tag type filtering** - --tag-types option applies to all operations
-- **Multi-command operations** - Extract, rename, merge, delete, stats, analyze with consistent interface
+- **Multi-command operations** - Extract, rename, merge, delete, fix-duplicates, stats, analyze with consistent interface
 - **Dual input modes** - All analyze commands accept vault path (auto-extract) or JSON file
 - **Configuration commands** - init, validate for managing .tagex/ configuration
 - **Health reporting** - Unified health command with comprehensive analysis
@@ -106,6 +110,9 @@ uv run pytest tests/
 - **Content-based tag suggestions** - Analyzes note content to suggest relevant existing tags for untagged/lightly-tagged notes
 - **Unified recommendations system** - Consolidates all analyzer suggestions into editable YAML operations file
 - **Apply workflow** - Execute operations from YAML file with enable/disable flags for selective application
+- **Frontmatter repair** - Fix duplicate 'tags:' fields automatically
+- **Vault maintenance** - Cleanup tools for backup files and vault organization
+- **Current directory defaults** - All commands default to cwd when no path specified
 
 ### Configuration Structure
 

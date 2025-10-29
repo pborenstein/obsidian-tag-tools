@@ -49,16 +49,24 @@ tagex --help
 
 ### First-Time Setup
 
-1. **Test with stats command** (read-only):
+All commands default to the current working directory, making it convenient to work with your vault by running commands from within it.
+
+1. **Navigate to your vault**:
 
    ```bash
-   tagex stats /path/to/vault
+   cd /path/to/vault
    ```
 
-2. **Initialize tagex configuration**:
+2. **Test with stats command** (read-only):
 
    ```bash
-   tagex init /path/to/vault
+   tagex stats
+   ```
+
+3. **Initialize tagex configuration**:
+
+   ```bash
+   tagex init
    ```
 
    This creates:
@@ -67,13 +75,20 @@ tagex --help
    - `.tagex/exclusions.yaml` - Tag exclusions (merge and auto-generated)
    - `.tagex/README.md` - Documentation about the configuration
 
-3. **Extract tags to verify setup**:
+4. **Check for and fix any frontmatter issues**:
 
    ```bash
-   tagex extract /path/to/vault -o tags.json
+   tagex tags fix-duplicates              # Preview duplicate 'tags:' fields
+   tagex tags fix-duplicates --execute    # Fix them if needed
    ```
 
-4. **Review extraction results**:
+5. **Extract tags to verify setup**:
+
+   ```bash
+   tagex tags extract -o tags.json
+   ```
+
+6. **Review extraction results**:
 
    ```bash
    # View top 20 tags
@@ -102,11 +117,17 @@ your-vault/
 Create the `.tagex/` directory with template files:
 
 ```bash
-# Initialize with default templates
+# Navigate to your vault
+cd /path/to/vault
+
+# Initialize with default templates (defaults to cwd)
+tagex init
+
+# Or specify a path explicitly
 tagex init /path/to/vault
 
 # Reinitialize (overwrites existing files)
-tagex init /path/to/vault --force
+tagex init --force
 ```
 
 ### Configuration Files
@@ -233,11 +254,15 @@ auto_generated_tags:
 Check configuration files for errors:
 
 ```bash
-# Basic validation
+# Basic validation (run from vault directory)
+cd /path/to/vault
+tagex validate
+
+# Or specify path explicitly
 tagex validate /path/to/vault
 
 # Strict mode (treats warnings as errors)
-tagex validate /path/to/vault --strict
+tagex validate --strict
 ```
 
 **What gets validated:**
@@ -273,14 +298,14 @@ tagex validate /path/to/vault --strict
    # Edit configuration
    vim .tagex/config.yaml
 
-   # Validate changes
-   tagex validate /path/to/vault
+   # Validate changes (from vault directory)
+   tagex validate
    ```
 
 5. **Use init --force to reset:**
    ```bash
-   # If configuration becomes corrupted
-   tagex init /path/to/vault --force
+   # If configuration becomes corrupted (from vault directory)
+   tagex init --force
    ```
 
 ## Git Integration
@@ -332,21 +357,25 @@ git status
 # 2. Create branch for tag changes
 git checkout -b tag-cleanup
 
-# 3. Preview changes (safe by default)
-tagex rename /vault old-tag new-tag
+# 3. Fix any frontmatter issues first
+tagex tags fix-duplicates                   # Preview
+tagex tags fix-duplicates --execute         # Fix if needed
 
-# 4. Execute operation
-tagex rename /vault old-tag new-tag --execute
+# 4. Preview changes (safe by default, commands default to cwd)
+tagex tags rename old-tag new-tag
 
-# 5. Review changes
+# 5. Execute operation
+tagex tags rename old-tag new-tag --execute
+
+# 6. Review changes
 git diff
 git status
 
-# 6. Commit if satisfied
+# 7. Commit if satisfied
 git add .
 git commit -m "Rename tag: old-tag → new-tag"
 
-# 7. Merge to main
+# 8. Merge to main
 git checkout main
 git merge tag-cleanup
 ```
@@ -732,15 +761,17 @@ jq -r '.[] | .relativePaths[]' tags.json | sort | uniq
 **Quick tag health check:**
 
 ```bash
-# Morning routine - check vault health
-tagex stats /vault --top 10
+# Morning routine - check vault health (from vault directory)
+cd /path/to/vault
+tagex stats --top 10
 ```
 
 **Weekly cleanup:**
 
 ```bash
-# Extract and analyze
-tagex extract /vault -o weekly-tags.json
+# Extract and analyze (from vault directory)
+cd /path/to/vault
+tagex tags extract -o weekly-tags.json
 tagex analyze pairs weekly-tags.json
 
 # Review merge suggestions
@@ -752,18 +783,21 @@ tagex analyze merge weekly-tags.json --min-usage 5
 **Starting new project:**
 
 ```bash
+# Navigate to vault
+cd /path/to/vault
+
 # 1. Extract current state
-tagex extract /vault -o before-cleanup.json
+tagex tags extract -o before-cleanup.json
 
 # 2. Review and plan tag consolidation
 tagex analyze merge before-cleanup.json
 
-# 3. Execute planned changes
-tagex rename /vault old-tag new-tag --dry-run
-tagex rename /vault old-tag new-tag
+# 3. Execute planned changes (safe by default)
+tagex tags rename old-tag new-tag                # Preview
+tagex tags rename old-tag new-tag --execute      # Apply
 
 # 4. Verify results
-tagex extract /vault -o after-cleanup.json
+tagex tags extract -o after-cleanup.json
 ```
 
 ### Backup Workflow
@@ -771,23 +805,30 @@ tagex extract /vault -o after-cleanup.json
 **Before major tag operations:**
 
 ```bash
-# 1. Git commit current state
-cd /vault
+# 1. Navigate to vault and commit current state
+cd /path/to/vault
 git add .
 git commit -m "Pre-tag-operation backup"
 
 # 2. Extract complete tag inventory
-tagex extract /vault --tag-types both -o backup-tags.json
+tagex tags extract --tag-types both -o backup-tags.json
 
-# 3. Run operation with dry-run first
-tagex merge /vault tag1 tag2 --into new-tag --dry-run
+# 3. Fix any frontmatter issues first
+tagex tags fix-duplicates                        # Preview
+tagex tags fix-duplicates --execute              # Fix if needed
 
-# 4. Execute operation
-tagex merge /vault tag1 tag2 --into new-tag
+# 4. Preview operation (safe by default)
+tagex tags merge tag1 tag2 --into new-tag
 
-# 5. Verify and commit
+# 5. Execute operation
+tagex tags merge tag1 tag2 --into new-tag --execute
+
+# 6. Verify and commit
 git diff
 git commit -am "Merge tags: tag1, tag2 → new-tag"
+
+# 7. Clean up backup files if desired
+tagex vault cleanup-backups .
 ```
 
 ### Automated Analysis

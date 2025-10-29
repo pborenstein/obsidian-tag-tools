@@ -12,10 +12,13 @@ tagex is a command-line tool for managing tags across entire Obsidian vaults. It
 - Analyze tag relationships and co-occurrence patterns
 - Suggest tags for untagged/lightly-tagged notes based on content analysis
 - Rename, merge, and delete tags across entire vaults
+- Fix duplicate frontmatter 'tags:' fields automatically
 - Generate vault health metrics and statistics
 - Detect semantic similarities for tag consolidation
 - Unified recommendations system for streamlined tag cleanup
+- Vault maintenance tools (backup cleanup, repair operations)
 - Safe operations with preview mode by default and comprehensive logging
+- Commands default to current working directory for convenience
 
 ## Quick Start
 
@@ -42,15 +45,15 @@ tagex "$HOME/Obsidian/MyVault" rename "work" "project" --execute  # Actually app
 
 ## Commands
 
-The tool provides comprehensive tag management through multiple commands:
+The tool provides comprehensive tag management through multiple commands. All commands default to the current working directory when no vault path is specified.
 
 ```bash
-# Configuration management
-tagex init /path/to/vault                    # Initialize .tagex/ configuration
-tagex validate /path/to/vault                # Validate configuration files
+# Configuration management (defaults to cwd)
+tagex init [vault_path]                      # Initialize .tagex/ configuration
+tagex validate [vault_path]                  # Validate configuration files
 
-# Extract tags from vault
-tagex tags extract /path/to/vault [options]
+# Extract tags from vault (defaults to cwd)
+tagex tags extract [vault_path] [options]
 
 # Rename a tag across all files (safe by default - preview mode)
 tagex tags rename /path/to/vault old-tag new-tag             # Preview only
@@ -64,31 +67,38 @@ tagex tags merge /path/to/vault tag1 tag2 tag3 --into target-tag --execute   # A
 tagex tags delete /path/to/vault tag-to-remove another-tag             # Preview only
 tagex tags delete /path/to/vault tag-to-remove another-tag --execute   # Actually delete
 
-# Get comprehensive vault statistics
-tagex stats /path/to/vault --top 15
+# Fix duplicate 'tags:' fields in frontmatter (safe by default)
+tagex tags fix-duplicates /path/to/vault                # Preview duplicates
+tagex tags fix-duplicates /path/to/vault --execute      # Fix duplicates
 
-# Get comprehensive health report (unified analysis)
-tagex health /path/to/vault
+# Get comprehensive vault statistics (defaults to cwd)
+tagex stats [vault_path] --top 15
 
-# Analyze tag relationships and quality (accept vault or JSON input)
-tagex analyze pairs /path/to/vault           # Auto-extract and analyze
+# Get comprehensive health report (defaults to cwd)
+tagex health [vault_path]
+
+# Analyze tag relationships and quality (accept vault or JSON input, defaults to cwd)
+tagex analyze pairs [vault_path]             # Auto-extract and analyze
 tagex analyze merge tags.json --min-usage 5  # Or use pre-extracted JSON
-tagex analyze quality /path/to/vault
-tagex analyze synonyms /path/to/vault --min-similarity 0.7
-tagex analyze plurals /path/to/vault --prefer usage
+tagex analyze quality [vault_path]
+tagex analyze synonyms [vault_path] --min-similarity 0.7
+tagex analyze plurals [vault_path] --prefer usage
 tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
 
-# Unified recommendations workflow (consolidates all analyzers)
-tagex analyze recommendations /path/to/vault --export operations.yaml
+# Unified recommendations workflow (consolidates all analyzers, defaults to cwd)
+tagex analyze recommendations [vault_path] --export operations.yaml
 tagex tags apply operations.yaml                  # Preview changes (safe default)
 tagex tags apply operations.yaml --execute        # Apply changes (requires explicit flag)
 
+# Vault maintenance operations
+tagex vault cleanup-backups /path/to/vault          # Remove .bak backup files
+
 # Global --tag-types option examples (frontmatter is default)
-tagex tags extract /path/to/vault  # frontmatter only (default)
+tagex tags extract [vault_path]  # frontmatter only (default)
 tagex tags rename /path/to/vault --tag-types inline old-tag new-tag             # Preview only
 tagex tags rename /path/to/vault --tag-types inline old-tag new-tag --execute   # Execute
 tagex tags merge /path/to/vault --tag-types both tag1 tag2 --into new-tag       # Preview only
-tagex stats /path/to/vault --tag-types both --format json
+tagex stats [vault_path] --tag-types both --format json
 ```
 
 Or during development:
@@ -107,15 +117,17 @@ uv run python -m tagex.main stats /path/to/vault --top 20
 
 | Option | Commands | Description | Default |
 |:-------|:---------|:------------|:---------|
-| `--tag-types` | All | Tag types to process (`both`, `frontmatter`, `inline`) | `frontmatter` |
+| `--tag-types` | All tag operations | Tag types to process (`both`, `frontmatter`, `inline`) | `frontmatter` |
 | `--output`, `-o` | extract | Output file path | stdout |
 | `--format`, `-f` | extract, stats | Output format (`json`, `csv`, `txt` for extract; `text`, `json` for stats) | `json`, `text` |
 | `--exclude` | extract | File patterns to exclude (repeatable) | none |
 | `--verbose`, `-v` | extract | Enable verbose logging | disabled |
 | `--quiet`, `-q` | extract | Suppress summary output | disabled |
-| `--no-filter` | extract, stats | Include all raw tags without filtering | disabled |
-| `--execute` | rename, merge, delete, apply | Actually apply changes (default is preview mode) | disabled |
+| `--no-filter` | extract, stats, analyze | Include all raw tags without filtering | disabled |
+| `--execute` | rename, merge, delete, apply, fix-duplicates | Actually apply changes (default is preview mode) | disabled |
 | `--top`, `-t` | stats | Number of top tags to display | 20 |
+| `--force` | init | Overwrite existing configuration files | disabled |
+| `--strict` | validate | Treat warnings as errors | disabled |
 
 ### Examples
 
@@ -137,14 +149,18 @@ tagex stats /path/to/vault --top 10 --format json
 
 **Workflow:**
 ```bash
-# Initialize configuration (first time)
-tagex init /vault
+# Initialize configuration (first time, defaults to cwd)
+tagex init
 
-# Get vault health overview
-tagex health /vault
+# Get vault health overview (defaults to cwd)
+tagex health
 
-# Generate unified recommendations (recommended workflow)
-tagex analyze recommendations /vault --export operations.yaml
+# Fix any duplicate tags: fields (safe by default)
+tagex tags fix-duplicates                    # Preview duplicates
+tagex tags fix-duplicates --execute          # Fix them
+
+# Generate unified recommendations (recommended workflow, defaults to cwd)
+tagex analyze recommendations --export operations.yaml
 
 # Review and edit operations.yaml, then preview
 tagex tags apply operations.yaml
@@ -153,15 +169,18 @@ tagex tags apply operations.yaml
 tagex tags apply operations.yaml --execute
 
 # Verify improvements
-tagex health /vault
+tagex health
 
-# Alternative: Run individual analyzers
-tagex analyze pairs /vault
-tagex analyze synonyms /vault
-tagex analyze plurals /vault
+# Clean up backup files if needed
+tagex vault cleanup-backups
+
+# Alternative: Run individual analyzers (all default to cwd)
+tagex analyze pairs
+tagex analyze synonyms
+tagex analyze plurals
 
 # Traditional workflow: extract once and analyze multiple times
-tagex tags extract /vault -o tags.json
+tagex tags extract -o tags.json
 tagex analyze pairs tags.json
 tagex analyze merge tags.json
 ```
@@ -187,9 +206,16 @@ tagex analyze merge tags.json
 | Rename | Single tag renaming across vault | Preview by default, requires --execute |
 | Merge | Consolidate multiple tags | Preview by default, requires --execute |
 | Delete | Remove tags from all files | Preview by default, requires --execute, inline tag warnings |
+| Fix duplicates | Repair duplicate 'tags:' fields in frontmatter | Preview by default, requires --execute |
 | Selective processing | Target frontmatter, inline, or both | Type-specific operations |
 | Logging | Track all modifications | Integrity checks |
 | Structure preservation | Maintain file formatting | No YAML corruption |
+
+### Vault Maintenance
+
+| Operation | Description | Safety Features |
+|:----------|:------------|:---------------|
+| Cleanup backups | Remove .bak backup files from vault | Safe deletion of backup files |
 
 ### Advanced Analysis
 
