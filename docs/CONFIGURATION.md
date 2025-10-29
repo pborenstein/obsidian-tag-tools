@@ -504,27 +504,105 @@ tagex rename /vault old-tag new-tag --tag-types both
 
 ## Exclusion Patterns
 
-### Common Exclusion Patterns
+Tagex provides two ways to exclude files and directories from processing:
 
-Exclude files/directories you don't want processed:
+1. **Configuration-based** (recommended): Define exclusions in `.tagex/config.yaml`
+2. **CLI-based**: Override or supplement with `--exclude` flag
+
+### Default Behavior
+
+By default, tagex **excludes all dotfiles and dotdirectories**:
+
+```
+.obsidian/     ← Excluded by default
+.git/          ← Excluded by default
+.trash/        ← Excluded by default
+.tools/        ← Excluded by default
+.claude/       ← Excluded by default
+note.md        ← Included (not a dotfile)
+templates/     ← Included (not a dotfile)
+```
+
+This prevents processing tool-specific directories like `.obsidian`, `.git`, `.vscode`, `.trash`, etc.
+
+### Configuration-Based Exclusions
+
+Define persistent exclusion rules in `.tagex/config.yaml`:
+
+```yaml
+file_exclusions:
+  # Exclude all dotfiles/directories (default: true)
+  exclude_dotfiles: true
+
+  # Allowlist: specific dotfiles to include
+  include_dotfiles:
+    - .gitignore    # Process .gitignore file
+
+  # Additional patterns to exclude (beyond dotfiles)
+  exclude_patterns:
+    - "templates/*"           # Exclude templates directory
+    - "*.excalidraw.md"       # Exclude Excalidraw files
+    - "archive/*"             # Exclude archive directory
+    - "_drafts/*"             # Exclude drafts directory
+```
+
+**Advantages:**
+- Persistent across all commands
+- Vault-specific configuration
+- No need to repeat flags
+- Version-controlled with your vault
+
+### CLI-Based Exclusions
+
+Override or supplement configuration with the `--exclude` flag:
 
 ```bash
 # Exclude templates directory
-tagex extract /vault --exclude "templates/*"
+tagex tags extract /vault --exclude "templates/*"
 
 # Exclude multiple patterns
-tagex extract /vault \
+tagex tags extract /vault \
   --exclude "templates/*" \
   --exclude "archive/*" \
-  --exclude ".obsidian/*"
+  --exclude "daily/*"
 
-# Exclude daily notes
-tagex extract /vault --exclude "daily/*"
+# Combine with configuration (patterns are merged)
+tagex tags extract /vault --exclude "drafts/*"
+```
+
+**Use CLI exclusions when:**
+- One-time exclusions needed
+- Testing different exclusion patterns
+- Scripting with dynamic patterns
+
+### Dotfile Handling
+
+#### Including Specific Dotfiles
+
+To process specific dotfiles while excluding all others:
+
+```yaml
+# .tagex/config.yaml
+file_exclusions:
+  exclude_dotfiles: true
+  include_dotfiles:
+    - .gitignore
+    - .project-notes.md
+```
+
+#### Disabling Dotfile Exclusion
+
+To process all dotfiles (not recommended):
+
+```yaml
+# .tagex/config.yaml
+file_exclusions:
+  exclude_dotfiles: false
 ```
 
 ### Pattern Syntax
 
-Uses glob-style patterns:
+Exclusion patterns use glob-style matching:
 
 | Pattern | Matches | Example |
 |:--------|:--------|:--------|
@@ -532,18 +610,57 @@ Uses glob-style patterns:
 | `dir/*` | All files in directory | `templates/template.md` |
 | `**/archive/*` | Archive in any subdirectory | `notes/archive/old.md` |
 | `daily-*.md` | Files with prefix | `daily-2024-01-15.md` |
+| `.tools` | Exact dotfile/directory name | `.tools/` |
 
-### Recommended Exclusions
+### Common Exclusion Scenarios
 
-Common directories to exclude:
+**Default setup** (already configured by default):
+
+```yaml
+# .tagex/config.yaml - Already defaults to this
+file_exclusions:
+  exclude_dotfiles: true  # Excludes .obsidian, .git, .trash, etc.
+  include_dotfiles: []
+  exclude_patterns: []
+```
+
+**With templates and archive**:
+
+```yaml
+file_exclusions:
+  exclude_dotfiles: true
+  include_dotfiles: []
+  exclude_patterns:
+    - "templates/*"
+    - "archive/*"
+    - "_drafts/*"
+```
+
+**Daily notes and attachments**:
+
+```yaml
+file_exclusions:
+  exclude_dotfiles: true
+  include_dotfiles: []
+  exclude_patterns:
+    - "daily/*"
+    - "attachments/*"
+    - "*.excalidraw.md"
+```
+
+### Verification
+
+Check which files are being processed:
 
 ```bash
-tagex extract /vault \
-  --exclude ".obsidian/*" \      # Obsidian config
-  --exclude "templates/*" \       # Template files
-  --exclude "archive/*" \         # Archived notes
-  --exclude ".trash/*" \          # Deleted files
-  --exclude "drafts/*"            # Work in progress
+# Extract and see file count
+tagex tags extract /vault -o tags.json
+
+# Check specific file appears
+grep "suspicious-file" tags.json
+
+# View all processed files
+jq -r '.[] | .relativePaths[]' tags.json | sort | uniq
 ```
 
 ## Workflow Configuration

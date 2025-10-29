@@ -24,12 +24,12 @@ class TagExtractor:
 
         Args:
             vault_path: Path to the Obsidian vault
-            exclude_patterns: Patterns to exclude from scanning
+            exclude_patterns: Additional patterns to exclude from scanning (merged with config)
             filter_tags: Whether to filter out invalid tags (default: True)
             tag_types: Which tag types to extract ('both', 'frontmatter', 'inline')
         """
         self.vault_path = Path(vault_path)
-        self.exclude_patterns = exclude_patterns or {'.obsidian', '.git', '.DS_Store', '__pycache__'}
+        self.exclude_patterns = exclude_patterns  # Will be merged with config in find_markdown_files
         self.filter_tags = filter_tags
         self.tag_types = tag_types
         self.file_count = 0

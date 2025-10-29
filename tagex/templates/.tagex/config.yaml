@@ -28,6 +28,35 @@ plural:
   #          (ratio too small, falls back to preference mode)
   usage_ratio_threshold: 2.0
 
+# File and Directory Exclusions
+# Controls which files and directories are excluded from processing
+file_exclusions:
+  # Exclude all dotfiles and dot-directories by default
+  # This prevents processing of tool-specific directories like:
+  #   .obsidian, .git, .trash, .vscode, .claude, .copilot, etc.
+  exclude_dotfiles: true
+
+  # Allowlist: specific dotfiles to include (when exclude_dotfiles is true)
+  # Uncomment and add paths you want to process:
+  include_dotfiles: []
+  #   - .gitignore    # Example: process .gitignore file
+
+  # Additional patterns to exclude (beyond dotfiles)
+  # Glob patterns for files and directories to skip
+  exclude_patterns: []
+  #   - "templates/*"           # Exclude templates directory
+  #   - "*.excalidraw.md"       # Exclude Excalidraw files
+  #   - "archive/*"             # Exclude archive directory
+  #   - "_drafts/*"             # Exclude drafts directory
+
+# Similarity Detection
+similarity:
+  # Minimum similarity threshold for merge suggestions (0.0-1.0)
+  threshold: 0.85
+#
+#   # Whether to use TF-IDF embeddings (requires scikit-learn)
+#   use_embeddings: true
+
 # Future Configuration Options
 # (These are placeholders for future features)
 
@@ -43,14 +72,6 @@ plural:
 #   exclude_patterns:
 #     - '^temp-'
 #     - '^draft-'
-
-# Similarity Detection
-# similarity:
-#   # Minimum similarity threshold for merge suggestions (0.0-1.0)
-#   threshold: 0.85
-#
-#   # Whether to use TF-IDF embeddings (requires scikit-learn)
-#   use_embeddings: true
 
 # Output Preferences
 # output:
