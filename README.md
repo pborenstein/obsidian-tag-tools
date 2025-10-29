@@ -340,10 +340,12 @@ See [docs/README.md](docs/README.md) for the complete documentation index with s
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Vault setup, git integration, and best practices | Users & Developers |
+| [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Single-page command cheat sheet | Users |
+| [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) | Installation, vault setup, git integration | Users & Developers |
+| [docs/CONFIGURATION_REFERENCE.md](docs/CONFIGURATION_REFERENCE.md) | `.tagex/` configuration files reference | Users & Developers |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and component design | Developers |
 | [docs/ANALYTICS.md](docs/ANALYTICS.md) | Tag analysis tools and usage guide | Users & Developers |
-| [docs/SEMANTIC_ANALYSIS.md](docs/SEMANTIC_ANALYSIS.md) | Semantic similarity detection algorithms | Developers |
+| [docs/ALGORITHMS.md](docs/ALGORITHMS.md) | Algorithm implementations and complexity | Developers |
 | [tests/README.md](tests/README.md) | Test suite organization and usage | Developers |
 
