@@ -159,6 +159,7 @@ class AddTagsOperation(TagOperationEngine):
         lines = yaml_content.split('\n')
         updated_lines = []
         i = 0
+        tags_field_found = False
 
         while i < len(lines):
             line = lines[i]
@@ -166,39 +167,54 @@ class AddTagsOperation(TagOperationEngine):
 
             # Check if this is the tags field
             if stripped.startswith('tags:') or stripped.startswith('tag:'):
-                key_part = line.split(':', 1)[0] + ':'
-                value_part = line.split(':', 1)[1].strip() if len(line.split(':', 1)) > 1 else ''
-                indent = line[:len(line) - len(line.lstrip())]
-
-                if value_part:
-                    # Inline format: tags: [tag1, tag2] or tags: tag1
-                    if value_part.startswith('[') and value_part.endswith(']'):
-                        # Array format - append to array
-                        inner = value_part[1:-1]
-                        existing_tags = [t.strip().strip('"\'') for t in inner.split(',') if t.strip()]
-                        all_tags = existing_tags + new_tags
-                        updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
-                    else:
-                        # Convert single tag to array with new tags
-                        existing_tag = value_part.strip().strip('"\'')
-                        all_tags = [existing_tag] + new_tags
-                        updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
-                else:
-                    # Multi-line array format
-                    updated_lines.append(line)  # Keep the "tags:" line
-
-                    # Copy existing array items
-                    i += 1
-                    while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
-                        updated_lines.append(lines[i])
+                # Detect duplicate tags: fields (invalid YAML)
+                if tags_field_found:
+                    # Skip duplicate tags: field - don't copy it
+                    # If it has values, we need to skip those too
+                    value_part = line.split(':', 1)[1].strip() if len(line.split(':', 1)) > 1 else ''
+                    if not value_part:
+                        # Multi-line format - skip array items
                         i += 1
+                        while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
+                            i += 1
+                        i -= 1  # Back up since we'll increment at end of loop
+                    # If inline format, just skip the line (which happens by not adding to updated_lines)
+                else:
+                    # First tags: field - update it
+                    tags_field_found = True
+                    key_part = line.split(':', 1)[0] + ':'
+                    value_part = line.split(':', 1)[1].strip() if len(line.split(':', 1)) > 1 else ''
+                    indent = line[:len(line) - len(line.lstrip())]
 
-                    # Add new tags as array items
-                    array_indent = indent + "  "
-                    for tag in new_tags:
-                        updated_lines.append(f"{array_indent}- {tag}")
+                    if value_part:
+                        # Inline format: tags: [tag1, tag2] or tags: tag1
+                        if value_part.startswith('[') and value_part.endswith(']'):
+                            # Array format - append to array
+                            inner = value_part[1:-1]
+                            existing_tags = [t.strip().strip('"\'') for t in inner.split(',') if t.strip()]
+                            all_tags = existing_tags + new_tags
+                            updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
+                        else:
+                            # Convert single tag to array with new tags
+                            existing_tag = value_part.strip().strip('"\'')
+                            all_tags = [existing_tag] + new_tags
+                            updated_lines.append(f"{indent}{key_part} [{', '.join(all_tags)}]")
+                    else:
+                        # Multi-line array format
+                        updated_lines.append(line)  # Keep the "tags:" line
 
-                    i -= 1  # Back up since we'll increment at end of loop
+                        # Copy existing array items
+                        i += 1
+                        while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
+                            updated_lines.append(lines[i])
+                            i += 1
+
+                        # Add new tags as array items
+                        array_indent = indent + "  "
+                        for tag in new_tags:
+                            updated_lines.append(f"{array_indent}- {tag}")
+
+                        i -= 1  # Back up since we'll increment at end of loop
             else:
                 updated_lines.append(line)
 
@@ -210,6 +226,8 @@ class AddTagsOperation(TagOperationEngine):
         """
         Add tags field to YAML that doesn't have one.
 
+        Also handles removing duplicate tags: fields if they exist.
+
         Args:
             yaml_content: Current YAML content
             tags: Tags to add
@@ -217,12 +235,38 @@ class AddTagsOperation(TagOperationEngine):
         Returns:
             Updated YAML content with tags field
         """
+        # Check for and remove any existing duplicate tags: fields
+        # (This shouldn't normally happen, but handles edge cases)
+        lines = yaml_content.split('\n')
+        filtered_lines = []
+        i = 0
+
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            # Skip any existing tags: or tag: fields (duplicates)
+            if stripped.startswith('tags:') or stripped.startswith('tag:'):
+                value_part = line.split(':', 1)[1].strip() if len(line.split(':', 1)) > 1 else ''
+                if not value_part:
+                    # Multi-line format - skip array items
+                    i += 1
+                    while i < len(lines) and (lines[i].strip().startswith('- ') or lines[i].strip() == ''):
+                        i += 1
+                    i -= 1  # Back up since we'll increment at end of loop
+                # If inline format, just skip the line
+            else:
+                filtered_lines.append(line)
+
+            i += 1
+
         # Add tags field at the end of YAML
         tags_line = f"tags: [{', '.join(tags)}]"
 
-        if yaml_content.strip():
+        cleaned_yaml = '\n'.join(filtered_lines)
+        if cleaned_yaml.strip():
             # Existing YAML - append tags field
-            return f"{yaml_content}\n{tags_line}"
+            return f"{cleaned_yaml}\n{tags_line}"
         else:
             # Empty YAML - just add tags
             return tags_line
