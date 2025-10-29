@@ -9,7 +9,7 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 - **Encountering issues?** Check [Troubleshooting](TROUBLESHOOTING.md) for solutions
 - **Understanding the system?** See [Architecture Overview](ARCHITECTURE.md)
 - **Using analysis tools?** Check out the [Analytics Guide](ANALYTICS.md)
-- **Deep technical dive?** Read [Semantic Analysis](SEMANTIC_ANALYSIS.md)
+- **Deep technical dive?** Read [Algorithms Reference](ALGORITHMS.md)
 
 ## Suggested Reading Flow
 
@@ -25,14 +25,12 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 
 1. **[Architecture Overview](ARCHITECTURE.md)** - System design and component organization
 2. **[Algorithms Reference](ALGORITHMS.md)** - Algorithm implementations and complexity analysis
-3. **[Testing Narrative](TESTING_NARRATIVE.md)** - Development approach and testing philosophy
-4. **[Archive](archive/)** - Historical decisions and completed plans
+3. **[Archive](archive/)** - Historical decisions, completed plans, and development narratives
 
 ### For Algorithm Deep Dives
 
 1. **[Algorithms Reference](ALGORITHMS.md)** - Complete technical reference for all algorithms
 2. **[Analytics Guide](ANALYTICS.md)** - User-focused guide with practical examples
-3. **[Semantic Analysis](SEMANTIC_ANALYSIS.md)** - Original TF-IDF documentation (now superseded by ALGORITHMS.md)
 
 ## Documentation Files
 
@@ -52,13 +50,14 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 |:---------|:------------|:---------|
 | [ALGORITHMS.md](ALGORITHMS.md) | Algorithm details: TF-IDF, Jaccard, specificity scoring, etc. | Developers |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, data flow, component design | Developers |
-| [SEMANTIC_ANALYSIS.md](SEMANTIC_ANALYSIS.md) | Semantic similarity detection using sentence-transformers | Developers |
-| [TESTING_NARRATIVE.md](TESTING_NARRATIVE.md) | Test development story and approach | Developers |
+| [DESIGN_CONSIDERATIONS.md](DESIGN_CONSIDERATIONS.md) | Future design discussions and unresolved tensions | Developers |
 
 ### Archive
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
+| [archive/SEMANTIC_ANALYSIS.md](archive/SEMANTIC_ANALYSIS.md) | Original TF-IDF documentation (superseded by ALGORITHMS.md) | Developers |
+| [archive/TESTING_NARRATIVE.md](archive/TESTING_NARRATIVE.md) | Documentation-driven test development methodology | Developers |
 | [archive/FRONTMATTER_PARSER_DECISION.md](archive/FRONTMATTER_PARSER_DECISION.md) | PyYAML vs python-frontmatter analysis (Sep 2024) | Developers |
 | [archive/TAG_TYPE_FILTERING_PLAN.md](archive/TAG_TYPE_FILTERING_PLAN.md) | Historical implementation plan (completed) | Developers |
 | [archive/TAG_QUALITY_IMPROVEMENTS.md](archive/TAG_QUALITY_IMPROVEMENTS.md) | Tag quality analysis implementation plan (completed Oct 2025) | Developers |
