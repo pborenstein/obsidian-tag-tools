@@ -71,15 +71,15 @@ Use this decision tree to find the right analysis command for your needs:
         │           tagex analyze
         │           quality tags.json
         │
-        ├─────────┬─────────┬─────────┬─────────┐
-        │         │         │         │         │
-        ▼         ▼         ▼         ▼         ▼
-    ┌────┐   ┌────┐   ┌────┐   ┌────┐   ┌────┐
-    │Sing│   │Same│   │Spell│  │Morph│  │Rela│
-    │/Pl │   │Mean│   │Varia│  │Vari │  │tion│
-    │    │   │Diff │   │tions│  │ants │  │ship│
-    │    │   │Name │   │     │  │     │  │    │
-    └────┘   └────┘   └────┘  └────┘  └────┘
+        ├───────┬────────┬────────┬────────┐
+        │       │        │        │        │
+        ▼       ▼        ▼        ▼        ▼
+    ┌────┐   ┌─────┐  ┌─────┐  ┌─────┐  ┌────┐
+    │Sing│   │Same │  │Spell│  │Morph│  │Rela│
+    │/Pl │   │Mean │  │Varia│  │Vari │  │tion│
+    │    │   │Diff │  │tions│  │ants │  │ship│
+    │    │   │Name │  │     │  │     │  │    │
+    └────┘   └─────┘  └─────┘  └─────┘  └────┘
       │        │        │       │        │
       ▼        ▼        │       │        ▼
    analyze  analyze     │       │     analyze
@@ -917,17 +917,17 @@ These duplicates reduce discoverability and make tag-based searches less effecti
 ### Algorithm: Semantic Detection
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ Tag Names       │───►│ Embed with       │───►│ Calculate       │
+┌─────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Tag Names       │───►│ Embed with       │───►│ Calculate        │
 │ (not contexts)  │    │ all-MiniLM-L6-v2 │    │ Cosine Similarity│
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+└─────────────────┘    └──────────────────┘    └──────────────────┘
                                 │                        │
                                 ▼                        ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │ "film" embedding │───►│ Similarity ≥ 0.7│
+                       ┌──────────────────┐    ┌──────────────────┐
+                       │ "film" embedding │───►│ Similarity ≥ 0.7 │
                        │ "movies" embed.  │    │ AND co-occur <30%│
-                       │                  │    │ → Synonyms      │
-                       └──────────────────┘    └─────────────────┘
+                       │                  │    │ → Synonyms       │
+                       └──────────────────┘    └──────────────────┘
 ```
 
 **Key difference from old approach:**
