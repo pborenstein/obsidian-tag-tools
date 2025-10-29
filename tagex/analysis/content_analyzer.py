@@ -20,6 +20,7 @@ except ImportError:
 
 from ..utils.file_discovery import find_markdown_files
 from ..core.parsers.frontmatter_parser import extract_frontmatter, extract_tags_from_frontmatter
+from ..config.exclusions_config import ExclusionsConfig
 
 
 class ContentAnalyzer:
@@ -49,10 +50,14 @@ class ContentAnalyzer:
         self.max_tag_count = max_tag_count
         self.min_tag_frequency = min_tag_frequency
 
-        # Filter to frequent tags only
+        # Load exclusions config
+        self.exclusions = ExclusionsConfig(vault_path)
+
+        # Filter to frequent tags only, excluding auto-generated tags
         self.candidate_tags = {
             tag: stats for tag, stats in tag_stats.items()
             if stats['count'] >= min_tag_frequency
+            and not self.exclusions.is_suggestion_excluded(tag)
         }
 
         self.semantic_model = None

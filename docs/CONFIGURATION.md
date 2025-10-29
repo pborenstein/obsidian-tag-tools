@@ -62,8 +62,9 @@ tagex --help
    ```
 
    This creates:
-   - `.tagex/config.yaml` - Plural preferences and other settings
+   - `.tagex/config.yaml` - Plural preferences, file exclusions, and other settings
    - `.tagex/synonyms.yaml` - User-defined synonym mappings
+   - `.tagex/exclusions.yaml` - Tag exclusions (merge and auto-generated)
    - `.tagex/README.md` - Documentation about the configuration
 
 3. **Extract tags to verify setup**:
@@ -88,8 +89,9 @@ Tagex stores vault-specific configuration in the `.tagex/` directory within your
 ```
 your-vault/
 ├── .tagex/
-│   ├── config.yaml      # General settings (plural preferences, etc.)
+│   ├── config.yaml      # General settings (plural preferences, file exclusions)
 │   ├── synonyms.yaml    # User-defined synonym mappings
+│   ├── exclusions.yaml  # Tag exclusions (merge and auto-generated)
 │   └── README.md        # Configuration documentation
 ├── .obsidian/           # Obsidian's configuration
 └── your-notes.md
@@ -165,6 +167,66 @@ tech:
 - Tags listed under a key will be suggested for merge into that key
 - The `analyze synonyms` command respects these mappings
 - Helps codify vault-specific terminology decisions
+
+#### exclusions.yaml
+
+Exclude specific tags from operations and suggestions:
+
+```yaml
+# .tagex/exclusions.yaml
+
+exclude_tags:
+  # Tags to exclude from merge/synonym suggestions
+  # Useful for proper nouns, country names, etc.
+  - spain
+  - france
+  - shakespeare
+  - orwell
+
+auto_generated_tags:
+  # Tags inserted automatically by other tools
+  # These will never be suggested when recommending tags for notes
+  - copilot-conversation
+  - daily-note
+  - auto-generated
+  - fragments
+```
+
+**Two types of exclusions:**
+
+1. **exclude_tags** - Tags to exclude from merge operations
+   - Never suggested for merging/consolidation
+   - Useful for proper nouns, place names, historical events
+   - Example: `spain`, `shakespeare`, `ww2`
+
+2. **auto_generated_tags** - Tags inserted automatically by tools
+   - Never suggested when recommending tags for content
+   - Useful for tool-generated tags like `copilot-conversation`, `daily-note`
+   - Prevents auto-tags from polluting manual tag suggestions
+
+**Use cases:**
+
+```yaml
+# Proper nouns and places
+exclude_tags:
+  - boston
+  - massachusetts
+  - shakespeare
+  - orwell
+
+# Tool-generated tags
+auto_generated_tags:
+  - copilot-conversation  # GitHub Copilot
+  - daily-note            # Templater/Daily Notes
+  - auto-tag              # Obsidian plugins
+  - fragments             # Custom automation
+```
+
+**Why this matters:**
+
+- **Merge operations**: Prevents consolidating important proper nouns
+- **Content suggestions**: Keeps auto-generated tags from being suggested for manual notes
+- **Tag quality**: Maintains clean separation between manual and automated tagging
 
 ### Validating Configuration
 
