@@ -951,6 +951,8 @@ def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
     """
     from .analysis.merge_analyzer import build_tag_stats, suggest_merges, print_merge_suggestions
     from .utils.input_handler import load_or_extract_tags, get_input_type
+    from .config.exclusions_config import ExclusionsConfig
+    from pathlib import Path
     import argparse
 
     filter_noise = not no_filter
@@ -960,11 +962,19 @@ def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
     if input_type == 'vault':
         print(f"Extracting tags from vault: {input_path}")
         print(f"Tag types: {tag_types}\n")
+        vault_path = Path(input_path)
     else:
         print(f"Loading tags from JSON: {input_path}\n")
+        vault_path = None
 
     tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    # Load exclusions configuration
+    exclusions = ExclusionsConfig(vault_path)
+    excluded_tags = exclusions.get_all_exclusions()
+    if excluded_tags:
+        print(f"Loaded {len(excluded_tags)} excluded tags from .tagex/exclusions.yaml")
 
     print(f"Analyzing {len(tag_stats)} tags for merge opportunities...")
     print(f"Minimum usage threshold: {min_usage}")
@@ -973,6 +983,23 @@ def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn):
     args = argparse.Namespace(no_sklearn=no_sklearn)
 
     suggestions = suggest_merges(tag_stats, min_usage, args)
+
+    # Filter excluded tags from suggestions
+    if excluded_tags:
+        filtered_suggestions = []
+        excluded_count = 0
+        for group in suggestions:
+            # Check if any tag in the group is excluded
+            all_tags = group['similar_tags'] + [group['representative']]
+            if any(exclusions.is_excluded(tag) for tag in all_tags):
+                excluded_count += 1
+                continue
+            filtered_suggestions.append(group)
+
+        suggestions = filtered_suggestions
+        if excluded_count > 0:
+            print(f"\nFiltered out {excluded_count} suggestion groups involving excluded tags\n")
+
     print_merge_suggestions(suggestions)
 
 
@@ -1257,6 +1284,8 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
         find_acronym_expansions
     )
     from .utils.input_handler import load_or_extract_tags, get_input_type
+    from .config.exclusions_config import ExclusionsConfig
+    from pathlib import Path
 
     filter_noise = not no_filter
 
@@ -1265,11 +1294,19 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
     if input_type == 'vault':
         print(f"Extracting tags from vault: {input_path}")
         print(f"Tag types: {tag_types}\n")
+        vault_path = Path(input_path)
     else:
         print(f"Loading tags from JSON: {input_path}\n")
+        vault_path = None
 
     tag_data = load_or_extract_tags(input_path, tag_types, filter_noise)
     tag_stats = build_tag_stats(tag_data, filter_noise)
+
+    # Load exclusions configuration
+    exclusions = ExclusionsConfig(vault_path)
+    excluded_tags = exclusions.get_all_exclusions()
+    if excluded_tags:
+        print(f"Loaded {len(excluded_tags)} excluded tags from .tagex/exclusions.yaml\n")
 
     print(f"Analyzing {len(tag_stats)} tags for synonyms...\n")
 
@@ -1285,6 +1322,22 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
                 tag_stats,
                 similarity_threshold=min_similarity
             )
+
+            # Filter excluded tags
+            if excluded_tags:
+                filtered_candidates = []
+                excluded_count = 0
+                for candidate in synonym_candidates:
+                    # Check if any tag in the pair is excluded
+                    if (exclusions.is_excluded(candidate['tag1']) or
+                        exclusions.is_excluded(candidate['tag2'])):
+                        excluded_count += 1
+                        continue
+                    filtered_candidates.append(candidate)
+
+                synonym_candidates = filtered_candidates
+                if excluded_count > 0:
+                    print(f"  Filtered out {excluded_count} suggestions involving excluded tags\n")
 
             if synonym_candidates:
                 for candidate in synonym_candidates[:20]:
@@ -1315,6 +1368,17 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
             similarity_threshold=0.7,
             min_context_tags=5
         )
+
+        # Filter excluded tags
+        if excluded_tags and related_candidates:
+            filtered_related = []
+            for candidate in related_candidates:
+                # Check if any tag in the pair is excluded
+                if (exclusions.is_excluded(candidate['tag1']) or
+                    exclusions.is_excluded(candidate['tag2'])):
+                    continue
+                filtered_related.append(candidate)
+            related_candidates = filtered_related
 
         if related_candidates:
             for candidate in related_candidates[:20]:
@@ -1441,6 +1505,7 @@ def plurals(input_path, tag_types, no_filter, prefer):
     from .analysis.merge_analyzer import build_tag_stats
     from .utils.input_handler import load_or_extract_tags, get_input_type
     from .config.plural_config import PluralConfig
+    from .config.exclusions_config import ExclusionsConfig
     from .analysis.plural_normalizer import (
         normalize_plural_forms,
         normalize_compound_plurals,
@@ -1456,14 +1521,18 @@ def plurals(input_path, tag_types, no_filter, prefer):
     if input_type == 'vault':
         print(f"Extracting tags from vault: {input_path}")
         print(f"Tag types: {tag_types}\n")
-        vault_path = input_path
+        vault_path = Path(input_path)
     else:
         print(f"Loading tags from JSON: {input_path}\n")
         # For JSON input, try to find vault path from config or use current dir
-        vault_path = str(Path.cwd())
+        vault_path = Path.cwd()
 
     # Load configuration
-    config = PluralConfig.from_vault(vault_path)
+    config = PluralConfig.from_vault(str(vault_path))
+    exclusions = ExclusionsConfig(vault_path)
+    excluded_tags = exclusions.get_all_exclusions()
+    if excluded_tags:
+        print(f"Loaded {len(excluded_tags)} excluded tags from .tagex/exclusions.yaml\n")
 
     # Override with command-line option if provided
     preference = prefer if prefer else config.preference.value
@@ -1495,6 +1564,20 @@ def plurals(input_path, tag_types, no_filter, prefer):
 
     # Filter to only groups with multiple variants
     variant_groups = {k: v for k, v in variant_groups.items() if len(v) > 1}
+
+    # Filter excluded tags
+    if excluded_tags:
+        filtered_groups = {}
+        excluded_count = 0
+        for canonical, variants in variant_groups.items():
+            # Check if canonical or any variant is excluded
+            if exclusions.is_excluded(canonical) or any(exclusions.is_excluded(v) for v in variants):
+                excluded_count += 1
+                continue
+            filtered_groups[canonical] = variants
+        variant_groups = filtered_groups
+        if excluded_count > 0:
+            print(f"Filtered out {excluded_count} variant groups involving excluded tags\n")
 
     if variant_groups:
         print(f"Found {len(variant_groups)} plural variant groups:\n")
