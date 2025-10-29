@@ -230,7 +230,7 @@ class TestExtractCommand:
         from tagex.main import main as cli
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['extract', '/dummy/path'])
+        result = runner.invoke(cli, ['tags', 'extract', '/dummy/path'])
 
         # Should fail gracefully
         assert result.exit_code != 0
@@ -684,10 +684,10 @@ class TestCLIErrorHandling:
     def test_extract_invalid_format(self, simple_vault):
         """Test extract with invalid format option."""
         from tagex.main import main as cli
-        
+
         runner = CliRunner()
         result = runner.invoke(cli, [
-            'extract', str(simple_vault),
+            'tags', 'extract', str(simple_vault),
             '--format', 'invalid-format'
         ])
 
@@ -706,7 +706,7 @@ class TestCLIErrorHandling:
         
         for path in invalid_paths:
             if path:  # Skip empty path as it might be handled differently
-                result = runner.invoke(cli, ['extract', path])
+                result = runner.invoke(cli, ['tags', 'extract', path])
                 # Should fail gracefully with error message
                 assert result.exit_code != 0
     
@@ -731,7 +731,7 @@ Content""")
             restricted_vault.chmod(stat.S_IWUSR)
             
             runner = CliRunner()
-            result = runner.invoke(cli, ['extract', str(restricted_vault)])
+            result = runner.invoke(cli, ['tags', 'extract', str(restricted_vault)])
 
             # Should handle permission errors gracefully
             # Exact behavior depends on implementation
@@ -753,7 +753,7 @@ Content""")
 
         # This is difficult to test directly, but we can at least verify
         # the CLI doesn't crash on normal operations
-        result = runner.invoke(cli, ['extract', str(simple_vault)])
+        result = runner.invoke(cli, ['tags', 'extract', str(simple_vault)])
         assert isinstance(result.exit_code, int)
 
 
@@ -777,23 +777,23 @@ Content with #work and #notes tags.""")
         runner = CliRunner()
 
         # 1. Extract tags
-        extract_result = runner.invoke(cli, ['extract', str(test_vault)])
+        extract_result = runner.invoke(cli, ['tags', 'extract', str(test_vault)])
         assert extract_result.exit_code == 0
 
         # 2. Rename a tag (dry run first)
         rename_dry_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional'
+            'tags', 'rename', str(test_vault), 'work', 'professional'
         ])
         assert rename_dry_result.exit_code == 0
 
         # 3. Actually rename tag
         rename_result = runner.invoke(cli, [
-            'rename', str(test_vault), 'work', 'professional'
+            'tags', 'rename', str(test_vault), 'work', 'professional'
         ])
         assert rename_result.exit_code == 0
 
         # 4. Extract again to verify changes
-        final_extract = runner.invoke(cli, ['extract', str(test_vault)])
+        final_extract = runner.invoke(cli, ['tags', 'extract', str(test_vault)])
         assert final_extract.exit_code == 0
     
     def test_cli_output_consistency(self, simple_vault, temp_dir):
@@ -805,7 +805,7 @@ Content with #work and #notes tags.""")
         # Run same command multiple times
         results = []
         for _ in range(3):
-            result = runner.invoke(cli, ['extract', str(simple_vault)])
+            result = runner.invoke(cli, ['tags', 'extract', str(simple_vault)])
             results.append(result)
 
         # All should succeed
@@ -822,12 +822,12 @@ Content with #work and #notes tags.""")
         runner = CliRunner()
 
         # Extract from complex vault
-        result = runner.invoke(cli, ['extract', str(complex_vault)])
+        result = runner.invoke(cli, ['tags', 'extract', str(complex_vault)])
         assert result.exit_code == 0
 
         # Try operations on complex vault
         rename_result = runner.invoke(cli, [
-            'rename', str(complex_vault), 'work', 'professional'
+            'tags', 'rename', str(complex_vault), 'work', 'professional'
         ])
         assert rename_result.exit_code == 0
 
@@ -976,7 +976,7 @@ This has an inline #old-tag in the content.
 
         # Test rename with global --tag-types frontmatter
         result = runner.invoke(cli, [
-            'rename', str(vault_path), '--tag-types', 'frontmatter', 'old-tag', 'new-tag'
+            'tags', 'rename', str(vault_path), '--tag-types', 'frontmatter', 'old-tag', 'new-tag'
         ])
 
         assert result.exit_code == 0
