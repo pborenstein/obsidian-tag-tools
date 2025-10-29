@@ -354,6 +354,83 @@ def delete(vault_path, tags_to_delete, tag_types, execute):
     operation.run_operation()
 
 
+@tags.command('fix-duplicates')
+@click.argument('vault_path', type=click.Path(exists=True), default='.', required=False)
+@click.option('--filelist', type=click.Path(), help='Text file containing list of files to process')
+@click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
+@click.option('--recursive/--no-recursive', default=True, help='Search subdirectories (default: recursive)')
+@click.option('--quiet', is_flag=True, help='Reduce output verbosity')
+@click.option('--log', type=click.Path(), help='Save log to file')
+def fix_duplicates(vault_path, filelist, execute, recursive, quiet, log):
+    """Fix duplicate 'tags:' fields in frontmatter.
+
+    VAULT_PATH: Path to Obsidian vault directory (defaults to current directory)
+
+    Consolidates multiple 'tags:' fields into a single field in YAML frontmatter.
+    Creates .bak backups before modification.
+
+    By default, runs in preview mode (dry-run). Use --execute to apply changes.
+    """
+    from .core.operations.fix_duplicates import run_operation
+
+    try:
+        stats = run_operation(
+            vault_path=vault_path,
+            filelist=filelist,
+            execute=execute,
+            recursive=recursive,
+            quiet=quiet,
+            log_file=log
+        )
+
+        # Exit with error code if there were errors
+        if stats['errors'] > 0:
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+@main.group()
+def vault():
+    """Vault maintenance operations - cleanup, repair, and validation."""
+    pass
+
+
+@vault.command('cleanup-backups')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option('--execute', is_flag=True, help='REQUIRED to actually delete files. Without this flag, runs in preview mode')
+@click.option('--recursive/--no-recursive', default=True, help='Search subdirectories (default: recursive)')
+@click.option('--quiet', is_flag=True, help='Reduce output verbosity')
+def cleanup_backups(vault_path, execute, recursive, quiet):
+    """Remove .bak backup files from vault.
+
+    VAULT_PATH: Path to Obsidian vault directory
+
+    Finds and removes all .bak files created by fix operations.
+
+    By default, runs in preview mode (dry-run). Use --execute to actually delete files.
+    """
+    from .utils.vault_maintenance import run_cleanup
+
+    try:
+        stats = run_cleanup(
+            vault_path=vault_path,
+            execute=execute,
+            recursive=recursive,
+            quiet=quiet
+        )
+
+        # Exit with error code if there were errors
+        if stats['errors'] > 0:
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 @main.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration directory')
