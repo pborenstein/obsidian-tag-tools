@@ -584,7 +584,7 @@ tagex analyze merges filtered.json
 
 ## Best Practices Summary
 
-1. **Always use `--dry-run`** before operations
+1. **Preview before executing** (all operations preview by default, use --execute to apply)
 2. **Keep git history** of tag changes
 3. **Use consistent naming** (lowercase, hyphens)
 4. **Separate frontmatter and inline** tag purposes
@@ -602,7 +602,7 @@ tagex analyze merges filtered.json
 - [ ] Create vault `.gitignore` for tagex outputs
 - [ ] Establish tag naming conventions
 - [ ] Document exclusion patterns
-- [ ] Test with `--dry-run` first
+- [ ] Preview operations (safe by default) before using --execute
 - [ ] Set up backup workflow
 
 
