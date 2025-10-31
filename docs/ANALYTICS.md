@@ -1548,7 +1548,7 @@ operations:
 
 ### Integration with Apply Workflow
 
-The content analyzer generates operations compatible with `tagex apply`:
+The content analyzer generates operations compatible with `tagex tags apply`:
 
 ```bash
 # 1. Generate suggestions
@@ -1778,7 +1778,7 @@ tagex vault cleanup-backups .
 | `--tag-types` | Tag types to process | `frontmatter` |
 | `--no-filter` | Include all raw tags | False |
 
-**`tagex apply` options:**
+**`tagex tags apply` options:**
 
 | Option | Description | Default |
 |:-------|:------------|:--------|

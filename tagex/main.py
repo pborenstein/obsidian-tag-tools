@@ -327,7 +327,7 @@ def apply(operations_file, vault_path, execute, tag_types):
         print("="*70)
         print(f"\nTo apply these changes, run:")
         vault_arg = f" --vault-path {vault_path}" if vault_path != str(Path.cwd()) else ""
-        print(f"  tagex apply {operations_file}{vault_arg} --execute")
+        print(f"  tagex tags apply {operations_file}{vault_arg} --execute")
     else:
         print("\n" + "="*70)
         print("EXECUTION COMPLETE - Files have been modified")
@@ -1673,7 +1673,7 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
     - singletons: Merge singleton tags into frequent tags
 
     The exported YAML file can be edited to enable/disable specific operations,
-    then applied using: tagex apply <file.yaml>
+    then applied using: tagex tags apply <file.yaml>
     """
     from .analysis.merge_analyzer import build_tag_stats
     from .analysis.recommendations import RecommendationsEngine
@@ -1721,8 +1721,8 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
         engine.export_to_yaml(export)
         print(f"\nNext steps:")
         print(f"  1. Review and edit: {export}")
-        print(f"  2. Preview changes: tagex apply {export}")
-        print(f"  3. Apply changes:  tagex apply {export} --execute")
+        print(f"  2. Preview changes: tagex tags apply {export}")
+        print(f"  3. Apply changes:  tagex tags apply {export} --execute")
     else:
         print("\nTo export recommendations to a file:")
         print(f"  tagex analyze recommendations {input_path} --export operations.yaml")
@@ -2060,8 +2060,8 @@ def suggest(paths, vault_path, tag_types, min_tags, max_tags, top_n, min_confide
         print(f"Exported {len(operations)} operations to: {export}")
         print(f"\nNext steps:")
         print(f"  1. Review and edit: {export}")
-        print(f"  2. Preview changes: tagex apply {export} --vault-path {vault_path}")
-        print(f"  3. Apply changes:  tagex apply {export} --vault-path {vault_path} --execute")
+        print(f"  2. Preview changes: tagex tags apply {export} --vault-path {vault_path}")
+        print(f"  3. Apply changes:  tagex tags apply {export} --vault-path {vault_path} --execute")
     else:
         print(f"\nTo export suggestions to a file:")
         print(f"  tagex analyze suggest --vault-path {vault_path} --min-tags {min_tags} --export suggestions.yaml")

@@ -401,8 +401,8 @@ class RecommendationsEngine:
             "# - Delete operations you don't want",
             "# - Reorder operations (they execute top-to-bottom)",
             "#",
-            "# Preview with: tagex apply <this-file>",
-            "# Apply with:   tagex apply <this-file> --execute",
+            "# Preview with: tagex tags apply <this-file>",
+            "# Apply with:   tagex tags apply <this-file> --execute",
             ""
         ]
 
