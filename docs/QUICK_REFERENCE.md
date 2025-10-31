@@ -612,28 +612,6 @@ Check:
 
 ---
 
-**Quick Reference Version:** 2.0 (CLI Restructure)
+**Quick Reference**
 **Last Updated:** 2025-10-30
 **Project:** tagex - Obsidian Tag Management Tool
-
-## Command Structure Changes (v2.0)
-
-This reference reflects the major CLI restructure in v2.0:
-
-- **`tags` → `tag`** (singular group name)
-- **`tags extract` → `tag export`** (renamed command)
-- **`tags fix-duplicates` → `tag fix`** (shorter)
-- **`validate` → `config validate`** (grouped)
-- **`analyze merge` → `analyze merges`** (renamed)
-- **`vault cleanup-backups` → `vault cleanup`** (shorter)
-
-**New commands:**
-- `tag add` - Add tags to specific files
-- `config show` - Display configuration
-- `config edit` - Edit configuration in $EDITOR
-- `vault backup` - Create vault backups
-- `vault verify` - Verify vault integrity
-
-**All vault_path arguments now optional** (default to current directory)
-
-See [RESTRUCTURE_COMPLETE.md](RESTRUCTURE_COMPLETE.md) for full migration guide.

@@ -29,18 +29,22 @@ uv tool install --editable .
 # Sanity check CLI
 tagex --help
 
-# View vault statistics and health metrics
-tagex "$HOME/Obsidian/MyVault" stats
+# Initialize configuration
+cd "$HOME/Obsidian/MyVault"
+tagex init
 
-# Extract all tags to JSON from your vault
-tagex "$HOME/Obsidian/MyVault" extract -f json -o tags.json
+# View vault statistics and health metrics
+tagex stats
+
+# Export all tags to JSON
+tagex tag export -f json -o tags.json
 
 # Top 20 tags (requires jq (https://jqlang.org/))
 jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
 
 # Preview a rename, then apply (safe by default)
-tagex "$HOME/Obsidian/MyVault" rename "work" "project"  # Preview only
-tagex "$HOME/Obsidian/MyVault" rename "work" "project" --execute  # Actually apply
+tagex tag rename "work" "project"              # Preview only
+tagex tag rename "work" "project" --execute    # Actually apply
 ```
 
 ## Commands
@@ -50,26 +54,32 @@ The tool provides comprehensive tag management through multiple commands. All co
 ```bash
 # Configuration management (defaults to cwd)
 tagex init [vault_path]                      # Initialize .tagex/ configuration
-tagex validate [vault_path]                  # Validate configuration files
+tagex config validate [vault_path]           # Validate configuration files
+tagex config show [vault_path]               # Display current configuration
+tagex config edit [config|synonyms|exclusions]  # Edit configuration in $EDITOR
 
-# Extract tags from vault (defaults to cwd)
-tagex tags extract [vault_path] [options]
+# Export tags from vault (defaults to cwd)
+tagex tag export [vault_path] [options]
 
 # Rename a tag across all files (safe by default - preview mode)
-tagex tags rename /path/to/vault old-tag new-tag             # Preview only
-tagex tags rename /path/to/vault old-tag new-tag --execute   # Actually rename
+tagex tag rename old-tag new-tag             # Preview only (uses cwd)
+tagex tag rename old-tag new-tag --execute   # Actually rename
 
 # Merge multiple tags into one (safe by default - preview mode)
-tagex tags merge /path/to/vault tag1 tag2 tag3 --into target-tag             # Preview only
-tagex tags merge /path/to/vault tag1 tag2 tag3 --into target-tag --execute   # Actually merge
+tagex tag merge tag1 tag2 tag3 --into target-tag             # Preview only (uses cwd)
+tagex tag merge tag1 tag2 tag3 --into target-tag --execute   # Actually merge
 
 # Delete tags from all files (safe by default - preview mode)
-tagex tags delete /path/to/vault tag-to-remove another-tag             # Preview only
-tagex tags delete /path/to/vault tag-to-remove another-tag --execute   # Actually delete
+tagex tag delete tag-to-remove another-tag             # Preview only (uses cwd)
+tagex tag delete tag-to-remove another-tag --execute   # Actually delete
+
+# Add tags to specific files (safe by default - preview mode)
+tagex tag add file.md python programming               # Preview only
+tagex tag add file.md python programming --execute     # Actually add
 
 # Fix duplicate 'tags:' fields in frontmatter (safe by default)
-tagex tags fix-duplicates /path/to/vault                # Preview duplicates
-tagex tags fix-duplicates /path/to/vault --execute      # Fix duplicates
+tagex tag fix                # Preview duplicates (uses cwd)
+tagex tag fix --execute      # Fix duplicates
 
 # Get comprehensive vault statistics (defaults to cwd)
 tagex stats [vault_path] --top 15
@@ -79,25 +89,28 @@ tagex health [vault_path]
 
 # Analyze tag relationships and quality (accept vault or JSON input, defaults to cwd)
 tagex analyze pairs [vault_path]                                      # Auto-extract and analyze
-tagex analyze merge [vault_path] --min-usage 5 --export ops.yaml     # Export operations to YAML
+tagex analyze merges [vault_path] --min-usage 5 --export ops.yaml    # Export operations to YAML
 tagex analyze quality [vault_path]
 tagex analyze synonyms [vault_path] --min-similarity 0.7 --export ops.yaml
 tagex analyze plurals [vault_path] --prefer usage --export ops.yaml
-tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
+tagex analyze suggest [vault_path] [paths...] --min-tags 2 --export suggestions.yaml
 
 # Unified recommendations workflow (consolidates all analyzers, defaults to cwd)
 tagex analyze recommendations [vault_path] --export operations.yaml
-tagex tags apply operations.yaml                  # Preview changes (safe default)
-tagex tags apply operations.yaml --execute        # Apply changes (requires explicit flag)
+tagex tag apply operations.yaml                  # Preview changes (safe default)
+tagex tag apply operations.yaml --execute        # Apply changes (requires explicit flag)
 
 # Vault maintenance operations
-tagex vault cleanup-backups /path/to/vault          # Remove .bak backup files
+tagex vault cleanup [vault_path]                 # Remove .bak backup files (preview)
+tagex vault cleanup --execute                    # Actually remove backups
+tagex vault backup [vault_path]                  # Create vault backup
+tagex vault verify [vault_path]                  # Verify vault integrity
 
 # Global --tag-types option examples (frontmatter is default)
-tagex tags extract [vault_path]  # frontmatter only (default)
-tagex tags rename /path/to/vault --tag-types inline old-tag new-tag             # Preview only
-tagex tags rename /path/to/vault --tag-types inline old-tag new-tag --execute   # Execute
-tagex tags merge /path/to/vault --tag-types both tag1 tag2 --into new-tag       # Preview only
+tagex tag export [vault_path]  # frontmatter only (default)
+tagex tag rename --tag-types inline old-tag new-tag             # Preview only
+tagex tag rename --tag-types inline old-tag new-tag --execute   # Execute
+tagex tag merge --tag-types both tag1 tag2 --into new-tag       # Preview only
 tagex stats [vault_path] --tag-types both --format json
 ```
 
