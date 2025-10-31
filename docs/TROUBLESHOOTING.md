@@ -191,7 +191,7 @@ Solutions to common issues when using tagex.
 
 **Symptoms:**
 
-- `tagex extract /vault` returns empty results
+- `tagex tag export /vault` returns empty results
 - Total tags: 0 despite vault having tags
 - "No tags found" message
 
@@ -201,10 +201,10 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Extract both frontmatter and inline tags
-   tagex extract /vault --tag-types both
+   tagex tag export /vault --tag-types both
 
    # Extract only inline tags
-   tagex extract /vault --tag-types inline
+   tagex tag export /vault --tag-types inline
    ```
 
 2. Verify vault path is correct:
@@ -222,7 +222,7 @@ Solutions to common issues when using tagex.
 4. Use `--verbose` to see what's being processed:
 
    ```bash
-   tagex extract /vault --verbose
+   tagex tag export /vault --verbose
    ```
 
 **Related Issues:**
@@ -243,7 +243,7 @@ Solutions to common issues when using tagex.
 1. Disable filtering to see raw tags:
 
    ```bash
-   tagex extract /vault --no-filter
+   tagex tag export /vault --no-filter
    ```
 
 2. Review tag validation rules in output:
@@ -273,16 +273,16 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Exclude templates directory
-   tagex extract /vault --exclude "templates/*"
+   tagex tag export /vault --exclude "templates/*"
 
    # Multiple exclusions
-   tagex extract /vault --exclude "templates/*" --exclude "archive/*"
+   tagex tag export /vault --exclude "templates/*" --exclude "archive/*"
    ```
 
 2. Verify file discovery with verbose mode:
 
    ```bash
-   tagex extract /vault --verbose
+   tagex tag export /vault --verbose
    ```
 
 3. Check for permission issues:
@@ -325,7 +325,7 @@ Solutions to common issues when using tagex.
 3. Fix the problematic file or exclude it:
 
    ```bash
-   tagex extract /vault --exclude "broken-file.md"
+   tagex tag export /vault --exclude "broken-file.md"
    ```
 
 **Related Issues:**
@@ -334,13 +334,13 @@ Solutions to common issues when using tagex.
 
 ## Tag Operation Issues
 
-### Dry-run Shows Changes But Operation Fails
+### Preview Shows Changes But Operation Fails
 
 **Symptoms:**
 
-- `--dry-run` preview looks correct
-- Running without dry-run fails or makes no changes
-- "No files modified" despite dry-run showing changes
+- Preview mode shows expected changes
+- Running with --execute fails or makes no changes
+- "No files modified" despite preview showing changes
 
 **Solutions:**
 
@@ -351,12 +351,12 @@ Solutions to common issues when using tagex.
    chmod 644 /vault/*.md  # If needed
    ```
 
-2. Ensure files haven't changed since dry-run:
+2. Ensure files haven't changed since preview:
 
    ```bash
-   # Run dry-run and actual operation immediately after
-   tagex rename /vault old-tag new-tag --dry-run
+   # Run preview and actual operation immediately after
    tagex rename /vault old-tag new-tag
+   tagex rename /vault old-tag new-tag --execute
    ```
 
 3. Check for file locks (Obsidian open):
@@ -392,7 +392,7 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Extract tags first to verify names
-   tagex extract /vault -o tags.json
+   tagex tag export /vault -o tags.json
    cat tags.json | grep -i "partial-name"
    ```
 
@@ -420,8 +420,8 @@ Solutions to common issues when using tagex.
 1. This is expected behavior - inline tags are part of content:
 
    ```bash
-   # Preview changes carefully with dry-run
-   tagex delete /vault inline-tag --tag-types inline --dry-run
+   # Preview changes carefully first
+   tagex delete /vault inline-tag --tag-types inline
    ```
 
 2. Consider renaming instead of deleting:
@@ -463,7 +463,7 @@ Solutions to common issues when using tagex.
 2. Re-extract tags and compare:
 
    ```bash
-   tagex extract /vault -o after.json
+   tagex tag export /vault -o after.json
    # Compare with before.json
    ```
 
@@ -569,7 +569,7 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Include all tags for analysis
-   tagex extract /vault --no-filter -o raw_tags.json
+   tagex tag export /vault --no-filter -o raw_tags.json
    tagex analyze pairs raw_tags.json
    ```
 
@@ -595,13 +595,13 @@ Solutions to common issues when using tagex.
 1. Use exclusion patterns for unnecessary directories:
 
    ```bash
-   tagex extract /vault --exclude "archive/*" --exclude ".obsidian/*"
+   tagex tag export /vault --exclude "archive/*" --exclude ".obsidian/*"
    ```
 
 2. Process specific subdirectory:
 
    ```bash
-   tagex extract /vault/active-notes
+   tagex tag export /vault/active-notes
    ```
 
 3. Expected performance:
@@ -630,7 +630,7 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Reduce tag set size
-   tagex extract /vault --min-usage 3 -o filtered.json
+   tagex tag export /vault --min-usage 3 -o filtered.json
    tagex analyze merges filtered.json
    ```
 
@@ -660,10 +660,10 @@ tagex stats /path/to/test/vault
 ### Safe Tag Renaming
 
 ```bash
-# Always preview first
-tagex rename /vault old-tag new-tag --dry-run
-# Review output, then execute
+# Always preview first (default behavior)
 tagex rename /vault old-tag new-tag
+# Review output, then execute
+tagex rename /vault old-tag new-tag --execute
 # Verify changes
 cat logs/tag-rename-op_*.json | tail -1
 ```
@@ -672,7 +672,7 @@ cat logs/tag-rename-op_*.json | tail -1
 
 ```bash
 # Extract all tags
-tagex extract /vault --tag-types both -o all_tags.json
+tagex tag export /vault --tag-types both -o all_tags.json
 
 # Get statistics
 tagex stats /vault --tag-types both

@@ -222,7 +222,7 @@ tagex analyze recommendations --export ops.yaml --analyzers synonyms,plurals,sin
 ### tag rename
 
 **What:** Change one tag across vault
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 
 ```bash
 tagex tag rename old-name new-name              # Preview changes (uses cwd)
@@ -234,7 +234,7 @@ tagex tag rename /vault old new                 # Preview with explicit vault pa
 ### tag merge
 
 **What:** Consolidate multiple tags into one
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 
 ```bash
 tagex tag merge tag1 tag2 tag3 --into target              # Preview (uses cwd)
@@ -246,7 +246,7 @@ tagex tag merge /vault tag1 tag2 --into new               # Explicit vault path
 ### tag delete
 
 **What:** Remove tags from all files
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 **Warning:** Permanently removes tags
 
 ```bash
@@ -259,7 +259,7 @@ tagex tag delete unwanted --execute            # Apply deletion
 ### tag add
 
 **What:** Add tags to specific files
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 
 ```bash
 tagex tag add note.md python programming       # Preview adding tags
@@ -272,7 +272,7 @@ tagex tag add /vault/note.md ml ai --execute   # Explicit vault and file path
 ### tag fix
 
 **What:** Fix duplicate 'tags:' fields in frontmatter
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 
 ```bash
 tagex tag fix                # Preview duplicates (uses cwd)
@@ -285,7 +285,7 @@ tagex tag fix /vault         # Preview with explicit vault path
 ### tag apply
 
 **What:** Apply batch operations from YAML file
-**Safety:** Dry-run by default
+**Safety:** Preview by default
 
 ```bash
 tagex tag apply operations.yaml              # Preview all operations
@@ -593,7 +593,7 @@ Check:
 
 - Extract with `--no-filter` to see raw tags
 - Check tag validation rules in `tagex/utils/tag_normalizer.py`
-- Verify JSON file is recent (`tagex extract` again)
+- Verify JSON file is recent (`tagex tag export` again)
 
 ### Operation didn't work
 

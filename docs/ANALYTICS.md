@@ -1629,7 +1629,7 @@ The `recommendations` command consolidates suggestions from all analyzers into a
 - Run all analyzers in one command
 - Get deduplicated recommendations
 - Edit and enable/disable operations before applying
-- Preview changes safely (dry-run by default)
+- Preview changes safely (preview by default, requires --execute to apply)
 - Apply multiple operations in sequence automatically
 
 ### Usage

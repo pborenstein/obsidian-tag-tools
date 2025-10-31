@@ -77,7 +77,7 @@ Command structure with three primary groups:
 │   └─ Apply tag operations from YAML file                    │
 │                                                             │
 │ All commands: --execute flag required to apply changes      │
-│              Default is preview mode (dry-run)              │
+│              Default is preview mode                        │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -390,7 +390,7 @@ Command structure with three primary groups:
 │   └─ BakRemover class                                       │
 │      ├─ Find .bak backup files                              │
 │      ├─ Recursive directory scanning                        │
-│      ├─ Safe deletion with dry-run                          │
+│      ├─ Safe deletion with preview mode                     │
 │      └─ Statistics reporting                                │
 │                                                             │
 │ input_handler.py                                            │
@@ -469,7 +469,7 @@ Input: Vault + Operation Parameters
 │                                                             │
 │   ├─ Initialize TagOperationEngine subclass                 │
 │   ├─ Create operation log structure                         │
-│   └─ Set dry-run mode (default: true)                       │
+│   └─ Set preview mode (default: enabled)                    │
 └─────────────────────────────────────────────────────────────┘
           │
           ▼
@@ -495,7 +495,7 @@ Input: Vault + Operation Parameters
 │   │   ├─ Delete: remove tags                                │
 │   │   └─ AddTags: append to frontmatter                     │
 │   ├─ Validate changes                                       │
-│   └─ Write back (if not dry-run)                            │
+│   └─ Write back (if --execute flag set)                     │
 │       ├─ Preserve formatting                                │
 │       ├─ Update operation log                               │
 │       └─ Track statistics                                   │
@@ -707,10 +707,10 @@ Input: Vault Path or File List
 ┌─────────────────────────────────────────────────────────────┐
 │ STEP 3: Fix and Validate                                    │
 │                                                             │
-│ If dry-run:                                                 │
-│   └─ Preview changes only                                   │
+│ If preview mode (default):                                  │
+│   └─ Show changes only                                      │
 │                                                             │
-│ If execute:                                                 │
+│ If --execute flag set:                                      │
 │   ├─ Create .bak backup                                     │
 │   ├─ Write fixed content                                    │
 │   ├─ Re-parse to validate fix                               │

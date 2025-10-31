@@ -374,13 +374,13 @@ Control which tag types to process:
 
 ```bash
 # Frontmatter only (default)
-tagex extract /vault
+tagex tag export /vault
 
 # Inline only
-tagex extract /vault --tag-types inline
+tagex tag export /vault --tag-types inline
 
 # Both types
-tagex extract /vault --tag-types both
+tagex tag export /vault --tag-types both
 
 # Operations support same filtering
 tagex rename /vault old-tag new-tag --tag-types both
@@ -477,7 +477,7 @@ OUTPUT_DIR="$HOME/tagex-reports"
 DATE=$(date +%Y-%m-%d)
 
 # Extract tags
-tagex extract "$VAULT" -o "$OUTPUT_DIR/tags-$DATE.json"
+tagex tag export "$VAULT" -o "$OUTPUT_DIR/tags-$DATE.json"
 
 # Generate statistics
 tagex stats "$VAULT" --format json > "$OUTPUT_DIR/stats-$DATE.json"
@@ -522,7 +522,7 @@ export PATH="$HOME/.local/bin:$PATH"
 **Use exclusion patterns** to reduce scope:
 
 ```bash
-tagex extract /vault \
+tagex tag export /vault \
   --exclude "archive/*" \
   --exclude ".obsidian/*" \
   --exclude "daily/*"
@@ -532,10 +532,10 @@ tagex extract /vault \
 
 ```bash
 # Process active notes only
-tagex extract /vault/active
+tagex tag export /vault/active
 
 # Process projects separately
-tagex extract /vault/projects
+tagex tag export /vault/projects
 ```
 
 ### Memory Constraints
@@ -547,7 +547,7 @@ tagex extract /vault/projects
 tagex analyze merges tags.json --no-sklearn
 
 # Filter before analysis
-tagex extract /vault --min-usage 3 -o filtered.json
+tagex tag export /vault --min-usage 3 -o filtered.json
 tagex analyze merges filtered.json
 ```
 
