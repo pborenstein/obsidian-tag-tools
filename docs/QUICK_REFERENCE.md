@@ -12,20 +12,23 @@ tagex --help
 ## Core Workflow
 
 ```bash
-# 1. Get overview (defaults to current directory)
+# 1. Initialize configuration (one-time setup)
+tagex init
+
+# 2. Get overview (defaults to current directory)
 tagex stats
 
-# 2. Extract tags (defaults to current directory)
-tagex tags extract -o tags.json
+# 3. Export tags (defaults to current directory)
+tagex tag export -o tags.json
 
-# 3. Analyze (defaults to current directory)
+# 4. Analyze (accepts vault path or JSON file)
 tagex analyze [command] tags.json
 
-# 4. Apply changes (safe by default)
-tagex tags [operation] /vault             # Preview changes
-tagex tags [operation] /vault --execute   # Apply changes
+# 5. Apply changes (safe by default - preview first)
+tagex tag [operation]             # Preview changes (uses cwd)
+tagex tag [operation] --execute   # Apply changes
 
-# 5. Verify (defaults to current directory)
+# 6. Verify results
 tagex stats
 ```
 
@@ -37,7 +40,7 @@ tagex stats
 |:--------|:--------|:--------|
 | `stats` | Vault health metrics | `tagex stats --top 20` |
 | `health` | Comprehensive health report | `tagex health` |
-| `extract` | Export tags to file | `tagex tags extract -o tags.json` |
+| `tag export` | Export tags to file | `tagex tag export -o tags.json` |
 
 ### Analysis Commands
 
@@ -47,61 +50,73 @@ tagex stats
 | `analyze quality` | Overbroad/generic tags | Find tags that are too broad |
 | `analyze plurals` | Singular/plural variants | book/books, child/children |
 | `analyze synonyms` | Same meaning, different names | python/py, music/audio |
-| `analyze merge` | Morphological/semantic variants | writing/writer/writers |
+| `analyze merges` | Morphological/semantic variants | writing/writer/writers |
+| `analyze suggest` | Content-based tag suggestions | Suggest tags for untagged notes |
+| `analyze recommendations` | All-in-one analysis | Generate consolidated operations file |
 
 ### Tag Operations
 
 | Command | Action | Example |
 |:--------|:-------|:--------|
-| `rename` | Change one tag | `tagex tags rename /vault old new` (preview) |
-| `merge` | Combine multiple tags | `tagex tags merge /vault tag1 tag2 --into new` (preview) |
-| `delete` | Remove tags | `tagex tags delete /vault unwanted` (preview) |
-| `fix-duplicates` | Fix duplicate 'tags:' fields | `tagex tags fix-duplicates /vault` (preview) |
-| `apply` | Apply YAML operations file | `tagex tags apply ops.yaml` (preview) |
+| `tag rename` | Change one tag | `tagex tag rename old new` (preview) |
+| `tag merge` | Combine multiple tags | `tagex tag merge tag1 tag2 --into new` (preview) |
+| `tag delete` | Remove tags | `tagex tag delete unwanted` (preview) |
+| `tag add` | Add tags to files | `tagex tag add file.md python --execute` |
+| `tag fix` | Fix duplicate 'tags:' fields | `tagex tag fix` (preview) |
+| `tag apply` | Apply YAML operations file | `tagex tag apply ops.yaml` (preview) |
 
 ### Configuration Commands
 
 | Command | Action | Example |
 |:--------|:-------|:--------|
-| `init` | Initialize .tagex/ config | `tagex init` (defaults to cwd) |
-| `validate` | Validate configuration | `tagex validate` (defaults to cwd) |
+| `init` | Initialize .tagex/ config | `tagex init` (quick access) |
+| `config validate` | Validate configuration | `tagex config validate` |
+| `config show` | Display configuration | `tagex config show` |
+| `config edit` | Edit config in $EDITOR | `tagex config edit synonyms` |
 
 ### Vault Maintenance
 
 | Command | Action | Example |
 |:--------|:-------|:--------|
-| `cleanup-backups` | Remove .bak files | `tagex vault cleanup-backups /vault` |
+| `vault cleanup` | Remove .bak files | `tagex vault cleanup --execute` |
+| `vault backup` | Create vault backup | `tagex vault backup -o backup.tar.gz` |
+| `vault verify` | Check vault integrity | `tagex vault verify` |
 
 ## Common Options
 
 | Option | Available On | Effect | Default |
 |:-------|:-------------|:-------|:--------|
+| `[vault_path]` | All commands | Vault directory path | `.` (cwd) |
 | `--tag-types` | All tag operations | frontmatter/inline/both | frontmatter |
-| `--execute` | Operations (rename, merge, delete, fix-duplicates, apply) | Apply changes (preview is default) | disabled |
-| `--no-filter` | extract, stats, analyze | Include technical noise | disabled |
-| `-o, --output` | extract | Output file path | stdout |
-| `-f, --format` | extract, stats | json/csv/txt or text/json | json, text |
+| `--execute` | Tag operations (rename, merge, delete, add, fix, apply) | Apply changes (preview is default) | disabled |
+| `--no-filter` | export, stats, analyze | Include technical noise | disabled |
+| `-o, --output` | export, vault backup | Output file path | stdout / auto |
+| `-f, --format` | export, stats | json/csv/txt or text/json | json, text |
 | `--top N` | stats | Show top N tags | 20 |
 | `--min-usage N` | analyze commands | Minimum tag uses | varies |
 | `--force` | init | Overwrite existing config | disabled |
-| `--strict` | validate | Treat warnings as errors | disabled |
+| `--strict` | config validate | Treat warnings as errors | disabled |
+| `--export` | analyze commands | Export to YAML operations file | none |
 
 ## Quick Decision Tree
 
 ```
 Need to... → Use this command
+├─ Set up vault → tagex init
 ├─ Understand vault health → tagex stats (or tagex health)
-├─ Fix frontmatter issues → tagex tags fix-duplicates
+├─ View configuration → tagex config show
+├─ Fix frontmatter issues → tagex tag fix
 ├─ Find duplicates
 │  ├─ Plural variants (book/books) → analyze plurals
 │  ├─ Synonyms (python/py) → analyze synonyms
-│  ├─ Typos/morphology (write/writing) → analyze merge
+│  ├─ Typos/morphology (write/writing) → analyze merges
 │  └─ Too generic (notes, misc) → analyze quality
 ├─ See relationships → analyze pairs
 ├─ Suggest tags for notes → analyze suggest
 ├─ Get all recommendations → analyze recommendations --export ops.yaml
-├─ Make changes → tags rename/merge/delete (preview), then --execute
-└─ Maintain vault → vault cleanup-backups
+├─ Make changes → tag rename/merge/delete/add (preview), then --execute
+├─ Batch operations → tag apply ops.yaml (preview), then --execute
+└─ Maintain vault → vault cleanup/backup/verify
 ```
 
 ## Analysis Command Details
@@ -158,127 +173,192 @@ tagex analyze synonyms /vault --export ops.yaml     # Export to YAML
 
 **Detects:** Abbreviations, acronyms, conceptual equivalents
 
-### analyze merge
+### analyze merges
 
 **What:** Semantic & morphological duplicates
 **Use when:** Typos, morphology, character similarity
 **Output:** Merge suggestions from 4 detection methods
 
 ```bash
-tagex analyze merge tags.json
-tagex analyze merge tags.json --min-usage 10
-tagex analyze merge tags.json --no-sklearn  # Pattern-based fallback
-tagex analyze merge /vault --export ops.yaml     # Export to YAML
+tagex analyze merges tags.json
+tagex analyze merges tags.json --min-usage 10
+tagex analyze merges tags.json --no-sklearn  # Pattern-based fallback
+tagex analyze merges --export ops.yaml       # Export to YAML (uses cwd)
 ```
 
 **Methods:** String similarity (85%+), TF-IDF embeddings (0.6+), file overlap (80%+), morphological patterns
 
+### analyze suggest
+
+**What:** Content-based tag suggestions for untagged/lightly-tagged notes
+**Use when:** Notes have few or no tags
+**Output:** Tag suggestions based on content analysis
+
+```bash
+tagex analyze suggest                        # Analyze all notes in cwd
+tagex analyze suggest --min-tags 2           # Only notes with < 2 tags
+tagex analyze suggest projects/              # Specific directory
+tagex analyze suggest --export suggestions.yaml
+```
+
+**Uses:** TF-IDF and semantic similarity to match note content with existing tags
+
+### analyze recommendations
+
+**What:** Consolidated analysis from all analyzers
+**Use when:** You want a comprehensive cleanup plan
+**Output:** Single YAML operations file with all suggestions
+
+```bash
+tagex analyze recommendations --export ops.yaml
+tagex analyze recommendations --analyzers synonyms,plurals
+tagex analyze recommendations --export ops.yaml --analyzers synonyms,plurals,singletons
+```
+
+**Combines:** Synonym detection, plural normalization, singleton merging
+
 ## Tag Operations Details
 
-### rename
+### tag rename
 
 **What:** Change one tag across vault
 **Safety:** Dry-run by default
 
 ```bash
-tagex tags rename /vault old-name new-name              # Preview changes
-tagex tags rename /vault old-name new-name --execute    # Apply changes
-tagex tags rename /vault --tag-types inline old new     # Preview inline only
+tagex tag rename old-name new-name              # Preview changes (uses cwd)
+tagex tag rename old-name new-name --execute    # Apply changes
+tagex tag rename --tag-types inline old new     # Preview inline only
+tagex tag rename /vault old new                 # Preview with explicit vault path
 ```
 
-### merge
+### tag merge
 
 **What:** Consolidate multiple tags into one
 **Safety:** Dry-run by default
 
 ```bash
-tagex tags merge /vault tag1 tag2 tag3 --into target              # Preview
-tagex tags merge /vault tag1 tag2 --into target --execute         # Apply
-tagex tags merge /vault --tag-types both tag1 tag2 --into new
+tagex tag merge tag1 tag2 tag3 --into target              # Preview (uses cwd)
+tagex tag merge tag1 tag2 --into target --execute         # Apply
+tagex tag merge --tag-types both tag1 tag2 --into new     # Both tag types
+tagex tag merge /vault tag1 tag2 --into new               # Explicit vault path
 ```
 
-### delete
+### tag delete
 
 **What:** Remove tags from all files
 **Safety:** Dry-run by default
 **Warning:** Permanently removes tags
 
 ```bash
-tagex tags delete /vault unwanted-tag                  # Preview
-tagex tags delete /vault tag1 tag2 tag3                # Preview multiple
-tagex tags delete /vault --tag-types inline temp-tag   # Preview inline only
+tagex tag delete unwanted-tag                  # Preview (uses cwd)
+tagex tag delete tag1 tag2 tag3                # Preview multiple
+tagex tag delete --tag-types inline temp-tag   # Preview inline only
+tagex tag delete unwanted --execute            # Apply deletion
 ```
 
-### fix-duplicates
+### tag add
+
+**What:** Add tags to specific files
+**Safety:** Dry-run by default
+
+```bash
+tagex tag add note.md python programming       # Preview adding tags
+tagex tag add note.md python --execute         # Apply tag addition
+tagex tag add /vault/note.md ml ai --execute   # Explicit vault and file path
+```
+
+**Use when:** You want to add tags to specific files programmatically.
+
+### tag fix
 
 **What:** Fix duplicate 'tags:' fields in frontmatter
 **Safety:** Dry-run by default
 
 ```bash
-tagex tags fix-duplicates /vault                # Preview duplicates
-tagex tags fix-duplicates /vault --execute      # Fix duplicates
+tagex tag fix                # Preview duplicates (uses cwd)
+tagex tag fix --execute      # Fix duplicates
+tagex tag fix /vault         # Preview with explicit vault path
 ```
 
 **Use when:** You have files with multiple 'tags:' keys in frontmatter, which can happen after manual edits or plugin conflicts.
 
-## Extract Command Details
+### tag apply
 
-### Basic extraction
+**What:** Apply batch operations from YAML file
+**Safety:** Dry-run by default
+
+```bash
+tagex tag apply operations.yaml              # Preview all operations
+tagex tag apply operations.yaml --execute    # Apply all operations
+tagex tag apply /vault ops.yaml              # Explicit vault path
+```
+
+**Use when:** Applying recommendations from `analyze recommendations` or custom YAML operations files.
+
+## Tag Export Command Details
+
+### Basic export
 
 ```bash
 # JSON to stdout (default)
-tagex tags extract /vault
+tagex tag export
 
 # JSON to file
-tagex tags extract /vault -o tags.json
+tagex tag export -o tags.json
 
 # CSV format
-tagex tags extract /vault -f csv -o tags.csv
+tagex tag export -f csv -o tags.csv
 
 # Text format
-tagex tags extract /vault -f txt -o tags.txt
+tagex tag export -f txt -o tags.txt
+
+# Explicit vault path
+tagex tag export /vault -o tags.json
 ```
 
 ### Filtering
 
 ```bash
 # Frontmatter only (default)
-tagex tags extract /vault -o fm_tags.json
+tagex tag export -o fm_tags.json
 
 # Inline only
-tagex tags extract /vault --tag-types inline -o inline_tags.json
+tagex tag export --tag-types inline -o inline_tags.json
 
 # Both types
-tagex tags extract /vault --tag-types both -o all_tags.json
+tagex tag export --tag-types both -o all_tags.json
 
 # Include technical noise
-tagex tags extract /vault --no-filter -o raw_tags.json
+tagex tag export --no-filter -o raw_tags.json
 ```
 
 ### Exclusions
 
 ```bash
 # Exclude patterns (repeatable)
-tagex tags extract /vault --exclude "*.excalidraw.md" --exclude "templates/*"
+tagex tag export --exclude "*.excalidraw.md" --exclude "templates/*"
 ```
 
 ## Stats Command Details
 
 ```bash
-# Basic stats
-tagex stats /vault
+# Basic stats (uses cwd)
+tagex stats
 
 # Top 50 tags
-tagex stats /vault --top 50
+tagex stats --top 50
 
 # JSON output
-tagex stats /vault --format json
+tagex stats --format json
 
 # Include noise
-tagex stats /vault --no-filter
+tagex stats --no-filter
 
 # Both tag types
-tagex stats /vault --tag-types both
+tagex stats --tag-types both
+
+# Explicit vault path
+tagex stats /vault --top 20
 ```
 
 **Output includes:**
@@ -293,24 +373,34 @@ tagex stats /vault --tag-types both
 ### Complete tag cleanup
 
 ```bash
-# Baseline
-tagex stats /vault --top 20 > before.txt
+# Initialize configuration
+tagex init
 
-# Extract
-tagex tags extract /vault -o tags.json
+# Baseline
+tagex stats --top 20 > before.txt
+
+# Export tags
+tagex tag export -o tags.json
 
 # Run all analyses
 tagex analyze quality tags.json > quality.txt
 tagex analyze plurals tags.json > plurals.txt
 tagex analyze synonyms tags.json > synonyms.txt
-tagex analyze merge tags.json > merge.txt
+tagex analyze merges tags.json > merge.txt
+
+# OR: Get consolidated recommendations
+tagex analyze recommendations --export ops.yaml
 
 # Apply recommended merges (from reports)
-tagex tags merge /vault family families --into families              # Preview
-tagex tags merge /vault family families --into families --execute    # Apply
+tagex tag merge family families --into families              # Preview
+tagex tag merge family families --into families --execute    # Apply
+
+# OR: Apply from operations file
+tagex tag apply ops.yaml              # Preview
+tagex tag apply ops.yaml --execute    # Apply
 
 # Verify
-tagex stats /vault --top 20 > after.txt
+tagex stats --top 20 > after.txt
 diff before.txt after.txt
 ```
 
@@ -321,42 +411,80 @@ diff before.txt after.txt
 tagex analyze quality tags.json | grep "extreme"
 
 # Find all plural variants
-tagex analyze plurals tags.json
+tagex analyze plurals
 
 # Find synonyms for python-related tags
-tagex tags extract /vault -o tags.json
+tagex tag export -o tags.json
 grep -i python tags.json
 tagex analyze synonyms tags.json | grep -i python
+
+# Fix frontmatter issues
+tagex tag fix                # Preview
+tagex tag fix --execute      # Apply
 ```
 
 ### Batch operations
 
 ```bash
 # Preview multiple tag renames
-tagex tags rename /vault old1 new1 && \
-tagex tags rename /vault old2 new2 && \
-tagex tags rename /vault old3 new3
+tagex tag rename old1 new1
+tagex tag rename old2 new2
+tagex tag rename old3 new3
 
 # After verification, add --execute to each command
+tagex tag rename old1 new1 --execute
+tagex tag rename old2 new2 --execute
+tagex tag rename old3 new3 --execute
+
+# OR: Use operations file for batch changes
+tagex analyze recommendations --export ops.yaml
+# Edit ops.yaml to enable/disable specific operations
+tagex tag apply ops.yaml --execute
 ```
 
 ## Configuration Files
 
-### .tagex-synonyms.yaml
+Configuration is stored in `.tagex/` directory within each vault. Initialize with `tagex init`.
 
-Place in vault root to define synonym relationships:
+### .tagex/config.yaml
+
+General configuration settings:
 
 ```yaml
-synonyms:
-  - [python, py, python3]
-  - [javascript, js, ecmascript]
-
-prefer:
-  technology: [tech, technical]
-  documentation: [docs, doc]
+plural:
+  preference: usage  # usage, plural, or singular
+  usage_ratio_threshold: 2.0
 ```
 
-See [SYNONYM_CONFIGURATION.md](SYNONYM_CONFIGURATION.md) for complete guide.
+### .tagex/synonyms.yaml
+
+Define synonym relationships:
+
+```yaml
+python:
+  - py
+  - python3
+javascript:
+  - js
+  - ecmascript
+```
+
+### .tagex/exclusions.yaml
+
+Tags to exclude from merge suggestions:
+
+```yaml
+exclude_tags:
+  - spain
+  - france
+  - proper-noun-tag
+```
+
+**Commands:**
+- `tagex init` - Create configuration directory
+- `tagex config show` - Display current configuration
+- `tagex config edit [config|synonyms|exclusions]` - Edit in $EDITOR
+- `tagex config validate` - Check configuration validity
 
 ## Output Formats
 
@@ -402,23 +530,44 @@ python (67 uses)
 ### Find hub tags
 
 ```bash
-tagex analyze pairs tags.json | grep "Most Connected"
+tagex analyze pairs | grep "Most Connected"
 ```
 
 ### Find underused tags
 
 ```bash
-tagex stats /vault | grep "Singletons"
-tagex tags extract /vault -o tags.json
+tagex stats | grep "Singletons"
+tagex tag export -o tags.json
 jq '.[] | select(.tagCount == 1) | .tag' tags.json
 ```
 
 ### Compare tag types
 
 ```bash
-tagex tags extract /vault -o fm.json
-tagex tags extract /vault --tag-types inline -o inline.json
+tagex tag export -o fm.json
+tagex tag export --tag-types inline -o inline.json
 wc -l fm.json inline.json  # Compare counts
+```
+
+### Add tags to multiple files
+
+```bash
+# Add tags to specific files
+tagex tag add projects/ml-notes.md machine-learning python --execute
+tagex tag add projects/ai-research.md artificial-intelligence research --execute
+```
+
+### Create and apply batch operations
+
+```bash
+# Generate recommendations
+tagex analyze recommendations --export ops.yaml
+
+# Review the file
+cat ops.yaml
+
+# Apply selectively (edit YAML to enable/disable operations)
+tagex tag apply ops.yaml --execute
 ```
 
 ## Performance
@@ -463,6 +612,28 @@ Check:
 
 ---
 
-**Quick Reference Version:** 1.0
-**Last Updated:** 2025-10-25
+**Quick Reference Version:** 2.0 (CLI Restructure)
+**Last Updated:** 2025-10-30
 **Project:** tagex - Obsidian Tag Management Tool
+
+## Command Structure Changes (v2.0)
+
+This reference reflects the major CLI restructure in v2.0:
+
+- **`tags` → `tag`** (singular group name)
+- **`tags extract` → `tag export`** (renamed command)
+- **`tags fix-duplicates` → `tag fix`** (shorter)
+- **`validate` → `config validate`** (grouped)
+- **`analyze merge` → `analyze merges`** (renamed)
+- **`vault cleanup-backups` → `vault cleanup`** (shorter)
+
+**New commands:**
+- `tag add` - Add tags to specific files
+- `config show` - Display configuration
+- `config edit` - Edit configuration in $EDITOR
+- `vault backup` - Create vault backups
+- `vault verify` - Verify vault integrity
+
+**All vault_path arguments now optional** (default to current directory)
+
+See [RESTRUCTURE_COMPLETE.md](RESTRUCTURE_COMPLETE.md) for full migration guide.
