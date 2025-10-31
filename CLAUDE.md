@@ -15,18 +15,27 @@ uv sync
 # Install as system-wide tool (creates 'tagex' command)
 uv tool install --editable .
 
-# Configuration management (defaults to cwd)
-tagex init [vault_path] [--force]
-tagex validate [vault_path] [--strict]
+# Quick start (most common commands)
+tagex init                          # Initialize vault configuration (defaults to cwd)
+tagex stats                         # View tag statistics
+tagex health                        # Check vault health
+tagex analyze recommendations --export ops.yaml
+tagex tag apply ops.yaml --execute
+
+# Configuration management
+tagex init [vault_path] [--force]           # Initialize .tagex/ configuration
+tagex config validate [vault_path] [--strict]
+tagex config show [vault_path]               # Display current configuration
+tagex config edit [vault_path] [config]     # Edit config in $EDITOR
 
 # Tag operations (safe by default, require --execute to apply changes)
-# Tag operations grouped under 'tags' command
-tagex tags extract [vault_path] [options]                          # Defaults to cwd
-tagex tags rename /path/to/vault old-tag new-tag [--execute]
-tagex tags merge /path/to/vault tag1 tag2 --into target [--execute]
-tagex tags delete /path/to/vault unwanted-tag another-tag [--execute]
-tagex tags fix-duplicates [vault_path] [--execute]                 # Fix duplicate 'tags:' fields
-tagex tags apply operations.yaml [--vault-path /vault] [--execute]
+tagex tag export [vault_path] [options]                  # Export tags (formerly extract)
+tagex tag rename [vault_path] old-tag new-tag [--execute]
+tagex tag merge [vault_path] tag1 tag2 --into target [--execute]
+tagex tag delete [vault_path] unwanted-tag another-tag [--execute]
+tagex tag add [vault_path] file.md python programming [--execute]  # NEW
+tagex tag fix [vault_path] [--execute]                   # Fix duplicate 'tags:' fields
+tagex tag apply [vault_path] operations.yaml [--execute]
 
 # Quick info commands (top level for convenience, default to cwd)
 tagex stats [vault_path] [--top N] [--format text|json]
@@ -37,33 +46,37 @@ tagex analyze pairs [vault_path] [--no-filter] [--min-pairs N]
 tagex analyze quality [vault_path] [--format text|json]
 tagex analyze synonyms [vault_path] [--min-similarity 0.7] [--show-related] [--no-transformers] [--export ops.yaml]
 tagex analyze plurals [vault_path] [--prefer usage|plural|singular] [--export ops.yaml]
-tagex analyze merge [vault_path] [--min-usage 3] [--no-sklearn] [--export ops.yaml]
-tagex analyze suggest [--vault-path /vault] [paths...] [--min-tags 2] [--export suggestions.yaml]
-
-# Unified recommendations and apply workflow (safe by default, defaults to cwd)
+tagex analyze merges [vault_path] [--min-usage 3] [--no-sklearn] [--export ops.yaml]
+tagex analyze suggest [vault_path] [paths...] [--min-tags 2] [--export suggestions.yaml]
 tagex analyze recommendations [vault_path] [--export operations.yaml] [--analyzers synonyms,plurals,singletons]
-tagex tags apply operations.yaml [--vault-path /vault]              # Preview mode (default)
-tagex tags apply operations.yaml [--vault-path /vault] --execute    # Actually apply changes
+
+# Unified recommendations and apply workflow
+tagex analyze recommendations --export ops.yaml    # Generate recommendations
+tagex tag apply ops.yaml                           # Preview changes
+tagex tag apply ops.yaml --execute                 # Apply changes
 
 # Vault maintenance operations
-tagex vault cleanup-backups /path/to/vault                          # Remove .bak backup files
+tagex vault cleanup [vault_path] [--execute]       # Remove .bak backup files
+tagex vault backup [vault_path] [-o output.tar.gz] # Create vault backup
+tagex vault verify [vault_path]                    # Verify vault integrity
 
 # Or using uv run during development (preview mode by default, commands default to cwd)
-uv run python -m tagex.main init [vault_path]                                 # Defaults to cwd
-uv run python -m tagex.main validate [vault_path]                             # Defaults to cwd
-uv run python -m tagex.main tags extract [vault_path] [options]               # Defaults to cwd
-uv run python -m tagex.main tags rename /vault old-tag new-tag                # Preview only
-uv run python -m tagex.main tags rename /vault old-tag new-tag --execute      # Actually rename
-uv run python -m tagex.main tags merge /vault tag1 tag2 --into target         # Preview only
-uv run python -m tagex.main tags merge /vault tag1 tag2 --into target --execute  # Actually merge
-uv run python -m tagex.main tags delete /vault unwanted-tag                   # Preview only
-uv run python -m tagex.main tags delete /vault unwanted-tag --execute         # Actually delete
-uv run python -m tagex.main stats [vault_path] [--top 10] [--format json]    # Defaults to cwd
-uv run python -m tagex.main health [vault_path]                               # Defaults to cwd
+uv run python -m tagex.main init
+uv run python -m tagex.main config validate
+uv run python -m tagex.main tag export
+uv run python -m tagex.main tag rename old-tag new-tag                # Preview only
+uv run python -m tagex.main tag rename old-tag new-tag --execute      # Actually rename
+uv run python -m tagex.main tag merge tag1 tag2 --into target         # Preview only
+uv run python -m tagex.main tag merge tag1 tag2 --into target --execute
+uv run python -m tagex.main tag delete unwanted-tag                   # Preview only
+uv run python -m tagex.main tag delete unwanted-tag --execute
+uv run python -m tagex.main tag add file.md python --execute          # Add tags to file
+uv run python -m tagex.main stats [--top 10] [--format json]
+uv run python -m tagex.main health
 
 # Global --tag-types option (applies to all commands, default: frontmatter)
-uv run python -m tagex.main tags extract  # frontmatter only (default), uses cwd
-uv run python -m tagex.main tags extract --tag-types both  # both types, uses cwd
+uv run python -m tagex.main tag export              # frontmatter only (default), uses cwd
+uv run python -m tagex.main tag export --tag-types both  # both types, uses cwd
 
 # Run tests
 uv run pytest tests/
@@ -93,12 +106,13 @@ uv run pytest tests/
 
 ### Key Features
 
-- **Vault-first CLI structure** - Vault path comes first, then command
+- **Hybrid CLI structure** - Quick-access commands (init, stats, health) at top level, organized groups for advanced operations
+- **Command groups** - `config/`, `tag/`, `analyze/`, `vault/` for logical organization
 - **Configuration system** - .tagex/ directory for vault-specific settings
 - **Global tag type filtering** - --tag-types option applies to all operations
-- **Multi-command operations** - Extract, rename, merge, delete, fix-duplicates, stats, analyze with consistent interface
+- **Multi-command operations** - Export, rename, merge, delete, add, fix, stats, analyze with consistent interface
 - **Dual input modes** - All analyze commands accept vault path (auto-extract) or JSON file
-- **Configuration commands** - init, validate for managing .tagex/ configuration
+- **Configuration commands** - init, config validate, config show, config edit for managing .tagex/ configuration
 - **Health reporting** - Unified health command with comprehensive analysis
 - **Comprehensive statistics** - Tag distribution, vault health metrics, singleton analysis
 - **Safe by default** - All write operations require --execute flag; preview mode is default
@@ -112,7 +126,7 @@ uv run pytest tests/
 - **Unified recommendations system** - Consolidates all analyzer suggestions into editable YAML operations file
 - **Apply workflow** - Execute operations from YAML file with enable/disable flags for selective application
 - **Frontmatter repair** - Fix duplicate 'tags:' fields automatically
-- **Vault maintenance** - Cleanup tools for backup files and vault organization
+- **Vault maintenance** - Cleanup, backup, and verify tools for vault organization
 - **Current directory defaults** - All commands default to cwd when no path specified
 
 ### Configuration Structure
@@ -124,5 +138,7 @@ Configuration files are stored in `.tagex/` directory within each vault:
 - **`.tagex/exclusions.yaml`** - Tags to exclude from merge suggestions
 - **`.tagex/README.md`** - Documentation about configuration
 
-Use `tagex init /vault` to create configuration directory with templates.
-Use `tagex validate /vault` to check configuration validity.
+Use `tagex init` to create configuration directory with templates.
+Use `tagex config validate` to check configuration validity.
+Use `tagex config show` to view current configuration.
+Use `tagex config edit` to modify configuration in your $EDITOR.

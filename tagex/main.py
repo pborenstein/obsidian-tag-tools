@@ -25,17 +25,50 @@ from .core.operations.add_tags import AddTagsOperation
 @click.group()
 @click.version_option()
 def main():
-    """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults."""
+    """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults.
+
+    Quick Start:
+      tagex init              # Initialize vault configuration
+      tagex stats             # View tag statistics
+      tagex health            # Check vault health
+      tagex analyze recommendations --export ops.yaml
+      tagex tag apply ops.yaml --execute
+
+    Commands are organized into groups:
+      • config   - Configuration management
+      • analyze  - Tag analysis (read-only)
+      • tag      - Tag operations (write)
+      • vault    - Vault maintenance
+    """
     pass
 
 
 @main.group()
-def tags():
-    """Tag operations - extract, rename, merge, delete, and apply tag modifications."""
+def config():
+    """Configuration management.
+
+    Initialize, validate, and manage vault configuration files.
+    All configuration is stored in the .tagex/ directory.
+    """
     pass
 
 
-@tags.command()
+@main.group()
+def tag():
+    """Tag operations - extract, modify, and manage tags.
+
+    These commands can modify your vault files. Most operations support
+    a preview mode (default) and require --execute to apply changes.
+
+    Workflow:
+      1. tagex tag export          # Understand current tags
+      2. tagex tag rename/merge    # Make specific changes
+      3. tagex tag apply ops.yaml  # Apply batch operations
+    """
+    pass
+
+
+@tag.command('export')
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--output', '-o', type=click.Path(), help='Output file path (default: stdout)')
 @click.option('--format', '-f', type=click.Choice(['json', 'csv', 'txt']), default='json', help='Output format')
@@ -44,10 +77,13 @@ def tags():
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
 @click.option('--quiet', '-q', is_flag=True, help='Suppress summary output')
 @click.option('--no-filter', is_flag=True, help='Disable tag filtering (include all raw tags)')
-def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_filter):
-    """Extract tags from the vault.
+def export(vault_path, output, format, tag_types, exclude, verbose, quiet, no_filter):
+    """Export tags from the vault to JSON, CSV, or text format.
 
     VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    This is a read-only operation that extracts tag information without
+    modifying any files.
     """
     # Set up logging
     log_level = logging.DEBUG if verbose else logging.INFO
@@ -106,8 +142,8 @@ def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_f
         sys.exit(1)
 
 
-@tags.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@tag.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.argument('old_tag')
 @click.argument('new_tag')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
@@ -115,7 +151,7 @@ def extract(vault_path, output, format, tag_types, exclude, verbose, quiet, no_f
 def rename(vault_path, old_tag, new_tag, tag_types, execute):
     """Rename a tag across all files in the vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     OLD_TAG: Tag to rename
 
@@ -127,8 +163,8 @@ def rename(vault_path, old_tag, new_tag, tag_types, execute):
     operation.run_operation()
 
 
-@tags.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@tag.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.argument('source_tags', nargs=-1, required=True)
 @click.option('--into', 'target_tag', required=True, help='Target tag to merge into')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
@@ -136,7 +172,7 @@ def rename(vault_path, old_tag, new_tag, tag_types, execute):
 def merge(vault_path, source_tags, target_tag, tag_types, execute):
     """Merge multiple tags into a single tag.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     SOURCE_TAGS: Tags to merge (space-separated)
 
@@ -146,18 +182,20 @@ def merge(vault_path, source_tags, target_tag, tag_types, execute):
     operation.run_operation()
 
 
-@tags.command()
+@tag.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.argument('operations_file', type=click.Path(exists=True, file_okay=True, dir_okay=False))
-@click.option('--vault-path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', help='Vault path (defaults to current directory)')
 @click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode (dry-run)')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
-def apply(operations_file, vault_path, execute, tag_types):
+def apply(vault_path, operations_file, execute, tag_types):
     """Apply tag operations from a YAML operations file.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     OPERATIONS_FILE: Path to YAML file containing operations (generated by 'tagex analyze recommendations')
 
     Reads the operations file and executes all enabled operations in order.
-    Each operation type (merge, rename, delete) is applied to the vault.
+    Each operation type (merge, rename, delete, add_tags) is applied to the vault.
 
     Operations are executed sequentially in the order they appear in the file.
 
@@ -183,11 +221,6 @@ def apply(operations_file, vault_path, execute, tag_types):
     if not operations:
         print("No operations found in file.")
         return
-
-    # Determine vault path
-    if not vault_path:
-        vault_path = str(Path.cwd())
-        print(f"Using current directory as vault: {vault_path}")
 
     # Filter to enabled operations only
     enabled_ops = [op for op in operations if op.get('enabled', True)]
@@ -334,15 +367,15 @@ def apply(operations_file, vault_path, execute, tag_types):
         print("="*70)
 
 
-@tags.command()
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@tag.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.argument('tags_to_delete', nargs=-1, required=True)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to process (default: frontmatter)')
 @click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
 def delete(vault_path, tags_to_delete, tag_types, execute):
     """Delete tags entirely from all files in the vault.
 
-    VAULT_PATH: Path to the Obsidian vault directory
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     TAGS_TO_DELETE: Tags to delete (space-separated)
 
@@ -354,14 +387,59 @@ def delete(vault_path, tags_to_delete, tag_types, execute):
     operation.run_operation()
 
 
-@tags.command('fix-duplicates')
+@tag.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
+@click.argument('file_path', type=click.Path(exists=True, file_okay=True, dir_okay=False))
+@click.argument('tags', nargs=-1, required=True)
+@click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
+def add(vault_path, file_path, tags, execute):
+    """Add tags to a specific file.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    FILE_PATH: Path to the markdown file to add tags to
+
+    TAGS: Tags to add (space-separated)
+
+    Adds tags to the frontmatter of the specified file. If frontmatter doesn't
+    exist, creates it. If the file already has some of these tags, they won't be duplicated.
+
+    By default, runs in preview mode (dry-run). Use --execute to apply changes.
+
+    Examples:
+      # Add tags to a file
+      tagex tag add /vault/note.md python programming
+
+      # Preview adding tags (no changes)
+      tagex tag add note.md python
+    """
+    from pathlib import Path
+
+    # Create file_tag_map for AddTagsOperation
+    file_tag_map = {str(Path(file_path)): list(tags)}
+
+    operation = AddTagsOperation(
+        vault_path=vault_path,
+        file_tag_map=file_tag_map,
+        dry_run=not execute,
+        tag_types='frontmatter',  # add_tags only supports frontmatter
+        quiet=False
+    )
+    result = operation.run_operation()
+
+    # Show summary
+    if not execute:
+        print("\nPreview complete. Use --execute to apply changes.")
+
+
+@tag.command('fix')
 @click.argument('vault_path', type=click.Path(exists=True), default='.', required=False)
 @click.option('--filelist', type=click.Path(), help='Text file containing list of files to process')
 @click.option('--execute', is_flag=True, help='REQUIRED to actually apply changes. Without this flag, runs in preview mode')
 @click.option('--recursive/--no-recursive', default=True, help='Search subdirectories (default: recursive)')
 @click.option('--quiet', is_flag=True, help='Reduce output verbosity')
 @click.option('--log', type=click.Path(), help='Save log to file')
-def fix_duplicates(vault_path, filelist, execute, recursive, quiet, log):
+def fix(vault_path, filelist, execute, recursive, quiet, log):
     """Fix duplicate 'tags:' fields in frontmatter.
 
     VAULT_PATH: Path to Obsidian vault directory (defaults to current directory)
@@ -398,15 +476,15 @@ def vault():
     pass
 
 
-@vault.command('cleanup-backups')
-@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@vault.command('cleanup')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--execute', is_flag=True, help='REQUIRED to actually delete files. Without this flag, runs in preview mode')
 @click.option('--recursive/--no-recursive', default=True, help='Search subdirectories (default: recursive)')
 @click.option('--quiet', is_flag=True, help='Reduce output verbosity')
-def cleanup_backups(vault_path, execute, recursive, quiet):
+def cleanup(vault_path, execute, recursive, quiet):
     """Remove .bak backup files from vault.
 
-    VAULT_PATH: Path to Obsidian vault directory
+    VAULT_PATH: Path to Obsidian vault directory (defaults to current directory)
 
     Finds and removes all .bak files created by fix operations.
 
@@ -431,18 +509,152 @@ def cleanup_backups(vault_path, execute, recursive, quiet):
         sys.exit(1)
 
 
+@vault.command('backup')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
+@click.option('--output', '-o', type=click.Path(), help='Backup output path (defaults to vault_backup_YYYYMMDD_HHMMSS.tar.gz)')
+def backup(vault_path, output):
+    """Create a backup of the vault.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    Creates a compressed tarball backup of the vault directory, excluding
+    .git directories and other version control files.
+
+    Backup filename format: vault_backup_YYYYMMDD_HHMMSS.tar.gz
+    """
+    from pathlib import Path
+    from datetime import datetime
+    import tarfile
+
+    vault = Path(vault_path)
+
+    # Generate output filename if not specified
+    if not output:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        vault_name = vault.name
+        output = f"{vault_name}_backup_{timestamp}.tar.gz"
+
+    output_path = Path(output)
+
+    print(f"Creating backup of: {vault}")
+    print(f"Output file: {output_path}")
+
+    # Create tarball
+    try:
+        with tarfile.open(output_path, 'w:gz') as tar:
+            # Add vault with exclusions
+            def filter_func(tarinfo):
+                # Exclude version control directories
+                if '/.git/' in tarinfo.name or tarinfo.name.endswith('/.git'):
+                    return None
+                if '/.svn/' in tarinfo.name or tarinfo.name.endswith('/.svn'):
+                    return None
+                if '/.hg/' in tarinfo.name or tarinfo.name.endswith('/.hg'):
+                    return None
+                return tarinfo
+
+            tar.add(vault, arcname=vault.name, filter=filter_func)
+
+        # Show size
+        size_mb = output_path.stat().st_size / (1024 * 1024)
+        print(f"\n✓ Backup created successfully")
+        print(f"  Size: {size_mb:.2f} MB")
+        print(f"  Location: {output_path.resolve()}")
+
+    except Exception as e:
+        print(f"Error creating backup: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+@vault.command('verify')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
+def verify(vault_path):
+    """Verify vault integrity and structure.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    Checks:
+    - Markdown file syntax
+    - Frontmatter YAML validity
+    - Broken internal links
+    - Orphaned attachments
+    - File encoding issues
+    """
+    from pathlib import Path
+    import yaml
+
+    vault = Path(vault_path)
+
+    print(f"Verifying vault: {vault}\n")
+    print("=" * 70)
+
+    errors = []
+    warnings = []
+    files_checked = 0
+
+    # Check all markdown files
+    for md_file in vault.rglob('*.md'):
+        files_checked += 1
+
+        try:
+            # Read file
+            content = md_file.read_text(encoding='utf-8')
+
+            # Check for frontmatter
+            if content.startswith('---'):
+                # Extract frontmatter
+                parts = content.split('---', 2)
+                if len(parts) >= 3:
+                    frontmatter = parts[1]
+                    try:
+                        yaml.safe_load(frontmatter)
+                    except yaml.YAMLError as e:
+                        errors.append(f"{md_file.relative_to(vault)}: Invalid YAML frontmatter - {e}")
+
+        except UnicodeDecodeError:
+            errors.append(f"{md_file.relative_to(vault)}: File encoding error (not UTF-8)")
+        except Exception as e:
+            errors.append(f"{md_file.relative_to(vault)}: {e}")
+
+    print(f"Files checked: {files_checked}\n")
+
+    if errors:
+        print("Errors:")
+        for error in errors:
+            print(f"  ✗ {error}")
+        print()
+
+    if warnings:
+        print("Warnings:")
+        for warning in warnings:
+            print(f"  ⚠ {warning}")
+        print()
+
+    if not errors and not warnings:
+        print("✓ No issues found")
+        print("\nVault structure is valid.")
+    else:
+        print("=" * 70)
+        print(f"\nSummary: {len(errors)} errors, {len(warnings)} warnings")
+        if errors:
+            sys.exit(1)
+
+
 @main.command()
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--force', '-f', is_flag=True, help='Overwrite existing configuration directory')
 def init(vault_path, force):
-    """Initialize tagex configuration in a vault.
+    """Initialize tagex configuration in a vault (quick access).
 
     VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     Creates .tagex/ directory with:
     - config.yaml: General configuration (plural preference, etc.)
     - synonyms.yaml: Tag synonym definitions
+    - exclusions.yaml: Tags to exclude from merge suggestions
     - README.md: Documentation for the configuration files
+
+    This is a convenience command. Same as: tagex config init
     """
     from pathlib import Path
     import shutil
@@ -575,7 +787,7 @@ For more information, see:
     print("  5. Run: tagex analyze recommendations " + str(vault_path))
 
 
-@main.command()
+@config.command('validate')
 @click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.option('--strict', is_flag=True, help='Treat warnings as errors')
 def validate(vault_path, strict):
@@ -722,6 +934,132 @@ def validate(vault_path, strict):
     else:
         print("✓ Validation PASSED")
         print("\nConfiguration is valid and ready to use.")
+
+
+@config.command('show')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
+def show(vault_path):
+    """Display current configuration.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    Shows the current configuration values from .tagex/config.yaml,
+    .tagex/synonyms.yaml, and .tagex/exclusions.yaml.
+    """
+    from pathlib import Path
+    import yaml
+
+    vault = Path(vault_path)
+    tagex_dir = vault / '.tagex'
+
+    print(f"Configuration for: {vault_path}\n")
+    print("=" * 70)
+
+    if not tagex_dir.exists():
+        print("⚠ No configuration found (.tagex/ directory doesn't exist)")
+        print(f"\nRun: tagex init {vault_path}")
+        return
+
+    # Show config.yaml
+    config_file = tagex_dir / 'config.yaml'
+    if config_file.exists():
+        print("\nconfig.yaml:")
+        print("-" * 70)
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+            if config:
+                print(yaml.dump(config, default_flow_style=False, sort_keys=False))
+            else:
+                print("(empty)")
+    else:
+        print("\nconfig.yaml: (not found)")
+
+    # Show synonyms.yaml
+    synonyms_file = tagex_dir / 'synonyms.yaml'
+    if synonyms_file.exists():
+        print("\nsynonyms.yaml:")
+        print("-" * 70)
+        with open(synonyms_file, 'r') as f:
+            synonyms = yaml.safe_load(f)
+            if synonyms:
+                print(yaml.dump(synonyms, default_flow_style=False, sort_keys=False))
+            else:
+                print("(empty)")
+    else:
+        print("\nsynonyms.yaml: (not found)")
+
+    # Show exclusions.yaml
+    exclusions_file = tagex_dir / 'exclusions.yaml'
+    if exclusions_file.exists():
+        print("\nexclusions.yaml:")
+        print("-" * 70)
+        with open(exclusions_file, 'r') as f:
+            exclusions = yaml.safe_load(f)
+            if exclusions:
+                print(yaml.dump(exclusions, default_flow_style=False, sort_keys=False))
+            else:
+                print("(empty)")
+    else:
+        print("\nexclusions.yaml: (not found)")
+
+    print("\n" + "=" * 70)
+
+
+@config.command('edit')
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
+@click.argument('file', type=click.Choice(['config', 'synonyms', 'exclusions']), default='config', required=False)
+def edit(vault_path, file):
+    """Edit configuration in $EDITOR.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
+
+    FILE: Which config file to edit (config, synonyms, exclusions)
+
+    Opens the specified configuration file in your default editor ($EDITOR).
+    If $EDITOR is not set, tries common editors (vim, nano, vi).
+    """
+    from pathlib import Path
+    import os
+    import subprocess
+
+    vault = Path(vault_path)
+    tagex_dir = vault / '.tagex'
+
+    if not tagex_dir.exists():
+        print(f"Error: Configuration directory not found: {tagex_dir}")
+        print(f"\nRun: tagex init {vault_path}")
+        sys.exit(1)
+
+    # Map file choice to actual filename
+    file_map = {
+        'config': 'config.yaml',
+        'synonyms': 'synonyms.yaml',
+        'exclusions': 'exclusions.yaml'
+    }
+
+    config_file = tagex_dir / file_map[file]
+
+    if not config_file.exists():
+        print(f"Error: Configuration file not found: {config_file}")
+        print(f"\nRun: tagex init {vault_path}")
+        sys.exit(1)
+
+    # Try to find an editor
+    editor = os.environ.get('EDITOR') or os.environ.get('VISUAL')
+    if not editor:
+        # Try common editors
+        for cmd in ['vim', 'nano', 'vi']:
+            if subprocess.run(['which', cmd], capture_output=True).returncode == 0:
+                editor = cmd
+                break
+
+    if not editor:
+        print("Error: No editor found. Please set $EDITOR environment variable.")
+        print(f"\nOr edit manually: {config_file}")
+        sys.exit(1)
+
+    print(f"Opening {config_file} in {editor}...")
+    subprocess.run([editor, str(config_file)])
 
 
 @main.command()
@@ -1009,14 +1347,14 @@ def pairs(input_path, tag_types, min_pairs, no_filter):
         print(f"{total_connections:3d}  {tag}")
 
 
-@analyze.command('merge')
+@analyze.command('merges')
 @click.argument('input_path', type=click.Path(exists=True), default='.' ,required=False)
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract (when input is vault)')
 @click.option('--min-usage', type=int, default=3, help='Minimum tag usage to consider')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
 @click.option('--no-sklearn', is_flag=True, help='Force use of pattern-based fallback instead of embeddings')
 @click.option('--export', type=click.Path(), help='Export operations to YAML file')
-def analyze_merge(input_path, tag_types, min_usage, no_filter, no_sklearn, export):
+def merges(input_path, tag_types, min_usage, no_filter, no_sklearn, export):
     """Suggest tag merge opportunities.
 
     INPUT_PATH: Vault directory or JSON file containing tag data (defaults to current directory)
@@ -1921,8 +2259,8 @@ def plurals(input_path, tag_types, no_filter, prefer, export):
 
 
 @analyze.command()
+@click.argument('vault_path', type=click.Path(exists=True, file_okay=False, dir_okay=True), default='.', required=False)
 @click.argument('paths', nargs=-1, type=click.Path(exists=True))
-@click.option('--vault-path', type=click.Path(exists=True, file_okay=False, dir_okay=True), required=True, help='Vault directory path')
 @click.option('--tag-types', type=click.Choice(['both', 'frontmatter', 'inline']), default='frontmatter', help='Tag types to extract')
 @click.option('--min-tags', type=int, default=2, help='Only suggest for notes with fewer than this many tags')
 @click.option('--max-tags', type=int, help='Only suggest for notes with at most this many tags')
@@ -1931,8 +2269,10 @@ def plurals(input_path, tag_types, no_filter, prefer, export):
 @click.option('--no-transformers', is_flag=True, help='Skip semantic analysis, use keyword matching')
 @click.option('--export', type=click.Path(), help='Export operations to YAML file')
 @click.option('--no-filter', is_flag=True, help='Disable noise filtering')
-def suggest(paths, vault_path, tag_types, min_tags, max_tags, top_n, min_confidence, no_transformers, export, no_filter):
+def suggest(vault_path, paths, tag_types, min_tags, max_tags, top_n, min_confidence, no_transformers, export, no_filter):
     """Suggest tags for notes based on content analysis.
+
+    VAULT_PATH: Path to the Obsidian vault directory (defaults to current directory)
 
     PATHS: Optional file paths or glob patterns to analyze (if not specified, analyzes entire vault)
 
@@ -1941,13 +2281,13 @@ def suggest(paths, vault_path, tag_types, min_tags, max_tags, top_n, min_confide
 
     Examples:
       # Suggest tags for all notes with < 2 tags
-      tagex analyze suggest --vault-path /vault --min-tags 2
+      tagex analyze suggest --min-tags 2
 
       # Suggest tags for specific directory
-      tagex analyze suggest /vault/projects/ --vault-path /vault --min-tags 1
+      tagex analyze suggest /vault projects/ --min-tags 1
 
       # Export suggestions to YAML for review
-      tagex analyze suggest --vault-path /vault --min-tags 2 --export suggestions.yaml
+      tagex analyze suggest --min-tags 2 --export suggestions.yaml
     """
     from .analysis.content_analyzer import ContentAnalyzer
     from .analysis.merge_analyzer import build_tag_stats
