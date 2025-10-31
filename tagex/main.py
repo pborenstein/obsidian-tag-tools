@@ -27,6 +27,7 @@ from .core.operations.add_tags import AddTagsOperation
 def main():
     """Obsidian Tag Management Tool - Extract and modify tags in Obsidian vaults.
 
+    \b
     Quick Start:
       tagex init              # Initialize vault configuration
       tagex stats             # View tag statistics
@@ -34,6 +35,7 @@ def main():
       tagex analyze recommendations --export ops.yaml
       tagex tag apply ops.yaml --execute
 
+    \b
     Commands are organized into groups:
       • config   - Configuration management
       • analyze  - Tag analysis (read-only)
@@ -60,6 +62,7 @@ def tag():
     These commands can modify your vault files. Most operations support
     a preview mode (default) and require --execute to apply changes.
 
+    \b
     Workflow:
       1. tagex tag export          # Understand current tags
       2. tagex tag rename/merge    # Make specific changes
@@ -406,6 +409,7 @@ def add(vault_path, file_path, tags, execute):
 
     By default, runs in preview mode (dry-run). Use --execute to apply changes.
 
+    \b
     Examples:
       # Add tags to a file
       tagex tag add /vault/note.md python programming
@@ -2279,6 +2283,7 @@ def suggest(vault_path, paths, tag_types, min_tags, max_tags, top_n, min_confide
     Analyzes note content and suggests relevant tags from existing tags in the vault.
     By default, only processes notes with fewer than --min-tags tags.
 
+    \b
     Examples:
       # Suggest tags for all notes with < 2 tags
       tagex analyze suggest --min-tags 2
