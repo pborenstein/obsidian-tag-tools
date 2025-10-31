@@ -355,8 +355,8 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Run preview and actual operation immediately after
-   tagex rename /vault old-tag new-tag
-   tagex rename /vault old-tag new-tag --execute
+   tagex tag rename /vault old-tag new-tag
+   tagex tag rename /vault old-tag new-tag --execute
    ```
 
 3. Check for file locks (Obsidian open):
@@ -382,10 +382,10 @@ Solutions to common issues when using tagex.
 
    ```bash
    # If tags are inline but operation targets frontmatter (default)
-   tagex delete /vault old-tag --tag-types inline
+   tagex tag delete /vault old-tag --tag-types inline
 
    # Process both types
-   tagex rename /vault old-tag new-tag --tag-types both
+   tagex tag rename /vault old-tag new-tag --tag-types both
    ```
 
 2. Check exact tag name (case-sensitive):
@@ -421,14 +421,14 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Preview changes carefully first
-   tagex delete /vault inline-tag --tag-types inline
+   tagex tag delete /vault inline-tag --tag-types inline
    ```
 
 2. Consider renaming instead of deleting:
 
    ```bash
    # Safer - preserves tag structure
-   tagex rename /vault old-tag new-tag --tag-types inline
+   tagex tag rename /vault old-tag new-tag --tag-types inline
    ```
 
 3. Check log files after operation:
@@ -661,9 +661,9 @@ tagex stats /path/to/test/vault
 
 ```bash
 # Always preview first (default behavior)
-tagex rename /vault old-tag new-tag
+tagex tag rename /vault old-tag new-tag
 # Review output, then execute
-tagex rename /vault old-tag new-tag --execute
+tagex tag rename /vault old-tag new-tag --execute
 # Verify changes
 cat logs/tag-rename-op_*.json | tail -1
 ```

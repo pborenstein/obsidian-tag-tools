@@ -13,7 +13,7 @@ Tagex is a comprehensive tag management system for Obsidian vaults. It provides 
 │  tagex                                                          │
 │   ├─ tags          → Tag operations (extract, rename, merge)    │
 │   ├─ analyze       → Analysis commands (pairs, quality, etc.)   │
-│   ├─ vault         → Maintenance (cleanup-backups)              │
+│   ├─ vault         → Maintenance (cleanup)              │
 │   ├─ init          → Configuration setup                        │
 │   ├─ validate      → Config validation                          │
 │   ├─ stats         → Vault statistics                           │
@@ -1087,7 +1087,7 @@ def is_valid_custom_tag(tag: str) -> bool:
 
 | Command | Description | Safe by Default |
 |:--------|:------------|:----------------|
-| `cleanup-backups` | Remove .bak backup files | Yes (--execute required) |
+| `cleanup` | Remove .bak backup files | Yes (--execute required) |
 
 ### Configuration Commands (2 commands)
 

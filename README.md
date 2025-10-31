@@ -122,7 +122,7 @@ uv run python -m tagex.main stats /path/to/vault --top 20
 | `--verbose`, `-v` | extract | Enable verbose logging | disabled |
 | `--quiet`, `-q` | extract | Suppress summary output | disabled |
 | `--no-filter` | extract, stats, analyze | Include all raw tags without filtering | disabled |
-| `--execute` | rename, merge, delete, apply, fix-duplicates | Actually apply changes (default is preview mode) | disabled |
+| `--execute` | rename, merge, delete, apply, fix | Actually apply changes (default is preview mode) | disabled |
 | `--top`, `-t` | stats | Number of top tags to display | 20 |
 | `--force` | init | Overwrite existing configuration files | disabled |
 | `--strict` | validate | Treat warnings as errors | disabled |
@@ -130,16 +130,16 @@ uv run python -m tagex.main stats /path/to/vault --top 20
 ### Examples
 
 ```bash
-# Extract tags (JSON output, frontmatter only by default)
-tagex tags extract /path/to/vault
-tagex tags extract /path/to/vault -f csv -o tags.csv
-tagex tags extract /path/to/vault --tag-types both --no-filter
+# Export tags (JSON output, frontmatter only by default)
+tagex tag export /path/to/vault
+tagex tag export /path/to/vault -f csv -o tags.csv
+tagex tag export /path/to/vault --tag-types both --no-filter
 
 # Tag operations (preview by default, --execute to apply)
-tagex tags rename /path/to/vault work project                            # Preview only
-tagex tags rename /path/to/vault work project --execute                  # Actually rename
-tagex tags merge /path/to/vault personal diary journal --into writing    # Preview only
-tagex tags delete /path/to/vault --tag-types inline obsolete-tag         # Preview only
+tagex tag rename /path/to/vault work project                            # Preview only
+tagex tag rename /path/to/vault work project --execute                  # Actually rename
+tagex tag merge /path/to/vault personal diary journal --into writing    # Preview only
+tagex tag delete /path/to/vault --tag-types inline obsolete-tag         # Preview only
 
 # Vault statistics
 tagex stats /path/to/vault --top 10 --format json
@@ -154,33 +154,33 @@ tagex init
 tagex health
 
 # Fix any duplicate tags: fields (safe by default)
-tagex tags fix-duplicates                    # Preview duplicates
-tagex tags fix-duplicates --execute          # Fix them
+tagex tag fix                    # Preview duplicates
+tagex tag fix --execute          # Fix them
 
 # Generate unified recommendations (recommended workflow, defaults to cwd)
 tagex analyze recommendations --export operations.yaml
 
 # Review and edit operations.yaml, then preview
-tagex tags apply operations.yaml
+tagex tag apply operations.yaml
 
 # Apply changes (requires explicit --execute flag)
-tagex tags apply operations.yaml --execute
+tagex tag apply operations.yaml --execute
 
 # Verify improvements
 tagex health
 
 # Clean up backup files if needed
-tagex vault cleanup-backups
+tagex vault cleanup
 
 # Alternative: Run individual analyzers (all default to cwd)
 tagex analyze pairs
 tagex analyze synonyms
 tagex analyze plurals
 
-# Traditional workflow: extract once and analyze multiple times
-tagex tags extract -o tags.json
+# Traditional workflow: export once and analyze multiple times
+tagex tag export -o tags.json
 tagex analyze pairs tags.json
-tagex analyze merge tags.json
+tagex analyze merges tags.json
 ```
 
 ## Installation

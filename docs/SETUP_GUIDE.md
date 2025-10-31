@@ -383,7 +383,7 @@ tagex tag export /vault --tag-types inline
 tagex tag export /vault --tag-types both
 
 # Operations support same filtering
-tagex rename /vault old-tag new-tag --tag-types both
+tagex tag rename /vault old-tag new-tag --tag-types both
 ```
 
 
