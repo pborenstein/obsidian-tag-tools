@@ -56,6 +56,10 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
+| [archive/COMMAND_STRUCTURE_ANALYSIS.md](archive/COMMAND_STRUCTURE_ANALYSIS.md) | CLI restructure analysis and design options (Oct 2025) | Developers |
+| [archive/COMMAND_FLOW_DIAGRAM.md](archive/COMMAND_FLOW_DIAGRAM.md) | Visual command hierarchy and workflow diagrams (Oct 2025) | Developers |
+| [archive/RESTRUCTURE_ROADMAP.md](archive/RESTRUCTURE_ROADMAP.md) | Implementation plan for CLI restructure (Oct 2025) | Developers |
+| [archive/RESTRUCTURE_COMPLETE.md](archive/RESTRUCTURE_COMPLETE.md) | Completion report and migration guide (Oct 2025) | Developers |
 | [archive/DESIGN_CONSIDERATIONS.md](archive/DESIGN_CONSIDERATIONS.md) | Future design discussions and unresolved tensions | Developers |
 | [archive/SEMANTIC_ANALYSIS.md](archive/SEMANTIC_ANALYSIS.md) | Original TF-IDF documentation (superseded by ALGORITHMS.md) | Developers |
 | [archive/TESTING_NARRATIVE.md](archive/TESTING_NARRATIVE.md) | Documentation-driven test development methodology | Developers |
