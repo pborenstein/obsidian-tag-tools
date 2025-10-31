@@ -6,6 +6,8 @@
 
 ```bash
 # 1. Install (one-time)
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
 uv tool install --editable .
 
 # 2. Navigate to your vault

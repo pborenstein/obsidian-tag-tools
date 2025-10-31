@@ -652,6 +652,8 @@ If you encounter issues not covered here:
 
 ```bash
 # Complete installation check
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
 uv tool install --editable .
 tagex --help
 tagex stats /path/to/test/vault

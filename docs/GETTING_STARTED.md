@@ -20,6 +20,10 @@ Installation → Initialize → Explore → Fix → Analyze → Review → Previ
 ### Step 1: Install tagex
 
 ```bash
+# Clone the repository
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
+
 # Install as a system-wide command
 uv tool install --editable .
 

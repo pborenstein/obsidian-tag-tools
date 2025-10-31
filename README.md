@@ -9,7 +9,9 @@ Safe by default (preview mode requires --execute flag to apply changes).
 Most common workflow:
 
 ```bash
-# Install
+# Clone and install
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
 uv tool install --editable .
 
 # Initialize vault

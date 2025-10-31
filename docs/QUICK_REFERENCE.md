@@ -5,6 +5,8 @@ Single-page reference for all tagex commands. For detailed documentation, see [A
 ## Installation
 
 ```bash
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
 uv tool install --editable .
 tagex --help
 ```
