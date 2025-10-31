@@ -22,33 +22,31 @@ tagex is a command-line tool for managing tags across entire Obsidian vaults. It
 
 ## Quick Start
 
-**New to tagex?** Follow the [Getting Started Guide](docs/GETTING_STARTED.md) for a complete step-by-step walkthrough.
-
-For a quick taste:
+Most common workflow:
 
 ```bash
 # Install
 uv tool install --editable .
 
-# Initialize your vault
+# Initialize vault
 cd "$HOME/Obsidian/MyVault"
 tagex init
 
-# See what you have
+# View current state
 tagex stats
 tagex health
 
 # Generate recommendations
 tagex analyze recommendations --export operations.yaml
 
-# Review operations.yaml, then preview changes
+# Review operations.yaml, then preview
 tagex tag apply operations.yaml
 
-# Apply changes (when ready)
+# Apply changes
 tagex tag apply operations.yaml --execute
 ```
 
-**That's the happy path!** Most users follow this workflow. See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for detailed explanations.
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for detailed walkthrough or [docs/HAPPY_PATH.md](docs/HAPPY_PATH.md) for command reference.
 
 ## Commands
 
@@ -350,19 +348,15 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if you encounter issues.
 
 ## Documentation
 
-**👉 Start here:** [Getting Started Guide](docs/GETTING_STARTED.md) - Complete walkthrough from installation to cleaned-up vault (15 minutes)
-
-**⚡ In a hurry?** [Happy Path Cheat Sheet](docs/HAPPY_PATH.md) - Just the commands, no explanations
-
-See [docs/README.md](docs/README.md) for the complete documentation index with suggested reading flows.
+See [docs/README.md](docs/README.md) for complete documentation index and reading flows.
 
 ### Quick Links
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | **Complete step-by-step workflow** | **New Users** |
-| [docs/HAPPY_PATH.md](docs/HAPPY_PATH.md) | **Ultra-minimal command list** | **All Users** |
-| [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Single-page command cheat sheet | All Users |
+| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | Step-by-step workflow walkthrough | New users |
+| [docs/HAPPY_PATH.md](docs/HAPPY_PATH.md) | Minimal command reference | All users |
+| [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Complete command cheat sheet | All users |
 | [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) | Installation, vault setup, git integration | Users & Developers |
 | [docs/CONFIGURATION_REFERENCE.md](docs/CONFIGURATION_REFERENCE.md) | `.tagex/` configuration files reference | Users & Developers |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
