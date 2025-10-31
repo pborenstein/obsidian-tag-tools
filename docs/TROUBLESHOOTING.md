@@ -486,7 +486,7 @@ Solutions to common issues when using tagex.
 
 **Symptoms:**
 
-- `tagex analyze merge` fails
+- `tagex analyze merges` fails
 - ImportError for scikit-learn
 - Analysis command crashes
 
@@ -501,7 +501,7 @@ Solutions to common issues when using tagex.
 2. Or use pattern-based fallback:
 
    ```bash
-   tagex analyze merge tags.json --no-sklearn
+   tagex analyze merges tags.json --no-sklearn
    ```
 
 3. Verify installation:
@@ -518,7 +518,7 @@ Solutions to common issues when using tagex.
 
 **Symptoms:**
 
-- `tagex analyze merge` returns empty results
+- `tagex analyze merges` returns empty results
 - "No similar tags found"
 - Expected related tags not suggested
 
@@ -528,7 +528,7 @@ Solutions to common issues when using tagex.
 
    ```bash
    # Default is 3, try lower
-   tagex analyze merge tags.json --min-usage 2
+   tagex analyze merges tags.json --min-usage 2
    ```
 
 2. Check if vault has enough tags:
@@ -623,7 +623,7 @@ Solutions to common issues when using tagex.
 1. Use pattern-based fallback (lower memory):
 
    ```bash
-   tagex analyze merge tags.json --no-sklearn
+   tagex analyze merges tags.json --no-sklearn
    ```
 
 2. Filter tags before analysis:
@@ -631,7 +631,7 @@ Solutions to common issues when using tagex.
    ```bash
    # Reduce tag set size
    tagex extract /vault --min-usage 3 -o filtered.json
-   tagex analyze merge filtered.json
+   tagex analyze merges filtered.json
    ```
 
 3. Process on machine with more RAM
@@ -679,5 +679,5 @@ tagex stats /vault --tag-types both
 
 # Analyze relationships
 tagex analyze pairs all_tags.json
-tagex analyze merge all_tags.json
+tagex analyze merges all_tags.json
 ```

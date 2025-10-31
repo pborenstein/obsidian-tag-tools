@@ -58,22 +58,22 @@ Command structure with three primary groups:
 ┌─────────────────────────────────────────────────────────────┐
 │ COMMAND GROUP: tags                                         │
 ├─────────────────────────────────────────────────────────────┤
-│ tagex tags extract [vault_path]                             │
+│ tagex tag export [vault_path]                             │
 │   └─ Extract tags from vault (JSON/CSV/TXT)                 │
 │                                                             │
-│ tagex tags rename [vault_path] old-tag new-tag              │
+│ tagex tag rename [vault_path] old-tag new-tag              │
 │   └─ Rename tag across all files                            │
 │                                                             │
-│ tagex tags merge [vault_path] tag1 tag2 --into target       │
+│ tagex tag merge [vault_path] tag1 tag2 --into target       │
 │   └─ Merge multiple tags into one                           │
 │                                                             │
-│ tagex tags delete [vault_path] unwanted-tag                 │
+│ tagex tag delete [vault_path] unwanted-tag                 │
 │   └─ Remove tags from vault                                 │
 │                                                             │
-│ tagex tags fix-duplicates [vault_path]                      │
+│ tagex tag fix [vault_path]                      │
 │   └─ Fix duplicate 'tags:' fields in frontmatter            │
 │                                                             │
-│ tagex tags apply operations.yaml                            │
+│ tagex tag apply operations.yaml                            │
 │   └─ Apply tag operations from YAML file                    │
 │                                                             │
 │ All commands: --execute flag required to apply changes      │
@@ -86,7 +86,7 @@ Command structure with three primary groups:
 │ tagex analyze pairs [vault_path]                            │
 │   └─ Tag co-occurrence and clustering                       │
 │                                                             │
-│ tagex analyze merge [vault_path]                            │
+│ tagex analyze merges [vault_path]                            │
 │   └─ Suggest tag merges (TF-IDF embeddings)                 │
 │                                                             │
 │ tagex analyze quality [vault_path]                          │
@@ -110,7 +110,7 @@ Command structure with three primary groups:
 ┌─────────────────────────────────────────────────────────────┐
 │ COMMAND GROUP: vault                                        │
 ├─────────────────────────────────────────────────────────────┤
-│ tagex vault cleanup-backups [vault_path]                    │
+│ tagex vault cleanup [vault_path]                    │
 │   └─ Remove .bak backup files                               │
 └─────────────────────────────────────────────────────────────┘
 
@@ -120,7 +120,7 @@ Command structure with three primary groups:
 │ tagex init [vault_path]                                     │
 │   └─ Initialize .tagex/ configuration directory             │
 │                                                             │
-│ tagex validate [vault_path]                                 │
+│ tagex config validate [vault_path]                                 │
 │   └─ Validate configuration files                           │
 │                                                             │
 │ tagex stats [vault_path]                                    │
@@ -357,7 +357,7 @@ Command structure with three primary groups:
 │                                                             │
 │ Configuration commands:                                     │
 │   tagex init [vault_path]     → Create .tagex/ directory    │
-│   tagex validate [vault_path] → Check config validity       │
+│   tagex config validate [vault_path] → Check config validity       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -600,8 +600,8 @@ Input: Vault Path
 │   └─ Reorder (executed top-to-bottom)                       │
 │                                                             │
 │ Apply operations:                                           │
-│   tagex tags apply operations.yaml          (preview)       │
-│   tagex tags apply operations.yaml --execute (apply)        │
+│   tagex tag apply operations.yaml          (preview)       │
+│   tagex tag apply operations.yaml --execute (apply)        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -672,7 +672,7 @@ Input: Vault Path + Target Criteria
 │         methods: [semantic, semantic, semantic]             │
 │                                                             │
 │ Apply with:                                                 │
-│   tagex tags apply suggestions.yaml --execute               │
+│   tagex tag apply suggestions.yaml --execute               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -757,8 +757,8 @@ All write operations follow the safe-by-default pattern:
 └─────────────────────────────────────────────────────────────┘
 
 Example:
-  tagex tags rename /vault old new        → Preview only
-  tagex tags rename /vault old new --execute  → Actually rename
+  tagex tag rename /vault old new        → Preview only
+  tagex tag rename /vault old new --execute  → Actually rename
 ```
 
 ### Current Directory Defaults
@@ -774,8 +774,8 @@ Example:
 │   tagex stats               → Stats for ./                  │
 │   tagex health              → Health for ./                 │
 │   tagex init                → Initialize ./.tagex/          │
-│   tagex validate            → Validate ./.tagex/            │
-│   tagex tags extract        → Extract from ./               │
+│   tagex config validate            → Validate ./.tagex/            │
+│   tagex tag export        → Extract from ./               │
 │   tagex analyze plurals     → Analyze ./                    │
 │                                                             │
 │ This allows for convenient usage when working within        │
@@ -793,11 +793,11 @@ Example:
 │ All analyze commands accept either:                         │
 │                                                             │
 │ 1. VAULT PATH (auto-extract)                                │
-│    tagex analyze merge /vault                               │
+│    tagex analyze merges /vault                               │
 │      └─ Extracts tags → runs analysis                       │
 │                                                             │
 │ 2. JSON FILE (pre-extracted data)                           │
-│    tagex analyze merge tags-export.json                     │
+│    tagex analyze merges tags-export.json                     │
 │      └─ Loads tags → runs analysis                          │
 │                                                             │
 │ Benefits:                                                   │
@@ -877,7 +877,7 @@ Example:
 │     └─ Process both frontmatter and inline tags             │
 │                                                             │
 │ Applied to:                                                 │
-│   ├─ Tag extraction (tagex tags extract)                    │
+│   ├─ Tag extraction (tagex tag export)                    │
 │   ├─ All operations (rename, merge, delete)                 │
 │   └─ All analyzers (pairs, merge, quality, etc.)            │
 │                                                             │
@@ -1064,12 +1064,12 @@ def is_valid_custom_tag(tag: str) -> bool:
 
 | Command                     | Description                  | Safe by Default          |
 | :-------------------------- | :--------------------------- | :----------------------- |
-| `tagex tags extract`        | Extract tags to JSON/CSV/TXT | Read-only                |
-| `tagex tags rename`         | Rename tag across vault      | Yes (--execute required) |
-| `tagex tags merge`          | Merge multiple tags into one | Yes (--execute required) |
-| `tagex tags delete`         | Delete tags from vault       | Yes (--execute required) |
-| `tagex tags fix-duplicates` | Fix duplicate tags: fields   | Yes (--execute required) |
-| `tagex tags apply`          | Apply operations from YAML   | Yes (--execute required) |
+| `tagex tag export`        | Extract tags to JSON/CSV/TXT | Read-only                |
+| `tagex tag rename`         | Rename tag across vault      | Yes (--execute required) |
+| `tagex tag merge`          | Merge multiple tags into one | Yes (--execute required) |
+| `tagex tag delete`         | Delete tags from vault       | Yes (--execute required) |
+| `tagex tag fix` | Fix duplicate tags: fields   | Yes (--execute required) |
+| `tagex tag apply`          | Apply operations from YAML   | Yes (--execute required) |
 
 ### Analysis Commands (7 analyzers)
 

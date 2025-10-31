@@ -21,7 +21,7 @@ tagex rename /vault old new            # Works on vault directory
 
 # JSON-based commands
 tagex analyze pairs tags.json          # Works on extracted JSON
-tagex analyze merge tags.json          # Works on extracted JSON
+tagex analyze merges tags.json          # Works on extracted JSON
 tagex analyze quality tags.json        # Works on extracted JSON
 ```
 
@@ -39,7 +39,7 @@ tagex analyze quality tags.json        # Works on extracted JSON
 # All commands work directly on vaults
 tagex stats /vault
 tagex analyze pairs /vault
-tagex analyze merge /vault
+tagex analyze merges /vault
 tagex analyze quality /vault
 
 # JSON export becomes optional flag
@@ -62,7 +62,7 @@ tagex analyze pairs /vault --export pairs.json
 tagex extract /vault -o tags.json
 tagex stats tags.json
 tagex analyze pairs tags.json
-tagex analyze merge tags.json
+tagex analyze merges tags.json
 ```
 
 **Pros:**
@@ -210,7 +210,7 @@ tagex config synonyms /vault
 
 **Option C: Validation command**
 ```bash
-tagex validate /vault
+tagex config validate /vault
 
 # Checks:
 # - .tagex-synonyms.yaml syntax
@@ -230,7 +230,7 @@ cp .tagex-synonyms.example.yaml /vault/.tagex-synonyms.yaml
 **Recommendation:** Combine A, C, and D:
 - Add example file to repo
 - Add `tagex init` command
-- Add `tagex validate` command
+- Add `tagex config validate` command
 
 ---
 
@@ -252,7 +252,7 @@ tagex extract /vault -o tags.json
 tagex analyze quality tags.json > quality.txt
 tagex analyze plurals tags.json > plurals.txt
 tagex analyze synonyms tags.json > synonyms.txt
-tagex analyze merge tags.json > merge.txt
+tagex analyze merges tags.json > merge.txt
 tagex analyze pairs tags.json > pairs.txt
 
 # Then manually review 5 text files
@@ -409,7 +409,7 @@ The merge analyzer uses TF-IDF embeddings via scikit-learn, with a fallback to p
 
 ```python
 # User runs:
-tagex analyze merge tags.json
+tagex analyze merges tags.json
 
 # Which algorithm is running?
 # - TF-IDF embeddings (if sklearn available)
@@ -429,7 +429,7 @@ tagex analyze merge tags.json
 
 **Option A: Runtime mode indicator**
 ```bash
-tagex analyze merge tags.json
+tagex analyze merges tags.json
 
 # Output:
 # Using TF-IDF embeddings (sklearn available)
@@ -443,8 +443,8 @@ tagex analyze merge tags.json
 **Option B: Explicit mode selection**
 ```bash
 # Require explicit choice
-tagex analyze merge tags.json --mode tfidf
-tagex analyze merge tags.json --mode pattern
+tagex analyze merges tags.json --mode tfidf
+tagex analyze merges tags.json --mode pattern
 
 # Error if sklearn missing:
 # "Error: TF-IDF mode requires scikit-learn"
@@ -454,7 +454,7 @@ tagex analyze merge tags.json --mode pattern
 
 **Option C: Performance/accuracy hints**
 ```bash
-tagex analyze merge tags.json
+tagex analyze merges tags.json
 
 # Output:
 # Mode: Pattern-based (faster, less accurate)
@@ -464,7 +464,7 @@ tagex analyze merge tags.json
 
 **Option D: Comparison mode**
 ```bash
-tagex analyze merge tags.json --compare
+tagex analyze merges tags.json --compare
 
 # Runs both algorithms, shows differences:
 # TF-IDF found: 15 suggestions

@@ -81,14 +81,14 @@ All commands default to the current working directory, making it convenient to w
 4. **Check for and fix any frontmatter issues**:
 
    ```bash
-   tagex tags fix-duplicates              # Preview duplicate 'tags:' fields
-   tagex tags fix-duplicates --execute    # Fix them if needed
+   tagex tag fix              # Preview duplicate 'tags:' fields
+   tagex tag fix --execute    # Fix them if needed
    ```
 
 5. **Extract tags to verify setup**:
 
    ```bash
-   tagex tags extract -o tags.json
+   tagex tag export -o tags.json
    ```
 
 6. **Review extraction results**:
@@ -149,14 +149,14 @@ git status
 git checkout -b tag-cleanup
 
 # 3. Fix any frontmatter issues first
-tagex tags fix-duplicates                   # Preview
-tagex tags fix-duplicates --execute         # Fix if needed
+tagex tag fix                   # Preview
+tagex tag fix --execute         # Fix if needed
 
 # 4. Preview changes (safe by default, commands default to cwd)
-tagex tags rename old-tag new-tag
+tagex tag rename old-tag new-tag
 
 # 5. Execute operation
-tagex tags rename old-tag new-tag --execute
+tagex tag rename old-tag new-tag --execute
 
 # 6. Review changes
 git diff
@@ -404,11 +404,11 @@ tagex stats --top 10
 ```bash
 # Extract and analyze (from vault directory)
 cd /path/to/vault
-tagex tags extract -o weekly-tags.json
+tagex tag export -o weekly-tags.json
 tagex analyze pairs weekly-tags.json
 
 # Review merge suggestions
-tagex analyze merge weekly-tags.json --min-usage 5
+tagex analyze merges weekly-tags.json --min-usage 5
 ```
 
 ### Project-Based Workflow
@@ -420,17 +420,17 @@ tagex analyze merge weekly-tags.json --min-usage 5
 cd /path/to/vault
 
 # 1. Extract current state
-tagex tags extract -o before-cleanup.json
+tagex tag export -o before-cleanup.json
 
 # 2. Review and plan tag consolidation
-tagex analyze merge before-cleanup.json
+tagex analyze merges before-cleanup.json
 
 # 3. Execute planned changes (safe by default)
-tagex tags rename old-tag new-tag                # Preview
-tagex tags rename old-tag new-tag --execute      # Apply
+tagex tag rename old-tag new-tag                # Preview
+tagex tag rename old-tag new-tag --execute      # Apply
 
 # 4. Verify results
-tagex tags extract -o after-cleanup.json
+tagex tag export -o after-cleanup.json
 ```
 
 ### Backup Workflow
@@ -444,24 +444,24 @@ git add .
 git commit -m "Pre-tag-operation backup"
 
 # 2. Extract complete tag inventory
-tagex tags extract --tag-types both -o backup-tags.json
+tagex tag export --tag-types both -o backup-tags.json
 
 # 3. Fix any frontmatter issues first
-tagex tags fix-duplicates                        # Preview
-tagex tags fix-duplicates --execute              # Fix if needed
+tagex tag fix                        # Preview
+tagex tag fix --execute              # Fix if needed
 
 # 4. Preview operation (safe by default)
-tagex tags merge tag1 tag2 --into new-tag
+tagex tag merge tag1 tag2 --into new-tag
 
 # 5. Execute operation
-tagex tags merge tag1 tag2 --into new-tag --execute
+tagex tag merge tag1 tag2 --into new-tag --execute
 
 # 6. Verify and commit
 git diff
 git commit -am "Merge tags: tag1, tag2 → new-tag"
 
 # 7. Clean up backup files if desired
-tagex vault cleanup-backups .
+tagex vault cleanup .
 ```
 
 ### Automated Analysis
@@ -544,11 +544,11 @@ tagex extract /vault/projects
 
 ```bash
 # Use pattern-based fallback (lower memory)
-tagex analyze merge tags.json --no-sklearn
+tagex analyze merges tags.json --no-sklearn
 
 # Filter before analysis
 tagex extract /vault --min-usage 3 -o filtered.json
-tagex analyze merge filtered.json
+tagex analyze merges filtered.json
 ```
 
 

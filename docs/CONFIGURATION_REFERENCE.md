@@ -176,13 +176,13 @@ Check configuration files for errors:
 ```bash
 # Basic validation (run from vault directory)
 cd /path/to/vault
-tagex validate
+tagex config validate
 
 # Or specify path explicitly
-tagex validate /path/to/vault
+tagex config validate /path/to/vault
 
 # Strict mode (treats warnings as errors)
-tagex validate --strict
+tagex config validate --strict
 ```
 
 **What gets validated:**
@@ -219,7 +219,7 @@ tagex validate --strict
    vim .tagex/config.yaml
 
    # Validate changes (from vault directory)
-   tagex validate
+   tagex config validate
    ```
 
 5. **Use init --force to reset:**
