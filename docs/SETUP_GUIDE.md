@@ -40,8 +40,9 @@ Before using tagex, ensure you have:
 Install tagex as a command-line tool:
 
 ```bash
-# Clone or navigate to tagex directory
-cd /path/to/tagex
+# Clone the repository
+git clone https://github.com/pborenstein/obsidian-tag-tools.git
+cd obsidian-tag-tools
 
 # Install with uv (recommended)
 uv tool install --editable .

@@ -360,7 +360,7 @@ def apply(vault_path, operations_file, execute, tag_types):
         print("="*70)
         print(f"\nTo apply these changes, run:")
         vault_arg = f" --vault-path {vault_path}" if vault_path != str(Path.cwd()) else ""
-        print(f"  tagex tags apply {operations_file}{vault_arg} --execute")
+        print(f"  tagex tag apply {operations_file}{vault_arg} --execute")
     else:
         print("\n" + "="*70)
         print("EXECUTION COMPLETE - Files have been modified")
@@ -757,7 +757,7 @@ tagex analyze plurals /path/to/vault --prefer plural
 To check if your configuration files are valid:
 
 ```bash
-tagex validate /path/to/vault
+tagex config validate /path/to/vault
 ```
 
 ## Documentation
@@ -783,7 +783,7 @@ For more information, see:
     print(f"  1. Edit .tagex/config.yaml to set your preferences")
     print(f"  2. Edit .tagex/synonyms.yaml to define tag synonyms")
     print(f"  3. Edit .tagex/exclusions.yaml to exclude tags (optional)")
-    print("  4. Run: tagex validate " + str(vault_path))
+    print("  4. Run: tagex config validate " + str(vault_path))
     print("  5. Run: tagex analyze recommendations " + str(vault_path))
 
 
@@ -1266,7 +1266,7 @@ def health(vault_path, tag_types, no_filter):
 
     if total_merge_suggestions > 5:
         print(f"  {action_num}. Review merge suggestions")
-        print(f"     Run: tagex analyze merge {vault_path}")
+        print(f"     Run: tagex analyze merges {vault_path}")
         action_num += 1
 
     if singleton_ratio > 0.3:
@@ -1282,7 +1282,7 @@ def health(vault_path, tag_types, no_filter):
     print("\n" + "=" * 70)
     print("\nFor detailed analysis, run individual analyze commands:")
     print(f"  tagex analyze plurals {vault_path}")
-    print(f"  tagex analyze merge {vault_path}")
+    print(f"  tagex analyze merges {vault_path}")
     print(f"  tagex analyze quality {vault_path}")
     print(f"  tagex analyze synonyms {vault_path}")
 
@@ -1499,8 +1499,8 @@ def merges(input_path, tag_types, min_usage, no_filter, no_sklearn, export):
             print(f"\nNext steps:")
             print(f"  1. Review and edit: {export}")
             vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
-            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
-            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
+            print(f"  2. Preview changes: tagex tag apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tag apply {export}{vault_arg} --execute")
         else:
             print(f"No merge operations to export.")
 
@@ -1982,8 +1982,8 @@ def synonyms(input_path, tag_types, no_filter, min_similarity, show_related, no_
             print(f"\nNext steps:")
             print(f"  1. Review and edit: {export}")
             vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
-            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
-            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
+            print(f"  2. Preview changes: tagex tag apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tag apply {export}{vault_arg} --execute")
         else:
             print(f"No synonym operations to export.")
 
@@ -2011,7 +2011,7 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
     - singletons: Merge singleton tags into frequent tags
 
     The exported YAML file can be edited to enable/disable specific operations,
-    then applied using: tagex tags apply <file.yaml>
+    then applied using: tagex tag apply <file.yaml>
     """
     from .analysis.merge_analyzer import build_tag_stats
     from .analysis.recommendations import RecommendationsEngine
@@ -2059,8 +2059,8 @@ def recommendations(input_path, tag_types, no_filter, export, analyzers, min_sim
         engine.export_to_yaml(export)
         print(f"\nNext steps:")
         print(f"  1. Review and edit: {export}")
-        print(f"  2. Preview changes: tagex tags apply {export}")
-        print(f"  3. Apply changes:  tagex tags apply {export} --execute")
+        print(f"  2. Preview changes: tagex tag apply {export}")
+        print(f"  3. Apply changes:  tagex tag apply {export} --execute")
     else:
         print("\nTo export recommendations to a file:")
         print(f"  tagex analyze recommendations {input_path} --export operations.yaml")
@@ -2252,8 +2252,8 @@ def plurals(input_path, tag_types, no_filter, prefer, export):
             print(f"\nNext steps:")
             print(f"  1. Review and edit: {export}")
             vault_arg = f" --vault-path {vault_path}" if vault_path and vault_path != str(Path.cwd()) else ""
-            print(f"  2. Preview changes: tagex tags apply {export}{vault_arg}")
-            print(f"  3. Apply changes:  tagex tags apply {export}{vault_arg} --execute")
+            print(f"  2. Preview changes: tagex tag apply {export}{vault_arg}")
+            print(f"  3. Apply changes:  tagex tag apply {export}{vault_arg} --execute")
     else:
         print("No plural variant groups found.\n")
 
@@ -2400,8 +2400,8 @@ def suggest(vault_path, paths, tag_types, min_tags, max_tags, top_n, min_confide
         print(f"Exported {len(operations)} operations to: {export}")
         print(f"\nNext steps:")
         print(f"  1. Review and edit: {export}")
-        print(f"  2. Preview changes: tagex tags apply {export} --vault-path {vault_path}")
-        print(f"  3. Apply changes:  tagex tags apply {export} --vault-path {vault_path} --execute")
+        print(f"  2. Preview changes: tagex tag apply {export} --vault-path {vault_path}")
+        print(f"  3. Apply changes:  tagex tag apply {export} --vault-path {vault_path} --execute")
     else:
         print(f"\nTo export suggestions to a file:")
         print(f"  tagex analyze suggest --vault-path {vault_path} --min-tags {min_tags} --export suggestions.yaml")
