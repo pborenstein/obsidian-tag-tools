@@ -1,24 +1,8 @@
 # Obsidian Tag Management Tool
 
-Extract, analyze, and modify tags in Obsidian vault markdown files using the `tagex` command-line tool.
+Extract, analyze, and modify tags in Obsidian vault markdown files.
 
-## Project Overview
-
-tagex is a command-line tool for managing tags across entire Obsidian vaults. It provides comprehensive tag extraction, analysis, and modification operations with safety features like preview-by-default mode (requires --execute flag) and operation logging.
-
-**Key capabilities:**
-
-- Extract tags from frontmatter YAML and inline hashtags
-- Analyze tag relationships and co-occurrence patterns
-- Suggest tags for untagged/lightly-tagged notes based on content analysis
-- Rename, merge, and delete tags across entire vaults
-- Fix duplicate frontmatter 'tags:' fields automatically
-- Generate vault health metrics and statistics
-- Detect semantic similarities for tag consolidation
-- Unified recommendations system for streamlined tag cleanup
-- Vault maintenance tools (backup cleanup, repair operations)
-- Safe operations with preview mode by default and comprehensive logging
-- Commands default to current working directory for convenience
+Safe by default (preview mode requires --execute flag to apply changes).
 
 ## Quick Start
 
