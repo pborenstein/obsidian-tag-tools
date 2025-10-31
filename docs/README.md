@@ -2,22 +2,32 @@
 
 Welcome to the tagex documentation. This guide will help you navigate the available resources based on your needs.
 
+## Start Here
+
+**👉 New to tagex? Read [GETTING_STARTED.md](GETTING_STARTED.md) for a step-by-step walkthrough of the most common workflow.**
+
+This 10-step guide will take you from installation to a cleaned-up vault in about 15 minutes.
+
+**⚡ In a hurry? See [HAPPY_PATH.md](HAPPY_PATH.md) for just the commands (no explanations).**
+
 ## Quick Navigation
 
-- **New to tagex?** Start with the [main README](../README.md) for installation and quick start
-- **Setting up your vault?** See [Setup Guide](SETUP_GUIDE.md) for installation and best practices
-- **Encountering issues?** Check [Troubleshooting](TROUBLESHOOTING.md) for solutions
-- **Understanding the system?** See [Architecture Overview](ARCHITECTURE.md)
-- **Using analysis tools?** Check out the [Analytics Guide](ANALYTICS.md)
-- **Deep technical dive?** Read [Algorithms Reference](ALGORITHMS.md)
+- **First time here?** → [Getting Started Guide](GETTING_STARTED.md) - Complete walkthrough
+- **Just the commands?** → [Happy Path Cheat Sheet](HAPPY_PATH.md) - Ultra-minimal command list
+- **Need a quick reference?** → [Quick Reference](QUICK_REFERENCE.md) - Complete command cheat sheet
+- **Setting up your vault?** → [Setup Guide](SETUP_GUIDE.md) - Installation and best practices
+- **Something broken?** → [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
+- **Want to understand how it works?** → [Architecture Overview](ARCHITECTURE.md) - System design
+- **Using analysis tools?** → [Analytics Guide](ANALYTICS.md) - Complete analysis workflows
+- **Deep dive?** → [Algorithms Reference](ALGORITHMS.md) - Technical details
 
 ## Suggested Reading Flow
 
 ### For New Users
 
-1. **[Main README](../README.md)** - Installation, commands, and basic usage
+1. **[Getting Started Guide](GETTING_STARTED.md)** - **START HERE** - Step-by-step walkthrough of the most common workflow
 2. **[Quick Reference](QUICK_REFERENCE.md)** - Command cheat sheet (keep this handy!)
-3. **[Setup Guide](SETUP_GUIDE.md)** - Installation and vault setup
+3. **[Setup Guide](SETUP_GUIDE.md)** - Installation details and vault setup
 4. **[Configuration Reference](CONFIGURATION_REFERENCE.md)** - `.tagex/` directory configuration files
 5. **[Analytics Guide](ANALYTICS.md)** - Complete analysis guide with decision tree
 6. **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
@@ -39,7 +49,9 @@ Welcome to the tagex documentation. This guide will help you navigate the availa
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | **Single-page command reference and cheat sheet** | **Users** |
+| **[GETTING_STARTED.md](GETTING_STARTED.md)** | **Step-by-step walkthrough of the complete workflow** | **New Users** |
+| **[HAPPY_PATH.md](HAPPY_PATH.md)** | **Ultra-minimal cheat sheet - just the commands** | **All Users** |
+| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | **Single-page command reference and cheat sheet** | **All Users** |
 | [SETUP_GUIDE.md](SETUP_GUIDE.md) | Installation, vault setup, git integration, naming conventions | Users |
 | [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md) | `.tagex/` directory configuration files (config.yaml, synonyms.yaml, exclusions.yaml) | Users & Developers |
 | [ANALYTICS.md](ANALYTICS.md) | Complete analysis guide with decision tree and workflows | Users & Developers |

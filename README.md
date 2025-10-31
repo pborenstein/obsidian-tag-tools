@@ -22,30 +22,33 @@ tagex is a command-line tool for managing tags across entire Obsidian vaults. It
 
 ## Quick Start
 
+**New to tagex?** Follow the [Getting Started Guide](docs/GETTING_STARTED.md) for a complete step-by-step walkthrough.
+
+For a quick taste:
+
 ```bash
-# Install (editably) with uv
+# Install
 uv tool install --editable .
 
-# Sanity check CLI
-tagex --help
-
-# Initialize configuration
+# Initialize your vault
 cd "$HOME/Obsidian/MyVault"
 tagex init
 
-# View vault statistics and health metrics
+# See what you have
 tagex stats
+tagex health
 
-# Export all tags to JSON
-tagex tag export -f json -o tags.json
+# Generate recommendations
+tagex analyze recommendations --export operations.yaml
 
-# Top 20 tags (requires jq (https://jqlang.org/))
-jq -r '.[0:20] | .[] | "\(.tag)\t\(.tagCount)"' tags.json
+# Review operations.yaml, then preview changes
+tagex tag apply operations.yaml
 
-# Preview a rename, then apply (safe by default)
-tagex tag rename "work" "project"              # Preview only
-tagex tag rename "work" "project" --execute    # Actually apply
+# Apply changes (when ready)
+tagex tag apply operations.yaml --execute
 ```
+
+**That's the happy path!** Most users follow this workflow. See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for detailed explanations.
 
 ## Commands
 
@@ -347,13 +350,19 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if you encounter issues.
 
 ## Documentation
 
+**👉 Start here:** [Getting Started Guide](docs/GETTING_STARTED.md) - Complete walkthrough from installation to cleaned-up vault (15 minutes)
+
+**⚡ In a hurry?** [Happy Path Cheat Sheet](docs/HAPPY_PATH.md) - Just the commands, no explanations
+
 See [docs/README.md](docs/README.md) for the complete documentation index with suggested reading flows.
 
 ### Quick Links
 
 | Document | Description | Audience |
 |:---------|:------------|:---------|
-| [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Single-page command cheat sheet | Users |
+| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | **Complete step-by-step workflow** | **New Users** |
+| [docs/HAPPY_PATH.md](docs/HAPPY_PATH.md) | **Ultra-minimal command list** | **All Users** |
+| [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Single-page command cheat sheet | All Users |
 | [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) | Installation, vault setup, git integration | Users & Developers |
 | [docs/CONFIGURATION_REFERENCE.md](docs/CONFIGURATION_REFERENCE.md) | `.tagex/` configuration files reference | Users & Developers |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and solutions | Users & Developers |
