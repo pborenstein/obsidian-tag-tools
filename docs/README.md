@@ -15,6 +15,7 @@ This 10-step guide will take you from installation to a cleaned-up vault in abou
 - **First time here?** → [Getting Started Guide](GETTING_STARTED.md) - Complete walkthrough
 - **Just the commands?** → [Happy Path Cheat Sheet](HAPPY_PATH.md) - Ultra-minimal command list
 - **Need a quick reference?** → [Quick Reference](QUICK_REFERENCE.md) - Complete command cheat sheet
+- **Want to see the command structure?** → [Command Hierarchy](COMMAND_HIERARCHY.md) - Full command tree and design
 - **Setting up your vault?** → [Setup Guide](SETUP_GUIDE.md) - Installation and best practices
 - **Something broken?** → [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
 - **Want to understand how it works?** → [Architecture Overview](ARCHITECTURE.md) - System design
@@ -52,6 +53,7 @@ This 10-step guide will take you from installation to a cleaned-up vault in abou
 | **[GETTING_STARTED.md](GETTING_STARTED.md)** | **Step-by-step walkthrough of the complete workflow** | **New Users** |
 | **[HAPPY_PATH.md](HAPPY_PATH.md)** | **Ultra-minimal cheat sheet - just the commands** | **All Users** |
 | **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | **Single-page command reference and cheat sheet** | **All Users** |
+| [COMMAND_HIERARCHY.md](COMMAND_HIERARCHY.md) | Complete command tree, design principles, capabilities matrix | Users & Developers |
 | [SETUP_GUIDE.md](SETUP_GUIDE.md) | Installation, vault setup, git integration, naming conventions | Users |
 | [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md) | `.tagex/` directory configuration files (config.yaml, synonyms.yaml, exclusions.yaml) | Users & Developers |
 | [ANALYTICS.md](ANALYTICS.md) | Complete analysis guide with decision tree and workflows | Users & Developers |
