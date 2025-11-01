@@ -3,7 +3,6 @@ File discovery utilities for finding markdown files in an Obsidian vault.
 """
 from pathlib import Path
 from typing import List, Set, Union, Optional
-import fnmatch
 
 
 def find_markdown_files(vault_path: str, exclude_patterns: Union[Set[str], List[str], None] = None, use_config: bool = True) -> List[Path]:

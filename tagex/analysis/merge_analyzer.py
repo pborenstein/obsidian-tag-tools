@@ -45,6 +45,11 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 
+# Constants for similarity analysis
+MIN_TAG_LENGTH_FOR_SIMILARITY = 3  # Minimum tag length to check for similarity
+MIN_SHARED_FILES_FOR_OVERLAP = 5  # Minimum shared files to consider tags overlapping
+
+
 def load_tag_data(json_file: str) -> List[Dict[str, Any]]:
     """Load tag data from JSON file.
 
@@ -108,7 +113,7 @@ def find_similar_tags(tags: Iterable[str], similarity_threshold: float = 0.85) -
                 continue
 
             # Only consider very similar tags to avoid false positives
-            if len(tag1) > 3 and len(tag2) > 3:
+            if len(tag1) > MIN_TAG_LENGTH_FOR_SIMILARITY and len(tag2) > MIN_TAG_LENGTH_FOR_SIMILARITY:
                 similarity = SequenceMatcher(None, tag1.lower(), tag2.lower()).ratio()
                 if similarity >= similarity_threshold:
                     group.append(tag2)
@@ -354,7 +359,7 @@ def find_overlapping_tags(
             union = len(files1.union(files2))
             overlap_ratio = intersection / union if union > 0 else 0
             
-            if overlap_ratio >= overlap_threshold and intersection >= 5:
+            if overlap_ratio >= overlap_threshold and intersection >= MIN_SHARED_FILES_FOR_OVERLAP:
                 overlaps.append({
                     'tag1': tag1,
                     'tag2': tag2,
