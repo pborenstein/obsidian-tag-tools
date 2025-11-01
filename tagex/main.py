@@ -141,7 +141,7 @@ def export(vault_path, output, format, tag_types, exclude, verbose, quiet, no_fi
             print_summary(tag_data, stats)
 
     except Exception as e:
-        logging.error(f"Error during extraction: {e}")
+        logging.exception(f"Error during extraction: {e}")
         sys.exit(1)
 
 
@@ -1102,7 +1102,7 @@ def stats(vault_path, tag_types, top, format, no_filter):
             print_tag_statistics(stats_result, tag_types)
 
     except Exception as e:
-        logging.error(f"Error during stats generation: {e}")
+        logging.exception(f"Error during stats generation: {e}")
         sys.exit(1)
 
 

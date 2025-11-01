@@ -67,8 +67,23 @@ class PluralConfig:
 
             return cls(preference=preference, usage_ratio_threshold=usage_ratio)
 
-        except Exception:
+        except (IOError, OSError, yaml.YAMLError) as e:
             # If there's any error loading config, use defaults
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Error loading plural config from {config_file}: {e}. Using defaults.")
+            return cls()
+        except (ValueError, KeyError) as e:
+            # Invalid config values
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Invalid plural config values in {config_file}: {e}. Using defaults.")
+            return cls()
+        except Exception as e:
+            # Unexpected error
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception(f"Unexpected error loading plural config from {config_file}")
             return cls()
 
     def to_dict(self) -> dict:

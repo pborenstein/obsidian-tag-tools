@@ -85,8 +85,8 @@ class TagOperationEngine(ABC):
                 return True
             
             return False
-            
-        except Exception as e:
+
+        except (IOError, OSError, UnicodeDecodeError, UnicodeEncodeError) as e:
             self.operation_log["stats"]["errors"] += 1
             self.operation_log["changes"].append({
                 "file": relative_path,
@@ -94,6 +94,16 @@ class TagOperationEngine(ABC):
             })
             if not self.quiet:
                 print(f"Error processing {file_path}: {e}")
+            return False
+        except Exception as e:
+            self.operation_log["stats"]["errors"] += 1
+            self.operation_log["changes"].append({
+                "file": relative_path,
+                "error": str(e)
+            })
+            if not self.quiet:
+                print(f"Unexpected error processing {file_path}: {e}")
+            logger.exception(f"Unexpected error in process_file for {file_path}")
             return False
         finally:
             self.operation_log["stats"]["files_processed"] += 1

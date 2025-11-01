@@ -60,9 +60,13 @@ class TagExtractor:
                         tag_data[tag]["count"] += 1
                         tag_data[tag]["files"].add(relative_path)
                 self.file_count += 1
-                
-            except Exception as e:
+
+            except (UnicodeDecodeError, IOError, OSError, ValueError) as e:
                 logger.error(f"Error processing file {file_path}: {e}")
+                self.error_count += 1
+                continue
+            except Exception as e:
+                logger.exception(f"Unexpected error processing {file_path}")
                 self.error_count += 1
                 continue
         
