@@ -421,7 +421,7 @@ class TestAnalysisIntegration:
         # 1. Extract tags to JSON
         tags_file = temp_dir / "pipeline_tags.json"
         runner = CliRunner()
-        extract_result = runner.invoke(cli, ['tags', 'extract', str(simple_vault),
+        extract_result = runner.invoke(cli, ['tag', 'export', str(simple_vault),
             '--output', str(tags_file)
         ])
 
@@ -446,7 +446,7 @@ class TestAnalysisIntegration:
         
         # Extract in JSON format (should work with analysis)
         json_file = temp_dir / "format_test.json"
-        json_result = runner.invoke(cli, ['tags', 'extract', str(simple_vault),
+        json_result = runner.invoke(cli, ['tag', 'export', str(simple_vault),
             '--format', 'json',
             '--output', str(json_file)
         ])
@@ -475,13 +475,13 @@ class TestAnalysisIntegration:
 
         # Extract with filtering
         filtered_file = temp_dir / "filtered_analysis.json"
-        filtered_result = runner.invoke(cli, ['tags', 'extract', str(complex_vault),
+        filtered_result = runner.invoke(cli, ['tag', 'export', str(complex_vault),
             '--output', str(filtered_file)
         ])
 
         # Extract without filtering
         unfiltered_file = temp_dir / "unfiltered_analysis.json"
-        unfiltered_result = runner.invoke(cli, ['tags', 'extract', str(complex_vault),
+        unfiltered_result = runner.invoke(cli, ['tag', 'export', str(complex_vault),
             '--no-filter',
             '--output', str(unfiltered_file)
         ])

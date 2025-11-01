@@ -170,13 +170,15 @@ class TestContentAnalyzerCLI:
         help_text = result.output.lower()
         assert 'suggest' in help_text or 'content' in help_text
 
-    def test_suggest_command_requires_vault(self):
-        """Test that suggest command requires vault-path."""
+    def test_suggest_command_defaults_to_cwd(self):
+        """Test that suggest command defaults to current working directory."""
         from tagex.main import main as cli
         from click.testing import CliRunner
 
         runner = CliRunner()
         result = runner.invoke(cli, ['analyze', 'suggest'])
 
-        # Should fail without vault-path
-        assert result.exit_code != 0
+        # Should succeed with default vault path (cwd)
+        # May succeed or fail based on whether cwd is a valid vault,
+        # but should not crash from missing argument
+        assert result.exit_code in [0, 1]  # Either success or validation error, not crash
