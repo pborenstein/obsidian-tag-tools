@@ -86,11 +86,11 @@ class ExclusionsConfig:
 
         # Process excluded tags (normalize)
         if 'exclude_tags' in config:
-            self.excluded_tags = {self._normalize_tag(tag) for tag in config['exclude_tags'] if tag}
+            self.excluded_tags = {self._normalize_tag(tag) for tag in (config['exclude_tags'] or []) if tag}
 
         # Process auto-generated tags (normalize)
         if 'auto_generated_tags' in config:
-            self.auto_generated_tags = {self._normalize_tag(tag) for tag in config['auto_generated_tags'] if tag}
+            self.auto_generated_tags = {self._normalize_tag(tag) for tag in (config['auto_generated_tags'] or []) if tag}
 
     def is_excluded(self, tag: str) -> bool:
         """Check if a tag is excluded from merge operations.
