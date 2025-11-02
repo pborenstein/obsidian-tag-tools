@@ -1,6 +1,6 @@
 [project]
 name = "tagex"
-version = "0.3.0"
+version = "0.3.1"
 description = "Extract, analyze, and modify tags in Obsidian markdown files"
 readme = "README.md"
 requires-python = ">=3.10"
